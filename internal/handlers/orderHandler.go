@@ -10,12 +10,12 @@ import (
 	"github.com/akinolaemmanuel49/gocommerce/internal/services"
 )
 
-func NewProductHandler(productService *services.ProductService, logger *log.Logger) *ProductHandler {
-	return &ProductHandler{productService: productService, logger: logger}
+func NewOrderHandler(orderService *services.OrderService, logger *log.Logger) *OrderHandler {
+	return &OrderHandler{orderService: orderService, logger: logger}
 }
 
-// GetAllProducts handles GET /products requests with optional filters
-func (h *ProductHandler) GetAllProducts(w http.ResponseWriter, r *http.Request) {
+// GetAllOrders handles GET /orders requests with optional filters
+func (h *OrderHandler) GetAllOrders(w http.ResponseWriter, r *http.Request) {
 	// Log to stdout
 	h.logger.Printf("%v %v", r.Method, r.URL.Path)
 
@@ -53,22 +53,22 @@ func (h *ProductHandler) GetAllProducts(w http.ResponseWriter, r *http.Request) 
 		}
 	}
 
-	products, nextCursor, err := h.productService.GetAllProducts(ctx, filter, lastID, limit)
+	orders, nextCursor, err := h.orderService.GetAllOrders(ctx, nil, lastID, limit)
 	if err != nil {
-		http.Error(w, "Error fetching products: "+err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Error fetching orders: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	response := map[string]interface{}{
-		"data":       products,
+		"data":       orders,
 		"nextCursor": nextCursor,
 	}
 	writeJSON(w, http.StatusOK, response)
 }
 
-// CreateProduct handles POST /products requests and accepts CreateProduct as input
-func (h *ProductHandler) CreateProduct(w http.ResponseWriter, r *http.Request) {
-	var input models.CreateProduct
+// CreateOrder handles POST /orders requests and accepts CreateOrder as input
+func (h *OrderHandler) CreateOrder(w http.ResponseWriter, r *http.Request) {
+	var input models.CreateOrder
 
 	// Parse request body
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
@@ -76,13 +76,13 @@ func (h *ProductHandler) CreateProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Call service to create product
-	product, err := h.productService.CreateProduct(r.Context(), &input)
+	// Call service to create order
+	order, err := h.orderService.CreateOrder(r.Context(), &input)
 	if err != nil {
-		http.Error(w, "Failed to create product", http.StatusInternalServerError)
+		http.Error(w, "Failed to create order", http.StatusInternalServerError)
 		return
 	}
 
-	// Respond with the created product
-	writeJSON(w, http.StatusCreated, product)
+	// Respond with the created order
+	writeJSON(w, http.StatusCreated, order)
 }

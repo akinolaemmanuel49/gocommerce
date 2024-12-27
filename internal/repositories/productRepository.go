@@ -6,6 +6,7 @@ import (
 
 	"github.com/akinolaemmanuel49/gocommerce/internal/models"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -20,7 +21,7 @@ func NewProductRepository(db *mongo.Database) *ProductRepository {
 	}
 }
 
-// FindAll retrieves products based on filters and cursor-based pagination.
+// FindAll retrieves products based on filters and implements cursor-based pagination.
 func (r *ProductRepository) FindAll(ctx context.Context, filter map[string]interface{}, lastID string, limit int) ([]models.Product, string, error) {
 	query := bson.M{}
 	if len(filter) > 0 {
@@ -29,7 +30,11 @@ func (r *ProductRepository) FindAll(ctx context.Context, filter map[string]inter
 
 	// If lastID is provided, add it to the filter for pagination
 	if lastID != "" {
-		query["_id"] = bson.M{"$gt": lastID} // Fetch products with IDs greater than lastID
+		objID, err := primitive.ObjectIDFromHex(lastID)
+		if err != nil {
+			return nil, "", fmt.Errorf("invalid lastID: %v", err)
+		}
+		query["_id"] = bson.M{"$gt": objID} // Fetch products with IDs greater than lastID
 	}
 
 	options := options.Find().

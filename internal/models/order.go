@@ -1,9 +1,9 @@
 package models
 
 type OrderItem struct {
-	ProductID string  `bson:"productId,omitempty"`
-	Quantity  int     `bson:"quantity,omitempty"`
-	Price     float64 `bson:"price,omitempty"`
+	ProductID string  `json:"productId" validate:"required"`
+	Quantity  int     `json:"quantity" validate:"required,min=1"`
+	Price     float64 `json:"price" validate:"required,gt=0"`
 }
 
 type Order struct {
@@ -14,4 +14,17 @@ type Order struct {
 	Status          string      `bson:"status,omitempty"` // "pending", "shipped", "delivered"
 	ShippingAddress Address     `bson:"shippingAddress,omitempty"`
 	CommonFields    `bson:"inline"`
+}
+
+type CreateOrder struct {
+	UserID          string      `json:"userId" validate:"required"`
+	Items           []OrderItem `json:"items" validate:"required,dive"`
+	TotalPrice      float64     `json:"totalPrice" validate:"required,gt=0"`
+	Status          string      `json:"status" validate:"required,oneof=pending shipped delivered"`
+	ShippingAddress Address     `json:"shippingAddress" validate:"required"`
+}
+
+type UpdateOrder struct {
+	Status          string  `json:"status,omitempty" validate:"omitempty,oneof=pending shipped delivered"`
+	ShippingAddress Address `json:"shippingAddress,omitempty"`
 }

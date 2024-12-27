@@ -12,3 +12,12 @@ type Product struct {
 	ReviewsCount int      `bson:"reviewsCount,omitempty"`
 	CommonFields `bson:"inline"`
 }
+
+type CreateProduct struct {
+	Name        string   `json:"name,omitempty" validate:"required"`
+	Description string   `json:"description,omitempty"`
+	Price       float64  `json:"price,omitempty" validate:"required,gt=0"`
+	Images      []string `json:"images,omitempty"`
+	CategoryID  string   `json:"categoryId,omitempty" validate:"required"`
+	Brand       string   `json:"brand,omitempty"`
+}

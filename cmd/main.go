@@ -15,49 +15,64 @@ import (
 	"github.com/akinolaemmanuel49/gocommerce/internal/queue"
 	"github.com/akinolaemmanuel49/gocommerce/internal/repositories"
 	"github.com/akinolaemmanuel49/gocommerce/internal/services"
+	l "github.com/akinolaemmanuel49/gocommerce/log"
+	"github.com/akinolaemmanuel49/gocommerce/routes"
 
 	"github.com/akinolaemmanuel49/gocommerce/internal/database"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+const (
+	RouteHealth   = "/health"
+	RouteUsers    = "/users"
+	RouteProducts = "/products"
+	RouteOrders   = "/orders"
+)
+
 func main() {
+	// Setup logger
+	logger := l.SetupLogger("service.log")
+
 	// Load config
 	config, err := configs.LoadConfig(".")
 	if err != nil {
-		log.Fatalf("Error reading config file: %v", err)
+		logger.Fatalf("Error reading config file: %v", err)
 	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 
 	// Initialize MongoDB
 	db, err := database.ConnectMongoDB(config.MongoDBURI, config.MongoDBName)
 	if err != nil {
-		log.Fatalf("Failed to connect to MongoDB: %v", err)
+		logger.Fatalf("Failed to connect to MongoDB: %v", err)
 	}
 	defer func() {
-		if err = db.Client().Disconnect(context.TODO()); err != nil {
-			log.Printf("Error disconnecting MongoDB: %v", err)
+		if err = db.Client().Disconnect(ctx); err != nil {
+			logger.Printf("Error disconnecting MongoDB: %v", err)
 		}
 	}()
 
 	// Ping MongoDB to ensure a successful connection
-	if err := db.Client().Database("admin").RunCommand(context.TODO(), bson.D{{"ping", 1}}).Err(); err != nil {
-		log.Fatalf("Failed to ping MongoDB: %v", err)
+	if err := db.Client().Database("admin").RunCommand(ctx, bson.D{{"ping", 1}}).Err(); err != nil {
+		logger.Fatalf("Failed to ping MongoDB: %v", err)
 	}
-	fmt.Println("Connected to MongoDB successfully!")
+	logger.Println("Connected to MongoDB successfully")
 
 	// Initialize RabbitMQ
 	conn, ch, err := queue.ConnectRabbitMQ(&config)
 	if err != nil {
-		log.Fatalf("Failed to connect to RabbitMQ: %v", err)
+		logger.Fatalf("Failed to connect to RabbitMQ: %v", err)
 	}
 	defer func() {
 		if err = conn.Close(); err != nil {
-			log.Printf("Error closing RabbitMQ connection: %v", err)
+			logger.Printf("Error closing RabbitMQ connection: %v", err)
 		}
 	}()
 	defer func() {
 		if err = ch.Close(); err != nil {
-			log.Printf("Error closing RabbitMQ channel: %v", err)
+			logger.Printf("Error closing RabbitMQ channel: %v", err)
 		}
 	}()
 
@@ -66,17 +81,17 @@ func main() {
 
 	// Setup HTTP routes
 	router := http.NewServeMux()
-	setupRoutes(router, db)
+	setupRoutes(router, db, logger)
 
 	// Start the HTTP server with graceful shutdown
 	server := &http.Server{
-		Addr:    ":8080",
+		Addr:    fmt.Sprintf(":%s", config.Port),
 		Handler: router,
 	}
 	go func() {
-		log.Println("Server is running on http://localhost:8080")
+		logger.Printf("Server is running on http://localhost:%s", config.Port)
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("Server error: %v", err)
+			logger.Fatalf("Server error: %v", err)
 		}
 	}()
 
@@ -84,29 +99,38 @@ func main() {
 	gracefulShutdown(server)
 }
 
-// setupRoutes configures the HTTP routes
-func setupRoutes(router *http.ServeMux, db *mongo.Database) {
+func setupRoutes(router *http.ServeMux, db *mongo.Database, logger *log.Logger) {
 	// Initialize repositories
-	userRepo := repositories.NewUserRepository(db)
-	productRepo := repositories.NewProductRepository(db)
+	orderRepo := repositories.NewOrderRepository(db)
 
 	// Initialize services
-	userService := services.NewUserService(userRepo)
-	productService := services.NewProductService(productRepo)
+	orderService := services.NewOrderService(orderRepo)
 
 	// Initialize handlers
-	userHandler := handlers.NewUserHandler(userService)
-	productHandler := handlers.NewProductHandler(productService)
+	orderHandler := handlers.NewOrderHandler(orderService, logger)
 
-	// Routes: Register them with the passed router
-	router.HandleFunc("/health", healthHandler)
-	router.HandleFunc("/users", userHandler.GetAllUsers)
-	// http.HandleFunc("/users/email", userHandler.GetUserByEmail) // Example: /users/email?email=example@example.com
-	router.HandleFunc("/products", productHandler.GetAllProducts)
-	// http.HandleFunc("/products/id", productHandler.GetProductByID) // Example: /products/id?id=12345
+	// Health check
+	router.HandleFunc(RouteHealth, healthHandler)
+
+	// User routes
+	routes.RegisterUserRoutes(router, db, logger)
+
+	// Product routes
+	routes.RegisterProductRoutes(router, db, logger)
+
+	// Order routes
+	router.HandleFunc(RouteOrders, func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case "GET":
+			orderHandler.GetAllOrders(w, r)
+		case "POST":
+			orderHandler.CreateOrder(w, r)
+		default:
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
+	})
 }
 
-// gracefulShutdown handles cleanup and ensures the server stops gracefully
 func gracefulShutdown(server *http.Server) {
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
@@ -118,13 +142,12 @@ func gracefulShutdown(server *http.Server) {
 	defer cancel()
 
 	if err := server.Shutdown(ctx); err != nil {
-		log.Fatalf("Error shutting down server: %v", err)
+		log.Fatalf("Server shutdown failed: %v", err)
 	}
 
 	log.Println("Server stopped cleanly.")
 }
 
-// healthHandler is a simple handler to check if the server is running.
 func healthHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("OK"))

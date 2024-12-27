@@ -5,12 +5,12 @@ import (
 )
 
 type Config struct {
-	MongoDBURI     string `mapstructure:"MongoDB_URI"`
-	MongoDBName    string `mapstructure:"MongoDB_Name"`
-	RedisAddr      string
-	RabbitMQURI    string `mapstructure:"RabbitMQ_URI"`
-	OrderQueueName string `mapstructure:"Order_Queue_Name"`
-	Port           string
+	MongoDBURI     string `mapstructure:"MONGODB_URI"`
+	MongoDBName    string `mapstructure:"MONGODB_NAME"`
+	RabbitMQURI    string `mapstructure:"RABBITMQ_URI"`
+	OrderQueueName string `mapstructure:"ORDER_QUEUE_NAME"`
+	Port           string `mapstructure:"PORT"`
+	DefaultTimeout string `mapstructure:"DEFAULT_TIMEOUT"`
 }
 
 func LoadConfig(path string) (config Config, err error) {
