@@ -6,4 +6,5 @@ import "time"
 type CommonFields struct {
 	CreatedAt time.Time `bson:"createdAt,omitempty"`
 	UpdatedAt time.Time `bson:"updatedAt,omitempty"`
+	IsDeleted bool      `bson:"isDeleted"`
 }

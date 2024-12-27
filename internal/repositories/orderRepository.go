@@ -61,3 +61,21 @@ func (r *OrderRepository) FindAll(ctx context.Context, filter map[string]interfa
 
 	return orders, nextCursor, nil
 }
+
+// FindByID retrieves an order by its ID
+func (r *OrderRepository) FindByID(ctx context.Context, ID string) (*models.Order, error) {
+	var order models.Order
+	objID, err := primitive.ObjectIDFromHex(ID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid ID: %v", err)
+	}
+	filter := bson.M{"_id": objID}
+
+	if err := r.Collection.FindOne(ctx, filter).Decode(&order); err != nil {
+		if err != mongo.ErrNoDocuments {
+			return nil, fmt.Errorf("order not found: %w", err)
+		}
+		return nil, err
+	}
+	return &order, nil
+}

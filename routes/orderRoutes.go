@@ -7,14 +7,15 @@ import (
 	"github.com/akinolaemmanuel49/gocommerce/internal/handlers"
 	"github.com/akinolaemmanuel49/gocommerce/internal/repositories"
 	"github.com/akinolaemmanuel49/gocommerce/internal/services"
+	"github.com/gorilla/mux"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func RegisterOrderRoutes(router *http.ServeMux, db *mongo.Database, logger *log.Logger) {
+func RegisterOrderRoutes(router *mux.Router, db *mongo.Database, logger *log.Logger) {
 	const RouteOrders = "/orders"
 
 	orderRepository := repositories.NewOrderRepository(db)
-	orderService := services.NewOrderService(orderRepository)
+	orderService := services.NewOrderService(orderRepository, logger)
 	orderHandler := handlers.NewOrderHandler(orderService, logger)
 
 	router.HandleFunc(RouteOrders, func(w http.ResponseWriter, r *http.Request) {

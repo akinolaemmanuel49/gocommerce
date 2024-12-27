@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/akinolaemmanuel49/gocommerce/internal/models"
@@ -10,13 +11,9 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-type ProductService struct {
-	productRepository *repositories.ProductRepository
-}
-
 // NewProductService creates a new instance of ProductService
-func NewProductService(productRepository *repositories.ProductRepository) *ProductService {
-	return &ProductService{productRepository: productRepository}
+func NewProductService(productRepository *repositories.ProductRepository, logger *log.Logger) *ProductService {
+	return &ProductService{productRepository: productRepository, logger: logger}
 }
 
 // GetAllProducts retrieves paginated products with optional filters

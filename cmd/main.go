@@ -14,6 +14,7 @@ import (
 	"github.com/akinolaemmanuel49/gocommerce/internal/queue"
 	l "github.com/akinolaemmanuel49/gocommerce/log"
 	"github.com/akinolaemmanuel49/gocommerce/routes"
+	"github.com/gorilla/mux"
 
 	"github.com/akinolaemmanuel49/gocommerce/internal/database"
 	"go.mongodb.org/mongo-driver/bson"
@@ -21,10 +22,7 @@ import (
 )
 
 const (
-	RouteHealth   = "/health"
-	RouteUsers    = "/users"
-	RouteProducts = "/products"
-	RouteOrders   = "/orders"
+	RouteHealth = "/health"
 )
 
 func main() {
@@ -58,7 +56,7 @@ func main() {
 	logger.Println("Connected to MongoDB successfully")
 
 	// Initialize RabbitMQ
-	conn, ch, err := queue.ConnectRabbitMQ(&config)
+	conn, ch, err := queue.ConnectRabbitMQ(&config, logger)
 	if err != nil {
 		logger.Fatalf("Failed to connect to RabbitMQ: %v", err)
 	}
@@ -77,7 +75,7 @@ func main() {
 	go queue.ConsumeOrderNotifications(&config, ch)
 
 	// Setup HTTP routes
-	router := http.NewServeMux()
+	router := mux.NewRouter()
 	setupRoutes(router, db, logger)
 
 	// Start the HTTP server with graceful shutdown
@@ -96,7 +94,7 @@ func main() {
 	gracefulShutdown(server)
 }
 
-func setupRoutes(router *http.ServeMux, db *mongo.Database, logger *log.Logger) {
+func setupRoutes(router *mux.Router, db *mongo.Database, logger *log.Logger) {
 	// Health check
 	router.HandleFunc(RouteHealth, healthHandler)
 

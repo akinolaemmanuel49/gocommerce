@@ -80,7 +80,11 @@ func (r *UserRepository) FindByEmail(ctx context.Context, email string) (*models
 // FindByID retrieves a user by ID
 func (r *UserRepository) FindByID(ctx context.Context, ID string) (*models.User, error) {
 	var user models.User
-	filter := bson.M{"_id": ID}
+	objID, err := primitive.ObjectIDFromHex(ID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid ID: %v", err)
+	}
+	filter := bson.M{"_id": objID}
 
 	if err := r.Collection.FindOne(ctx, filter).Decode(&user); err != nil {
 		if err == mongo.ErrNoDocuments {

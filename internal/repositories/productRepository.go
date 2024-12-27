@@ -65,7 +65,11 @@ func (r *ProductRepository) FindAll(ctx context.Context, filter map[string]inter
 // FindByID retrieves a product by its ID
 func (r *ProductRepository) FindByID(ctx context.Context, ID string) (*models.Product, error) {
 	var product models.Product
-	filter := bson.M{"_id": ID}
+	objID, err := primitive.ObjectIDFromHex(ID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid ID: %v", err)
+	}
+	filter := bson.M{"_id": objID}
 
 	if err := r.Collection.FindOne(ctx, filter).Decode(&product); err != nil {
 		if err != mongo.ErrNoDocuments {

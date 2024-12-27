@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"fmt"
+	"log"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -16,13 +17,9 @@ const (
 	HashCost = 10
 )
 
-type UserService struct {
-	userRepository *repositories.UserRepository
-}
-
 // NewUserService creates a new instance of UserService
-func NewUserService(userRepository *repositories.UserRepository) *UserService {
-	return &UserService{userRepository: userRepository}
+func NewUserService(userRepository *repositories.UserRepository, logger *log.Logger) *UserService {
+	return &UserService{userRepository: userRepository, logger: logger}
 }
 
 // GetAllUsers retrieves paginated users with optional filters
@@ -32,6 +29,7 @@ func (s *UserService) GetAllUsers(ctx context.Context, filter map[string]interfa
 		return nil, "", fmt.Errorf("error fetching users: %w", err)
 	}
 
+	s.logger.Printf("Reading users")
 	return users, nextCursor, nil
 }
 
@@ -42,6 +40,7 @@ func (s *UserService) GetUserByEmail(ctx context.Context, email string) (*models
 		return nil, fmt.Errorf("error fetching user: %w", err)
 	}
 
+	s.logger.Printf("Reading user ID %s", user.ID)
 	return user, nil
 }
 
@@ -52,6 +51,7 @@ func (s *UserService) GetUserByID(ctx context.Context, ID string) (*models.User,
 		return nil, fmt.Errorf("error fetching user: %w", err)
 	}
 
+	s.logger.Printf("Reading user ID %s", ID)
 	return user, nil
 }
 
@@ -92,5 +92,41 @@ func (s *UserService) CreateUser(ctx context.Context, newUser *models.CreateUser
 	}
 	user.ID = objectID.Hex() // Set the ID to the string representation of the ObjectID
 
+	s.logger.Printf("Creating user ID %s", user.ID)
 	return user, nil
+}
+
+// UpdateUser updates an instance of a user and commits it to the database
+func (s *UserService) UpdateUser(ctx context.Context, ID string, updatedUser *models.UpdateUser) (*models.User, error) {
+	existingUser, err := s.userRepository.FindByID(ctx, ID)
+	if err != nil {
+		return nil, fmt.Errorf("error fetching existing user: %w", err)
+	}
+
+	// Transform UpdateUser to User
+	user := &models.User{
+		ID:        ID,
+		FirstName: ifNotEmpty(updatedUser.FirstName, existingUser.FirstName),
+		LastName:  ifNotEmpty(updatedUser.LastName, existingUser.LastName),
+		Phone:     ifNotEmpty(updatedUser.Phone, existingUser.Phone),
+		Address:   mergeAddress(updatedUser.Address, existingUser.Address),
+		CommonFields: models.CommonFields{
+			UpdatedAt: time.Now(),
+		},
+	}
+
+	// Update user in database
+	_, err = s.userRepository.Update(ctx, ID, user)
+	if err != nil {
+		return nil, fmt.Errorf("error updating user: %w", err)
+	}
+
+	// Return the updated user
+	updatedRecord, err := s.userRepository.FindByID(ctx, ID)
+	if err != nil {
+		return nil, fmt.Errorf("error fetching updated user")
+	}
+
+	s.logger.Printf("Updating user ID %s", ID)
+	return updatedRecord, nil
 }

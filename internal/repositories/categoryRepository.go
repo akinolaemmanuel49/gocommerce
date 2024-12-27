@@ -61,3 +61,21 @@ func (r *CategoryRepository) FindAll(ctx context.Context, filter map[string]inte
 
 	return categories, nextCursor, nil
 }
+
+// FindByID retrieves a category by its ID
+func (r *CategoryRepository) FindByID(ctx context.Context, ID string) (*models.Category, error) {
+	var category models.Category
+	objID, err := primitive.ObjectIDFromHex(ID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid ID: %v", err)
+	}
+	filter := bson.M{"_id": objID}
+
+	if err := r.Collection.FindOne(ctx, filter).Decode(&category); err != nil {
+		if err != mongo.ErrNoDocuments {
+			return nil, fmt.Errorf("category not found: %w", err)
+		}
+		return nil, err
+	}
+	return &category, nil
+}

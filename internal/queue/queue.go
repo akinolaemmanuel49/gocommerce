@@ -6,7 +6,7 @@ import (
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
-func SetupQueue(ch *amqp.Channel) error {
+func SetupQueue(ch *amqp.Channel, logger *log.Logger) error {
 	_, err := ch.QueueDeclare(
 		"orderNotifications", // Queue name
 		true,                 // Durable
@@ -16,10 +16,10 @@ func SetupQueue(ch *amqp.Channel) error {
 		nil,                  // Arguments
 	)
 	if err != nil {
-		log.Printf("Failed to declare queue: %v", err)
+		logger.Printf("Failed to declare queue: %v", err)
 		return err
 	}
 
-	log.Println("Queue initialized: orderNotifications")
+	logger.Println("Queue initialized: orderNotifications")
 	return nil
 }

@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/akinolaemmanuel49/gocommerce/internal/models"
@@ -10,13 +11,9 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-type CategoryService struct {
-	categoryRepository *repositories.CategoryRepository
-}
-
 // NewCategoryService creates a new instance of CategoryService
-func NewCategoryService(categoryRepository *repositories.CategoryRepository) *CategoryService {
-	return &CategoryService{categoryRepository: categoryRepository}
+func NewCategoryService(categoryRepository *repositories.CategoryRepository, logger *log.Logger) *CategoryService {
+	return &CategoryService{categoryRepository: categoryRepository, logger: logger}
 }
 
 // GetAllCategories retrieves paginated categories with optional filters
