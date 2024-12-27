@@ -11,10 +11,7 @@ import (
 	"time"
 
 	"github.com/akinolaemmanuel49/gocommerce/configs"
-	"github.com/akinolaemmanuel49/gocommerce/internal/handlers"
 	"github.com/akinolaemmanuel49/gocommerce/internal/queue"
-	"github.com/akinolaemmanuel49/gocommerce/internal/repositories"
-	"github.com/akinolaemmanuel49/gocommerce/internal/services"
 	l "github.com/akinolaemmanuel49/gocommerce/log"
 	"github.com/akinolaemmanuel49/gocommerce/routes"
 
@@ -100,15 +97,6 @@ func main() {
 }
 
 func setupRoutes(router *http.ServeMux, db *mongo.Database, logger *log.Logger) {
-	// Initialize repositories
-	orderRepo := repositories.NewOrderRepository(db)
-
-	// Initialize services
-	orderService := services.NewOrderService(orderRepo)
-
-	// Initialize handlers
-	orderHandler := handlers.NewOrderHandler(orderService, logger)
-
 	// Health check
 	router.HandleFunc(RouteHealth, healthHandler)
 
@@ -119,16 +107,10 @@ func setupRoutes(router *http.ServeMux, db *mongo.Database, logger *log.Logger) 
 	routes.RegisterProductRoutes(router, db, logger)
 
 	// Order routes
-	router.HandleFunc(RouteOrders, func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case "GET":
-			orderHandler.GetAllOrders(w, r)
-		case "POST":
-			orderHandler.CreateOrder(w, r)
-		default:
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		}
-	})
+	routes.RegisterOrderRoutes(router, db, logger)
+
+	// Category routes
+	routes.RegisterCategoryRoutes(router, db, logger)
 }
 
 func gracefulShutdown(server *http.Server) {

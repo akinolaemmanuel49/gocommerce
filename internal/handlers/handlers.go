@@ -20,3 +20,8 @@ type OrderHandler struct {
 	orderService *services.OrderService
 	logger       *log.Logger
 }
+
+type CategoryHandler struct {
+	categoryService *services.CategoryService
+	logger          *log.Logger
+}
