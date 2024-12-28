@@ -21,11 +21,31 @@ func RegisterOrderRoutes(router *mux.Router, db *mongo.Database, logger *log.Log
 	router.HandleFunc(RouteOrders, func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case "GET":
-			orderHandler.GetAllOrders(w, r)
+			orderHandler.ReadAll(w, r)
 		case "POST":
-			orderHandler.CreateOrder(w, r)
+			orderHandler.Create(w, r)
 		default:
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
+	})
+
+	router.HandleFunc(RouteOrders+"/{id}", func(w http.ResponseWriter, r *http.Request) {
+		id := mux.Vars(r)["id"] // Extract the `id` path parameter
+
+		switch r.Method {
+		case "GET":
+			orderHandler.Read(w, r, id)
+		case "PATCH":
+			orderHandler.Update(w, r, id)
+		}
+	})
+
+	router.HandleFunc(RouteOrders+"/{id}/delete", func(w http.ResponseWriter, r *http.Request) {
+		id := mux.Vars(r)["id"] // Extract the `id` path parameter
+
+		switch r.Method {
+		case "PATCH":
+			orderHandler.Delete(w, r, id)
 		}
 	})
 }

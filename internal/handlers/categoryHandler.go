@@ -14,8 +14,37 @@ func NewCategoryHandler(categoryService *services.CategoryService, logger *log.L
 	return &CategoryHandler{categoryService: categoryService, logger: logger}
 }
 
-// GetAllCategories handles GET /categories requests with optional filter
-func (h *CategoryHandler) GetAllCategories(w http.ResponseWriter, r *http.Request) {
+// Compile-time check that CategoryHandler implements HandlerInterface
+var _ HandlerInterface = (*CategoryHandler)(nil)
+
+// Create handles POST /categories requests and accepts CreateCategory as input
+func (h *CategoryHandler) Create(w http.ResponseWriter, r *http.Request) {
+	var input models.CreateCategory
+
+	// Parse request body
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		http.Error(w, "Invalid input", http.StatusBadRequest)
+		return
+	}
+
+	// Call service to create category
+	category, err := h.categoryService.CreateCategory(r.Context(), &input)
+	if err != nil {
+		http.Error(w, "Failed to create category", http.StatusInternalServerError)
+		return
+	}
+
+	// Respond with the created category
+	writeJSON(w, http.StatusCreated, category)
+}
+
+// Read handles GET /categories/:id requests
+func (h *CategoryHandler) Read(w http.ResponseWriter, r *http.Request, id string) {
+	panic("unimplemented") // TODO
+}
+
+// ReadAll handles GET /categories requests with optional filter
+func (h *CategoryHandler) ReadAll(w http.ResponseWriter, r *http.Request) {
 	// Log to stdout
 	h.logger.Printf("%v %v", r.Method, r.URL.Path)
 
@@ -49,23 +78,12 @@ func (h *CategoryHandler) GetAllCategories(w http.ResponseWriter, r *http.Reques
 	writeJSON(w, http.StatusOK, response)
 }
 
-// CreateCategory handles POST /categories requests and accepts CreateCategory as input
-func (h *CategoryHandler) CreateCategory(w http.ResponseWriter, r *http.Request) {
-	var input models.CreateCategory
+// Update handles PATCH /categories/:id/delete requests
+func (h *CategoryHandler) Update(w http.ResponseWriter, r *http.Request, id string) {
+	panic("unimplemented") // TODO
+}
 
-	// Parse request body
-	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		http.Error(w, "Invalid input", http.StatusBadRequest)
-		return
-	}
-
-	// Call service to create category
-	category, err := h.categoryService.CreateCategory(r.Context(), &input)
-	if err != nil {
-		http.Error(w, "Failed to create category", http.StatusInternalServerError)
-		return
-	}
-
-	// Respond with the created category
-	writeJSON(w, http.StatusCreated, category)
+// Delete handles PATCH /categories/:id/delete requests
+func (h *CategoryHandler) Delete(w http.ResponseWriter, r *http.Request, id string) {
+	panic("unimplemented") // TODO
 }

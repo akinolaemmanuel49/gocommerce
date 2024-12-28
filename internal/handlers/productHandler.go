@@ -14,8 +14,37 @@ func NewProductHandler(productService *services.ProductService, logger *log.Logg
 	return &ProductHandler{productService: productService, logger: logger}
 }
 
-// GetAllProducts handles GET /products requests with optional filters
-func (h *ProductHandler) GetAllProducts(w http.ResponseWriter, r *http.Request) {
+// Compile-time check that ProductHandler implements HandlerInterface
+var _ HandlerInterface = (*ProductHandler)(nil)
+
+// Create handles POST /products requests and accepts CreateProduct as input
+func (h *ProductHandler) Create(w http.ResponseWriter, r *http.Request) {
+	var input models.CreateProduct
+
+	// Parse request body
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		http.Error(w, "Invalid input", http.StatusBadRequest)
+		return
+	}
+
+	// Call service to create product
+	product, err := h.productService.CreateProduct(r.Context(), &input)
+	if err != nil {
+		http.Error(w, "Failed to create product", http.StatusInternalServerError)
+		return
+	}
+
+	// Respond with the created product
+	writeJSON(w, http.StatusCreated, product)
+}
+
+// Read handles GET /products/:id requests
+func (h *ProductHandler) Read(w http.ResponseWriter, r *http.Request, id string) {
+	panic("unimplemented") // TODO
+}
+
+// ReadAll handles GET /products requests with optional filters
+func (h *ProductHandler) ReadAll(w http.ResponseWriter, r *http.Request) {
 	// Log to stdout
 	h.logger.Printf("%v %v", r.Method, r.URL.Path)
 
@@ -66,23 +95,12 @@ func (h *ProductHandler) GetAllProducts(w http.ResponseWriter, r *http.Request) 
 	writeJSON(w, http.StatusOK, response)
 }
 
-// CreateProduct handles POST /products requests and accepts CreateProduct as input
-func (h *ProductHandler) CreateProduct(w http.ResponseWriter, r *http.Request) {
-	var input models.CreateProduct
+// Update handles PATCH /products/:id requests
+func (h *ProductHandler) Update(w http.ResponseWriter, r *http.Request, id string) {
+	panic("unimplemented") // TODO
+}
 
-	// Parse request body
-	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		http.Error(w, "Invalid input", http.StatusBadRequest)
-		return
-	}
-
-	// Call service to create product
-	product, err := h.productService.CreateProduct(r.Context(), &input)
-	if err != nil {
-		http.Error(w, "Failed to create product", http.StatusInternalServerError)
-		return
-	}
-
-	// Respond with the created product
-	writeJSON(w, http.StatusCreated, product)
+// Delete handles DELETE /products/:id/delete requests
+func (h *ProductHandler) Delete(w http.ResponseWriter, r *http.Request, id string) {
+	panic("unimplemented") // TODO
 }

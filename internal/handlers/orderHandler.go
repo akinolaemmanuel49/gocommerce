@@ -14,8 +14,37 @@ func NewOrderHandler(orderService *services.OrderService, logger *log.Logger) *O
 	return &OrderHandler{orderService: orderService, logger: logger}
 }
 
-// GetAllOrders handles GET /orders requests with optional filters
-func (h *OrderHandler) GetAllOrders(w http.ResponseWriter, r *http.Request) {
+// Compile-time check that OrderHandler implements HandlerInterface
+var _ HandlerInterface = (*OrderHandler)(nil)
+
+// Create handles POST /orders requests and accepts CreateOrder as input
+func (h *OrderHandler) Create(w http.ResponseWriter, r *http.Request) {
+	var input models.CreateOrder
+
+	// Parse request body
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		http.Error(w, "Invalid input", http.StatusBadRequest)
+		return
+	}
+
+	// Call service to create order
+	order, err := h.orderService.CreateOrder(r.Context(), &input)
+	if err != nil {
+		http.Error(w, "Failed to create order", http.StatusInternalServerError)
+		return
+	}
+
+	// Respond with the created order
+	writeJSON(w, http.StatusCreated, order)
+}
+
+// Read handles GET /orders/:id requests
+func (h *OrderHandler) Read(w http.ResponseWriter, r *http.Request, id string) {
+	panic("unimplemented") // TODO
+}
+
+// ReadAll handles GET /orders requests with optional filters
+func (h *OrderHandler) ReadAll(w http.ResponseWriter, r *http.Request) {
 	// Log to stdout
 	h.logger.Printf("%v %v", r.Method, r.URL.Path)
 
@@ -66,23 +95,12 @@ func (h *OrderHandler) GetAllOrders(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, response)
 }
 
-// CreateOrder handles POST /orders requests and accepts CreateOrder as input
-func (h *OrderHandler) CreateOrder(w http.ResponseWriter, r *http.Request) {
-	var input models.CreateOrder
+// Update handles PATCH /orders/:id requests
+func (h *OrderHandler) Update(w http.ResponseWriter, r *http.Request, id string) {
+	panic("unimplemented") // TODO
+}
 
-	// Parse request body
-	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		http.Error(w, "Invalid input", http.StatusBadRequest)
-		return
-	}
-
-	// Call service to create order
-	order, err := h.orderService.CreateOrder(r.Context(), &input)
-	if err != nil {
-		http.Error(w, "Failed to create order", http.StatusInternalServerError)
-		return
-	}
-
-	// Respond with the created order
-	writeJSON(w, http.StatusCreated, order)
+// DELETE handles PATCH /orders/:id/delete requests
+func (h *OrderHandler) Delete(w http.ResponseWriter, r *http.Request, id string) {
+	panic("unimplemented") // TODO
 }

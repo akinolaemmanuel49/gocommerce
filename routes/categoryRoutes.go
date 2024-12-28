@@ -21,11 +21,33 @@ func RegisterCategoryRoutes(router *mux.Router, db *mongo.Database, logger *log.
 	router.HandleFunc(RouteCategories, func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case "GET":
-			categoryHandler.GetAllCategories(w, r)
+			categoryHandler.ReadAll(w, r)
 		case "POST":
-			categoryHandler.CreateCategory(w, r)
+			categoryHandler.Create(w, r)
 		default:
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
+	})
+
+	router.HandleFunc(RouteCategories+"/{id}", func(w http.ResponseWriter, r *http.Request) {
+		id := mux.Vars(r)["id"] // Extract the `id` path parameter
+
+		switch r.Method {
+		case "GET":
+			categoryHandler.Read(w, r, id)
+		case "PATCH":
+			categoryHandler.Update(w, r, id)
+		default:
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
+	})
+
+	router.HandleFunc(RouteCategories+"/{id}/delete", func(w http.ResponseWriter, r *http.Request) {
+		id := mux.Vars(r)["id"] // Extract the `id` path parameter
+
+		switch r.Method {
+		case "PATCH":
+			categoryHandler.Delete(w, r, id)
 		}
 	})
 }

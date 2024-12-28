@@ -15,8 +15,57 @@ func NewUserHandler(userService *services.UserService, logger *log.Logger) *User
 	return &UserHandler{userService: userService, logger: logger}
 }
 
-// GetAllUser handles GET /users requests
-func (h *UserHandler) GetAllUsers(w http.ResponseWriter, r *http.Request) {
+// Compile-time check that UserHandler implements HandlerInterface
+var _ HandlerInterface = (*UserHandler)(nil)
+
+// Create handles POST /user requests
+func (h *UserHandler) Create(w http.ResponseWriter, r *http.Request) {
+	var input models.CreateUser
+
+	// Parse request body
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		http.Error(w, "Invalid input", http.StatusBadRequest)
+		return
+	}
+
+	// Call service to create user
+	user, err := h.userService.CreateUser(r.Context(), &input)
+	if err != nil {
+		http.Error(w, "Failed to create user", http.StatusInternalServerError)
+		return
+	}
+
+	// Respond with the created user
+	writeJSON(w, http.StatusCreated, user)
+}
+
+// Read handles GET /user/:id requests
+func (h *UserHandler) Read(w http.ResponseWriter, r *http.Request, ID string) {
+	// Validate the ID
+	if ID == "" {
+		http.Error(w, "User ID is required", http.StatusBadRequest)
+		return
+	}
+
+	// Call service to get user by ID
+	user, err := h.userService.GetUserByID(r.Context(), ID)
+	if err != nil {
+		http.Error(w, "Failed to fetch user: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Check if user exists
+	if user == nil {
+		http.Error(w, "User not found", http.StatusNotFound)
+		return
+	}
+
+	// Respond with the user data
+	writeJSON(w, http.StatusOK, user)
+}
+
+// ReadAll handles GET /users requests
+func (h *UserHandler) ReadAll(w http.ResponseWriter, r *http.Request) {
 	// Log to stdout
 	h.logger.Printf("%v %v", r.Method, r.URL.Path)
 
@@ -62,51 +111,8 @@ func (h *UserHandler) GetAllUsers(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, response)
 }
 
-func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
-	var input models.CreateUser
-
-	// Parse request body
-	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		http.Error(w, "Invalid input", http.StatusBadRequest)
-		return
-	}
-
-	// Call service to create user
-	user, err := h.userService.CreateUser(r.Context(), &input)
-	if err != nil {
-		http.Error(w, "Failed to create user", http.StatusInternalServerError)
-		return
-	}
-
-	// Respond with the created user
-	writeJSON(w, http.StatusCreated, user)
-}
-
-func (h *UserHandler) ReadUser(w http.ResponseWriter, r *http.Request, ID string) {
-	// Validate the ID
-	if ID == "" {
-		http.Error(w, "User ID is required", http.StatusBadRequest)
-		return
-	}
-
-	// Call service to get user by ID
-	user, err := h.userService.GetUserByID(r.Context(), ID)
-	if err != nil {
-		http.Error(w, "Failed to fetch user: "+err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	// Check if user exists
-	if user == nil {
-		http.Error(w, "User not found", http.StatusNotFound)
-		return
-	}
-
-	// Respond with the user data
-	writeJSON(w, http.StatusOK, user)
-}
-
-func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request, ID string) {
+// Update handles PATCH /users/:id requests
+func (h *UserHandler) Update(w http.ResponseWriter, r *http.Request, ID string) {
 	// Validate the ID
 	if ID == "" {
 		http.Error(w, "User ID is required", http.StatusBadRequest)
@@ -129,4 +135,9 @@ func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request, ID stri
 
 	// Respond with updated user
 	writeJSON(w, http.StatusOK, user)
+}
+
+// Delete handles PATCH /users/:id/delete requests
+func (h *UserHandler) Delete(w http.ResponseWriter, r *http.Request, id string) {
+	panic("unimplemented") // TODO
 }
