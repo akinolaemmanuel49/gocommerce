@@ -2,11 +2,11 @@ package repositories
 
 import (
 	"context"
-	"fmt"
 
+	"github.com/akinolaemmanuel49/gocommerce/common/errors"
 	"github.com/akinolaemmanuel49/gocommerce/internal/models"
+	"github.com/akinolaemmanuel49/gocommerce/utils"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -21,6 +21,25 @@ func NewCategoryRepository(db *mongo.Database) *CategoryRepository {
 	}
 }
 
+// FindByID retrieves a category by its ID
+func (r *CategoryRepository) FindByID(ctx context.Context, ID string) (*models.Category, error) {
+	objID, err := utils.StringToObjectID(ID)
+	if err != nil {
+		return nil, err
+	}
+
+	filter := bson.M{"_id": objID}
+	var category models.Category
+
+	if err := r.Collection.FindOne(ctx, filter).Decode(&category); err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, errors.NewNotFoundError("Category", "ID", ID)
+		}
+		return nil, err
+	}
+	return &category, nil
+}
+
 // FindAll retrieves categories based on filters and implements cursor-based pagination
 func (r *CategoryRepository) FindAll(ctx context.Context, filter map[string]interface{}, lastID string, limit int) ([]models.Category, string, error) {
 	query := bson.M{}
@@ -30,9 +49,9 @@ func (r *CategoryRepository) FindAll(ctx context.Context, filter map[string]inte
 
 	// If lastID is provided, add it to the filter for pagination
 	if lastID != "" {
-		objID, err := primitive.ObjectIDFromHex(lastID)
+		objID, err := utils.StringToObjectID(lastID)
 		if err != nil {
-			return nil, "", fmt.Errorf("invalid lastID: %v", err)
+			return nil, "", errors.NewValidationError("nextCursor", "must be a valid ObjectID")
 		}
 		query["_id"] = bson.M{"$gt": objID} // Fetch categories with IDs greater than lastID
 	}
@@ -60,22 +79,4 @@ func (r *CategoryRepository) FindAll(ctx context.Context, filter map[string]inte
 	}
 
 	return categories, nextCursor, nil
-}
-
-// FindByID retrieves a category by its ID
-func (r *CategoryRepository) FindByID(ctx context.Context, ID string) (*models.Category, error) {
-	var category models.Category
-	objID, err := primitive.ObjectIDFromHex(ID)
-	if err != nil {
-		return nil, fmt.Errorf("invalid ID: %v", err)
-	}
-	filter := bson.M{"_id": objID}
-
-	if err := r.Collection.FindOne(ctx, filter).Decode(&category); err != nil {
-		if err != mongo.ErrNoDocuments {
-			return nil, fmt.Errorf("category not found: %w", err)
-		}
-		return nil, err
-	}
-	return &category, nil
 }

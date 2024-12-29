@@ -21,3 +21,10 @@ type CreateProduct struct {
 	CategoryID  string   `json:"categoryId,omitempty" validate:"required"`
 	Brand       string   `json:"brand,omitempty"`
 }
+
+type UpdateProduct struct {
+	Name        *string  `json:"name,omitempty" validate:"required"`
+	Description *string  `json:"description,omitempty"`
+	Price       *float64 `json:"price,omitempty" validate:"required,gt=0"`
+	Brand       *string  `json:"brand,omitempty"`
+}

@@ -8,6 +8,7 @@ import (
 
 	"github.com/akinolaemmanuel49/gocommerce/internal/models"
 	"github.com/akinolaemmanuel49/gocommerce/internal/services"
+	"github.com/akinolaemmanuel49/gocommerce/utils"
 )
 
 func NewOrderHandler(orderService *services.OrderService, logger *log.Logger) *OrderHandler {
@@ -35,7 +36,7 @@ func (h *OrderHandler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Respond with the created order
-	writeJSON(w, http.StatusCreated, order)
+	utils.WriteJSON(w, http.StatusCreated, order)
 }
 
 // Read handles GET /orders/:id requests
@@ -92,7 +93,7 @@ func (h *OrderHandler) ReadAll(w http.ResponseWriter, r *http.Request) {
 		"data":       orders,
 		"nextCursor": nextCursor,
 	}
-	writeJSON(w, http.StatusOK, response)
+	utils.WriteJSON(w, http.StatusOK, response)
 }
 
 // Update handles PATCH /orders/:id requests

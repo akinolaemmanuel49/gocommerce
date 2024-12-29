@@ -9,6 +9,14 @@ type Address struct {
 	Country string `json:"country" validate:"required"`
 }
 
+type UpdateAddress struct {
+	Street  *string `json:"street" validate:"required"`
+	City    *string `json:"city" validate:"required"`
+	State   *string `json:"state" validate:"required"`
+	Zip     *string `json:"zip" validate:"required"`
+	Country *string `json:"country" validate:"required"`
+}
+
 // Database model with bson tags
 type User struct {
 	ID           string  `bson:"_id,omitempty"`
@@ -33,8 +41,8 @@ type CreateUser struct {
 
 // Request DTO for updating a user
 type UpdateUser struct {
-	FirstName string  `json:"firstName,omitempty"`
-	LastName  string  `json:"lastName,omitempty"`
-	Phone     string  `json:"phone,omitempty"`
-	Address   Address `json:"address,omitempty"`
+	FirstName *string        `json:"firstName,omitempty"`
+	LastName  *string        `json:"lastName,omitempty"`
+	Phone     *string        `json:"phone,omitempty"`
+	Address   *UpdateAddress `json:"address,omitempty"`
 }

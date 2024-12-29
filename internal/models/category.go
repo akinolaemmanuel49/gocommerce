@@ -16,3 +16,9 @@ type CreateCategory struct {
 	ParentID    *string `json:"parentId,omitempty"`                 // Optional parent category
 	Image       string  `json:"image,omitempty"`                    // Optional category image
 }
+
+type UpdateCategory struct {
+	Name        *string `json:"name,omitempty" validate:"required"` // Name is required
+	Description *string `json:"description,omitempty"`              // Optional description
+	Image       *string `json:"image,omitempty"`
+}

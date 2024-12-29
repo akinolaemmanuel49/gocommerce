@@ -7,6 +7,7 @@ import (
 	"github.com/akinolaemmanuel49/gocommerce/internal/handlers"
 	"github.com/akinolaemmanuel49/gocommerce/internal/repositories"
 	"github.com/akinolaemmanuel49/gocommerce/internal/services"
+	"github.com/akinolaemmanuel49/gocommerce/middleware"
 	"github.com/gorilla/mux"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -17,6 +18,8 @@ func RegisterUserRoutes(router *mux.Router, db *mongo.Database, logger *log.Logg
 	userRepository := repositories.NewUserRepository(db)
 	userService := services.NewUserService(userRepository, logger)
 	userHandler := handlers.NewUserHandler(userService, logger)
+
+	router.Use(middleware.ErrorMiddleware) // Attach ErrorMiddleware
 
 	router.HandleFunc(RouteUsers, func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {

@@ -2,11 +2,11 @@ package repositories
 
 import (
 	"context"
-	"fmt"
 
+	"github.com/akinolaemmanuel49/gocommerce/common/errors"
 	"github.com/akinolaemmanuel49/gocommerce/internal/models"
+	"github.com/akinolaemmanuel49/gocommerce/utils"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -30,9 +30,9 @@ func (r *ProductRepository) FindAll(ctx context.Context, filter map[string]inter
 
 	// If lastID is provided, add it to the filter for pagination
 	if lastID != "" {
-		objID, err := primitive.ObjectIDFromHex(lastID)
+		objID, err := utils.StringToObjectID(lastID)
 		if err != nil {
-			return nil, "", fmt.Errorf("invalid lastID: %v", err)
+			return nil, "", errors.NewValidationError("nextCursor", "must be a valid ObjectID")
 		}
 		query["_id"] = bson.M{"$gt": objID} // Fetch products with IDs greater than lastID
 	}
@@ -64,16 +64,17 @@ func (r *ProductRepository) FindAll(ctx context.Context, filter map[string]inter
 
 // FindByID retrieves a product by its ID
 func (r *ProductRepository) FindByID(ctx context.Context, ID string) (*models.Product, error) {
-	var product models.Product
-	objID, err := primitive.ObjectIDFromHex(ID)
+	objID, err := utils.StringToObjectID(ID)
 	if err != nil {
-		return nil, fmt.Errorf("invalid ID: %v", err)
+		return nil, err
 	}
+
 	filter := bson.M{"_id": objID}
+	var product models.Product
 
 	if err := r.Collection.FindOne(ctx, filter).Decode(&product); err != nil {
-		if err != mongo.ErrNoDocuments {
-			return nil, fmt.Errorf("product not found: %w", err)
+		if err == mongo.ErrNoDocuments {
+			return nil, errors.NewNotFoundError("Product", "ID", ID)
 		}
 		return nil, err
 	}

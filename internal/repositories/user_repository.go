@@ -2,11 +2,11 @@ package repositories
 
 import (
 	"context"
-	"fmt"
 
+	"github.com/akinolaemmanuel49/gocommerce/common/errors"
 	"github.com/akinolaemmanuel49/gocommerce/internal/models"
+	"github.com/akinolaemmanuel49/gocommerce/utils"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -21,6 +21,41 @@ func NewUserRepository(db *mongo.Database) *UserRepository {
 	}
 }
 
+// FindByID retrieves a user by ID
+func (r *UserRepository) FindByID(ctx context.Context, ID string) (*models.User, error) {
+	objectID, err := utils.StringToObjectID(ID)
+	if err != nil {
+		return nil, err
+	}
+
+	filter := bson.M{"_id": objectID}
+	var user models.User
+
+	if err := r.Collection.FindOne(ctx, filter).Decode(&user); err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, errors.NewNotFoundError("User", "ID", ID)
+		}
+		return nil, err
+	}
+
+	return &user, nil
+}
+
+// FindByEmail retrieves a user by email
+func (r *UserRepository) FindByEmail(ctx context.Context, email string) (*models.User, error) {
+	filter := bson.M{"email": email}
+	var user models.User
+
+	if err := r.Collection.FindOne(ctx, filter).Decode(&user); err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, errors.NewNotFoundError("User", "email", email)
+		}
+		return nil, err
+	}
+
+	return &user, nil
+}
+
 // FindAll retrieves users based on filters and implements cursor-based pagination.
 func (r *UserRepository) FindAll(ctx context.Context, filter map[string]interface{}, lastID string, limit int) ([]models.User, string, error) {
 	query := bson.M{}
@@ -30,11 +65,11 @@ func (r *UserRepository) FindAll(ctx context.Context, filter map[string]interfac
 
 	// If lastID is provided, add it to the filter for pagination
 	if lastID != "" {
-		objID, err := primitive.ObjectIDFromHex(lastID)
+		objectID, err := utils.StringToObjectID(lastID)
 		if err != nil {
-			return nil, "", fmt.Errorf("invalid lastID: %v", err)
+			return nil, "", err
 		}
-		query["_id"] = bson.M{"$gt": objID} // Fetch users with IDs greater than lastID
+		query["_id"] = bson.M{"$gt": objectID} // Fetch users with IDs greater than lastID
 	}
 
 	options := options.Find().
@@ -60,38 +95,4 @@ func (r *UserRepository) FindAll(ctx context.Context, filter map[string]interfac
 	}
 
 	return users, nextCursor, nil
-}
-
-// FindByEmail retrieves a user by email
-func (r *UserRepository) FindByEmail(ctx context.Context, email string) (*models.User, error) {
-	var user models.User
-	filter := bson.M{"email": email}
-
-	if err := r.Collection.FindOne(ctx, filter).Decode(&user); err != nil {
-		if err == mongo.ErrNoDocuments {
-			return nil, fmt.Errorf("user not found: %w", err)
-		}
-		return nil, err
-	}
-
-	return &user, nil
-}
-
-// FindByID retrieves a user by ID
-func (r *UserRepository) FindByID(ctx context.Context, ID string) (*models.User, error) {
-	var user models.User
-	objID, err := primitive.ObjectIDFromHex(ID)
-	if err != nil {
-		return nil, fmt.Errorf("invalid ID: %v", err)
-	}
-	filter := bson.M{"_id": objID}
-
-	if err := r.Collection.FindOne(ctx, filter).Decode(&user); err != nil {
-		if err == mongo.ErrNoDocuments {
-			return nil, fmt.Errorf("user not found: %w", err)
-		}
-		return nil, err
-	}
-
-	return &user, nil
 }

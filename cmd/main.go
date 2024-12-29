@@ -27,7 +27,7 @@ const (
 
 func main() {
 	// Setup logger
-	logger := l.SetupLogger("service.log")
+	logger := l.SetupLogger("service.log", "INFO")
 
 	// Load config
 	config, err := configs.LoadConfig(".")

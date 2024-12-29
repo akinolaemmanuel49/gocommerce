@@ -6,8 +6,10 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/akinolaemmanuel49/gocommerce/common/errors"
 	"github.com/akinolaemmanuel49/gocommerce/internal/models"
 	"github.com/akinolaemmanuel49/gocommerce/internal/services"
+	"github.com/akinolaemmanuel49/gocommerce/utils"
 )
 
 // NewUserHandler creates a new instance of UserHandler
@@ -20,48 +22,42 @@ var _ HandlerInterface = (*UserHandler)(nil)
 
 // Create handles POST /user requests
 func (h *UserHandler) Create(w http.ResponseWriter, r *http.Request) {
-	var input models.CreateUser
+	var req models.CreateUser
 
 	// Parse request body
-	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		http.Error(w, "Invalid input", http.StatusBadRequest)
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		errors.HandleError(w, r, errors.NewValidationError("*", "Invalid request body"))
 		return
 	}
 
 	// Call service to create user
-	user, err := h.userService.CreateUser(r.Context(), &input)
+	user, err := h.userService.CreateUser(r.Context(), &req)
 	if err != nil {
-		http.Error(w, "Failed to create user", http.StatusInternalServerError)
+		errors.HandleError(w, r, err)
 		return
 	}
 
 	// Respond with the created user
-	writeJSON(w, http.StatusCreated, user)
+	utils.WriteJSON(w, http.StatusCreated, user)
 }
 
 // Read handles GET /user/:id requests
 func (h *UserHandler) Read(w http.ResponseWriter, r *http.Request, ID string) {
 	// Validate the ID
 	if ID == "" {
-		http.Error(w, "User ID is required", http.StatusBadRequest)
+		errors.HandleError(w, r, errors.NewValidationError("ID", "User ID is required"))
 		return
 	}
 
 	// Call service to get user by ID
-	user, err := h.userService.GetUserByID(r.Context(), ID)
+	user, err := h.userService.RetrieveUserByID(r.Context(), ID)
 	if err != nil {
-		http.Error(w, "Failed to fetch user: "+err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	// Check if user exists
-	if user == nil {
-		http.Error(w, "User not found", http.StatusNotFound)
+		errors.HandleError(w, r, err)
 		return
 	}
 
 	// Respond with the user data
-	writeJSON(w, http.StatusOK, user)
+	utils.WriteJSON(w, http.StatusOK, user)
 }
 
 // ReadAll handles GET /users requests
@@ -77,7 +73,7 @@ func (h *UserHandler) ReadAll(w http.ResponseWriter, r *http.Request) {
 	limitStr := query.Get("limit")
 
 	limit := 10 // Default value
-	if limitStr == "" {
+	if limitStr != "" {
 		if l, err := strconv.Atoi(limitStr); err == nil {
 			limit = l
 		}
@@ -98,9 +94,9 @@ func (h *UserHandler) ReadAll(w http.ResponseWriter, r *http.Request) {
 	// 	filter["country"] = country
 	// }
 
-	users, nextCursor, err := h.userService.GetAllUsers(ctx, filter, lastID, limit)
+	users, nextCursor, err := h.userService.RetrieveAllUsers(ctx, filter, lastID, limit)
 	if err != nil {
-		http.Error(w, "Error fetching users: "+err.Error(), http.StatusInternalServerError)
+		errors.HandleError(w, r, err)
 		return
 	}
 
@@ -108,7 +104,7 @@ func (h *UserHandler) ReadAll(w http.ResponseWriter, r *http.Request) {
 		"data":      users,
 		"nextCusor": nextCursor,
 	}
-	writeJSON(w, http.StatusOK, response)
+	utils.WriteJSON(w, http.StatusOK, response)
 }
 
 // Update handles PATCH /users/:id requests
@@ -118,23 +114,23 @@ func (h *UserHandler) Update(w http.ResponseWriter, r *http.Request, ID string) 
 		http.Error(w, "User ID is required", http.StatusBadRequest)
 		return
 	}
-	var input models.UpdateUser
+	var req models.UpdateUser
 
 	// Parse request body
-	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		http.Error(w, "Invalid input", http.StatusBadRequest)
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		errors.HandleError(w, r, errors.NewValidationError("*", "Invalid request body"))
 		return
 	}
 
 	// Call service to update user
-	user, err := h.userService.UpdateUser(r.Context(), ID, &input)
+	user, err := h.userService.UpdateUserByID(r.Context(), ID, &req)
 	if err != nil {
-		http.Error(w, "Failed to update user: "+err.Error(), http.StatusInternalServerError)
+		errors.HandleError(w, r, err)
 		return
 	}
 
 	// Respond with updated user
-	writeJSON(w, http.StatusOK, user)
+	utils.WriteJSON(w, http.StatusOK, user)
 }
 
 // Delete handles PATCH /users/:id/delete requests

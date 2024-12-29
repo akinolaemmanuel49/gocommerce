@@ -8,6 +8,7 @@ import (
 
 	"github.com/akinolaemmanuel49/gocommerce/internal/models"
 	"github.com/akinolaemmanuel49/gocommerce/internal/services"
+	"github.com/akinolaemmanuel49/gocommerce/utils"
 )
 
 func NewProductHandler(productService *services.ProductService, logger *log.Logger) *ProductHandler {
@@ -35,7 +36,7 @@ func (h *ProductHandler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Respond with the created product
-	writeJSON(w, http.StatusCreated, product)
+	utils.WriteJSON(w, http.StatusCreated, product)
 }
 
 // Read handles GET /products/:id requests
@@ -82,7 +83,7 @@ func (h *ProductHandler) ReadAll(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	products, nextCursor, err := h.productService.GetAllProducts(ctx, filter, lastID, limit)
+	products, nextCursor, err := h.productService.RetrieveAllProducts(ctx, filter, lastID, limit)
 	if err != nil {
 		http.Error(w, "Error fetching products: "+err.Error(), http.StatusInternalServerError)
 		return
@@ -92,7 +93,7 @@ func (h *ProductHandler) ReadAll(w http.ResponseWriter, r *http.Request) {
 		"data":       products,
 		"nextCursor": nextCursor,
 	}
-	writeJSON(w, http.StatusOK, response)
+	utils.WriteJSON(w, http.StatusOK, response)
 }
 
 // Update handles PATCH /products/:id requests

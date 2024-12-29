@@ -8,6 +8,7 @@ import (
 
 	"github.com/akinolaemmanuel49/gocommerce/internal/models"
 	"github.com/akinolaemmanuel49/gocommerce/internal/services"
+	"github.com/akinolaemmanuel49/gocommerce/utils"
 )
 
 func NewCategoryHandler(categoryService *services.CategoryService, logger *log.Logger) *CategoryHandler {
@@ -35,7 +36,7 @@ func (h *CategoryHandler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Respond with the created category
-	writeJSON(w, http.StatusCreated, category)
+	utils.WriteJSON(w, http.StatusCreated, category)
 }
 
 // Read handles GET /categories/:id requests
@@ -65,7 +66,7 @@ func (h *CategoryHandler) ReadAll(w http.ResponseWriter, r *http.Request) {
 	// Build filter map
 	// TODO
 
-	categories, nextCursor, err := h.categoryService.GetAllCategories(ctx, nil, lastID, limit)
+	categories, nextCursor, err := h.categoryService.RetrieveAllCategories(ctx, nil, lastID, limit)
 	if err != nil {
 		http.Error(w, "Error fetching categories: "+err.Error(), http.StatusInternalServerError)
 		return
@@ -75,7 +76,7 @@ func (h *CategoryHandler) ReadAll(w http.ResponseWriter, r *http.Request) {
 		"data":       categories,
 		"nextCursor": nextCursor,
 	}
-	writeJSON(w, http.StatusOK, response)
+	utils.WriteJSON(w, http.StatusOK, response)
 }
 
 // Update handles PATCH /categories/:id/delete requests
