@@ -3,9 +3,12 @@ package utils
 import (
 	"encoding/json"
 	"net/http"
+
+	l "github.com/akinolaemmanuel49/gocommerce/log"
 )
 
-func WriteJSON(w http.ResponseWriter, statusCode int, data interface{}) {
+func WriteJSON(w http.ResponseWriter, r *http.Request, statusCode int, data interface{}) {
+	logger := l.SetupLogger("service.log", "INFO")
 	w.Header().Set("Content-Type", "application/json")
 	if rw, ok := w.(*ErrorResponseWriter); ok && !rw.Written {
 		rw.WriteHeader(statusCode)
@@ -13,6 +16,7 @@ func WriteJSON(w http.ResponseWriter, statusCode int, data interface{}) {
 		w.WriteHeader(statusCode)
 	}
 
+	logger.Printf("%s %s", r.Method, r.URL.Path)
 	json.NewEncoder(w).Encode(data)
 }
 

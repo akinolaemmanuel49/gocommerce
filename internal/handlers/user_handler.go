@@ -38,7 +38,7 @@ func (h *UserHandler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Respond with the created user
-	utils.WriteJSON(w, http.StatusCreated, user)
+	utils.WriteJSON(w, r, http.StatusCreated, user)
 }
 
 // Read handles GET /user/:id requests
@@ -57,7 +57,7 @@ func (h *UserHandler) Read(w http.ResponseWriter, r *http.Request, ID string) {
 	}
 
 	// Respond with the user data
-	utils.WriteJSON(w, http.StatusOK, user)
+	utils.WriteJSON(w, r, http.StatusOK, user)
 }
 
 // ReadAll handles GET /users requests
@@ -104,7 +104,7 @@ func (h *UserHandler) ReadAll(w http.ResponseWriter, r *http.Request) {
 		"data":      users,
 		"nextCusor": nextCursor,
 	}
-	utils.WriteJSON(w, http.StatusOK, response)
+	utils.WriteJSON(w, r, http.StatusOK, response)
 }
 
 // Update handles PATCH /users/:id requests
@@ -130,7 +130,7 @@ func (h *UserHandler) Update(w http.ResponseWriter, r *http.Request, ID string) 
 	}
 
 	// Respond with updated user
-	utils.WriteJSON(w, http.StatusOK, user)
+	utils.WriteJSON(w, r, http.StatusOK, user)
 }
 
 // Delete handles PATCH /users/:id/delete requests

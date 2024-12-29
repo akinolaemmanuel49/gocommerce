@@ -36,7 +36,7 @@ func (h *CategoryHandler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Respond with the created category
-	utils.WriteJSON(w, http.StatusCreated, category)
+	utils.WriteJSON(w, r, http.StatusCreated, category)
 }
 
 // Read handles GET /categories/:id requests
@@ -76,7 +76,7 @@ func (h *CategoryHandler) ReadAll(w http.ResponseWriter, r *http.Request) {
 		"data":       categories,
 		"nextCursor": nextCursor,
 	}
-	utils.WriteJSON(w, http.StatusOK, response)
+	utils.WriteJSON(w, r, http.StatusOK, response)
 }
 
 // Update handles PATCH /categories/:id/delete requests

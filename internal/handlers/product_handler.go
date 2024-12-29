@@ -36,7 +36,7 @@ func (h *ProductHandler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Respond with the created product
-	utils.WriteJSON(w, http.StatusCreated, product)
+	utils.WriteJSON(w, r, http.StatusCreated, product)
 }
 
 // Read handles GET /products/:id requests
@@ -93,7 +93,7 @@ func (h *ProductHandler) ReadAll(w http.ResponseWriter, r *http.Request) {
 		"data":       products,
 		"nextCursor": nextCursor,
 	}
-	utils.WriteJSON(w, http.StatusOK, response)
+	utils.WriteJSON(w, r, http.StatusOK, response)
 }
 
 // Update handles PATCH /products/:id requests

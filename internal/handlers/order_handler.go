@@ -36,7 +36,7 @@ func (h *OrderHandler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Respond with the created order
-	utils.WriteJSON(w, http.StatusCreated, order)
+	utils.WriteJSON(w, r, http.StatusCreated, order)
 }
 
 // Read handles GET /orders/:id requests
@@ -93,7 +93,7 @@ func (h *OrderHandler) ReadAll(w http.ResponseWriter, r *http.Request) {
 		"data":       orders,
 		"nextCursor": nextCursor,
 	}
-	utils.WriteJSON(w, http.StatusOK, response)
+	utils.WriteJSON(w, r, http.StatusOK, response)
 }
 
 // Update handles PATCH /orders/:id requests
