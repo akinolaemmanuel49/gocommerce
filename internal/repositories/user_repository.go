@@ -3,7 +3,6 @@ package repositories
 import (
 	"context"
 
-	"github.com/akinolaemmanuel49/gocommerce/common/errors"
 	"github.com/akinolaemmanuel49/gocommerce/internal/models"
 	"github.com/akinolaemmanuel49/gocommerce/utils"
 	"go.mongodb.org/mongo-driver/bson"
@@ -34,7 +33,7 @@ func (r *UserRepository) FindByID(ctx context.Context, ID string) (*models.User,
 
 	if err := r.Collection.FindOne(ctx, filter).Decode(&user); err != nil {
 		if err == mongo.ErrNoDocuments {
-			return nil, errors.NewNotFoundError("User", "ID", ID)
+			return nil, err
 		}
 		return nil, err
 	}
@@ -49,7 +48,8 @@ func (r *UserRepository) FindByEmail(ctx context.Context, email string) (*models
 
 	if err := r.Collection.FindOne(ctx, filter).Decode(&user); err != nil {
 		if err == mongo.ErrNoDocuments {
-			return nil, errors.NewNotFoundError("User", "email", email)
+			// return nil, errors.NewNotFoundError("User", "email", email)
+			return nil, err
 		}
 		return nil, err
 	}

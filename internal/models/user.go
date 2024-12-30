@@ -19,14 +19,14 @@ type UpdateAddress struct {
 
 // Database model with bson tags
 type User struct {
-	ID           string  `bson:"_id,omitempty"`
-	Email        string  `bson:"email,omitempty"`
-	PasswordHash string  `bson:"passwordHash,omitempty"`
-	FirstName    string  `bson:"firstName,omitempty"`
-	LastName     string  `bson:"lastName,omitempty"`
-	Address      Address `bson:"address,omitempty"`
-	Phone        string  `bson:"phone,omitempty"`
-	Role         string  `bson:"role,omitempty"` // "customer" or "admin"
+	ID           string  `bson:"_id,omitempty" json:"id,omitempty"`
+	Email        string  `bson:"email,omitempty" json:"email,omitempty"`
+	PasswordHash string  `bson:"passwordHash,omitempty" json:"passwordHash,omitempty"`
+	FirstName    string  `bson:"firstName,omitempty" json:"firstName,omitempty"`
+	LastName     string  `bson:"lastName,omitempty" json:"lastName,omitempty"`
+	Address      Address `bson:"address,omitempty" json:"address,omitempty"`
+	Phone        string  `bson:"phone,omitempty" json:"phone,omitempty"`
+	Role         string  `bson:"role,omitempty" json:"role,omitempty"`
 	CommonFields `bson:"inline"`
 }
 
@@ -45,4 +45,9 @@ type UpdateUser struct {
 	LastName  *string        `json:"lastName,omitempty"`
 	Phone     *string        `json:"phone,omitempty"`
 	Address   *UpdateAddress `json:"address,omitempty"`
+}
+
+type UserCredentials struct {
+	Email    string
+	Password string
 }

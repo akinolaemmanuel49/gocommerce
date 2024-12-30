@@ -104,12 +104,19 @@ func (s *CategoryService) DeleteCategoryByID(ctx context.Context, ID string) err
 		return nil
 	}
 
-	// Set existingCategory IsDeleted field to true
-	existingCategory.IsDeleted = true
-	existingCategory.UpdatedAt = time.Now()
-	_, err = s.categoryRepository.Update(ctx, ID, existingCategory)
-	if err != nil {
-		return err
+	if existingCategory != nil {
+		// Apply transformation, set category IsDeleted field to true
+		category := &models.Category{
+			CommonFields: models.CommonFields{
+				IsDeleted: true,
+				UpdatedAt: time.Now(),
+			},
+		}
+
+		_, err = s.categoryRepository.Update(ctx, ID, category)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

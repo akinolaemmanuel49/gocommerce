@@ -73,6 +73,11 @@ func (s *UserService) CreateUser(ctx context.Context, newUser *models.CreateUser
 	return user, nil
 }
 
+// VerifyUser accepts user email and password, checks if the email is valid and compares the password hash
+func (s *UserService) VerifyUser(ctx context.Context, userCredentials *models.UserCredentials) {
+	panic("not implemented")
+}
+
 // RetrieveUserByID retrieves a user by ID
 func (s *UserService) RetrieveUserByID(ctx context.Context, ID string) (*models.User, error) {
 	user, err := s.userRepository.FindByID(ctx, ID)
@@ -112,7 +117,6 @@ func (s *UserService) UpdateUserByID(ctx context.Context, ID string, updatedUser
 
 	// Transform UpdateUser to User
 	user := &models.User{
-		ID:        ID,
 		FirstName: utils.IfNotNil(updatedUser.FirstName, existingUser.FirstName),
 		LastName:  utils.IfNotNil(updatedUser.LastName, existingUser.LastName),
 		Phone:     utils.IfNotNil(updatedUser.Phone, existingUser.Phone),
@@ -148,12 +152,19 @@ func (s *UserService) DeleteUserByID(ctx context.Context, ID string) error {
 		return nil
 	}
 
-	// Set existingUser IsDeleted field to true
-	existingUser.IsDeleted = true
-	existingUser.UpdatedAt = time.Now()
-	_, err = s.userRepository.Update(ctx, ID, existingUser)
-	if err != nil {
-		return err
+	if existingUser != nil {
+		// Apply transformation, set user IsDeleted field to true
+		user := &models.User{
+			CommonFields: models.CommonFields{
+				IsDeleted: true,
+				UpdatedAt: time.Now(),
+			},
+		}
+
+		_, err = s.userRepository.Update(ctx, ID, user)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

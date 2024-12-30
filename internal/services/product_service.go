@@ -112,12 +112,18 @@ func (s *ProductService) DeleteProductByID(ctx context.Context, ID string) error
 		return nil
 	}
 
-	// Set existingProduct IsDeleted field to true
-	existingProduct.IsDeleted = true
-	existingProduct.UpdatedAt = time.Now()
-	_, err = s.productRepository.Update(ctx, ID, existingProduct)
-	if err != nil {
-		return err
+	if existingProduct != nil {
+		// Apply transformation, set product IsDeleted field to true
+		product := &models.Product{
+			CommonFields: models.CommonFields{
+				IsDeleted: true,
+				UpdatedAt: time.Now(),
+			},
+		}
+		_, err = s.productRepository.Update(ctx, ID, product)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

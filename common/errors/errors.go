@@ -77,9 +77,9 @@ type ValidationError struct {
 
 func (e *ValidationError) Error() string {
 	if e.Field == "" {
-		return fmt.Sprintf("validation failed for %s", e.Err)
+		return fmt.Sprint(e.Err)
 	}
-	return fmt.Sprintf("validation failed for %s: %s", e.Field, e.Err)
+	return fmt.Sprintf("Validation failed for %s: %s", e.Field, e.Err)
 }
 
 // NewValidationError creates a new instance of ValidationError

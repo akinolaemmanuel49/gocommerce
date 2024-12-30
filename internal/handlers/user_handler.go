@@ -11,6 +11,7 @@ import (
 	"github.com/akinolaemmanuel49/gocommerce/internal/models"
 	"github.com/akinolaemmanuel49/gocommerce/internal/services"
 	"github.com/akinolaemmanuel49/gocommerce/utils"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 // NewUserHandler creates a new instance of UserHandler
@@ -52,7 +53,13 @@ func (h *UserHandler) Read(w http.ResponseWriter, r *http.Request, ID string) {
 
 	// Call service to get user by ID
 	user, err := h.userService.RetrieveUserByID(r.Context(), ID)
-	if err != nil {
+	switch err {
+	case mongo.ErrNoDocuments:
+		errors.HandleError(w, r, errors.NewNotFoundError("User", "ID", ID), h.errorLogger)
+		return
+	case nil:
+		// No error continue execution
+	default:
 		errors.HandleError(w, r, err, h.errorLogger)
 		return
 	}

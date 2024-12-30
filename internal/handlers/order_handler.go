@@ -83,7 +83,7 @@ func (h *OrderHandler) ReadAll(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	orders, nextCursor, err := h.orderService.GetAllOrders(ctx, nil, lastID, limit)
+	orders, nextCursor, err := h.orderService.RetrieveAllOrders(ctx, nil, lastID, limit)
 	if err != nil {
 		http.Error(w, "Error fetching orders: "+err.Error(), http.StatusInternalServerError)
 		return
