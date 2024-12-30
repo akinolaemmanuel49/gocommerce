@@ -2,7 +2,6 @@ package services
 
 import (
 	"context"
-	"log"
 	"time"
 
 	"github.com/akinolaemmanuel49/gocommerce/internal/models"
@@ -13,8 +12,8 @@ import (
 )
 
 // NewProductService creates a new instance of ProductService
-func NewProductService(productRepository *repositories.ProductRepository, logger *log.Logger) *ProductService {
-	return &ProductService{productRepository: productRepository, logger: logger}
+func NewProductService(productRepository *repositories.ProductRepository) *ProductService {
+	return &ProductService{productRepository: productRepository}
 }
 
 // CreateProduct creates a new instance of a product and commits it to the database

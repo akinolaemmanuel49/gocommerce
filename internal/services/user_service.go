@@ -2,7 +2,6 @@ package services
 
 import (
 	"context"
-	"log"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -20,8 +19,8 @@ const (
 )
 
 // NewUserService creates a new instance of UserService
-func NewUserService(userRepository *repositories.UserRepository, logger *log.Logger) *UserService {
-	return &UserService{userRepository: userRepository, logger: logger}
+func NewUserService(userRepository *repositories.UserRepository) *UserService {
+	return &UserService{userRepository: userRepository}
 }
 
 // CreateUser creates a new instance of a user and commits it to the database

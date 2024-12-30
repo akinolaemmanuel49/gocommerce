@@ -3,7 +3,6 @@ package services
 import (
 	"context"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/akinolaemmanuel49/gocommerce/internal/models"
@@ -12,8 +11,8 @@ import (
 )
 
 // NewOrderService creates a new instance of OrderService
-func NewOrderService(orderRepository *repositories.OrderRepository, logger *log.Logger) *OrderService {
-	return &OrderService{orderRepository: orderRepository, logger: logger}
+func NewOrderService(orderRepository *repositories.OrderRepository) *OrderService {
+	return &OrderService{orderRepository: orderRepository}
 }
 
 // GetAllOrders retrieves paginated orders with optional filters

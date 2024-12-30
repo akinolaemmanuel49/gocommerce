@@ -11,8 +11,8 @@ import (
 	"github.com/akinolaemmanuel49/gocommerce/utils"
 )
 
-func NewProductHandler(productService *services.ProductService, logger *log.Logger) *ProductHandler {
-	return &ProductHandler{productService: productService, logger: logger}
+func NewProductHandler(productService *services.ProductService, logger, errorLogger *log.Logger) *ProductHandler {
+	return &ProductHandler{productService: productService, logger: logger, errorLogger: errorLogger}
 }
 
 // Compile-time check that ProductHandler implements HandlerInterface
@@ -36,7 +36,7 @@ func (h *ProductHandler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Respond with the created product
-	utils.WriteJSON(w, r, http.StatusCreated, product)
+	utils.WriteJSON(w, r, http.StatusCreated, product, h.logger)
 }
 
 // Read handles GET /products/:id requests
@@ -93,7 +93,7 @@ func (h *ProductHandler) ReadAll(w http.ResponseWriter, r *http.Request) {
 		"data":       products,
 		"nextCursor": nextCursor,
 	}
-	utils.WriteJSON(w, r, http.StatusOK, response)
+	utils.WriteJSON(w, r, http.StatusOK, response, h.logger)
 }
 
 // Update handles PATCH /products/:id requests

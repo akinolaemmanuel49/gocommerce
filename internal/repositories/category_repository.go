@@ -15,6 +15,7 @@ type CategoryRepository struct {
 	*BaseRepository
 }
 
+// NewCategoryRepository creates a new instance of CategoryRepository
 func NewCategoryRepository(db *mongo.Database) *CategoryRepository {
 	return &CategoryRepository{
 		BaseRepository: NewBaseRepository(db.Collection("categories")),

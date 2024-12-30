@@ -11,12 +11,12 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func RegisterCategoryRoutes(router *mux.Router, db *mongo.Database, logger *log.Logger) {
+func RegisterCategoryRoutes(router *mux.Router, db *mongo.Database, logger, errorLogger *log.Logger) {
 	const RouteCategories = "/categories"
 
 	categoryRepository := repositories.NewCategoryRepository(db)
-	categoryService := services.NewCategoryService(categoryRepository, logger)
-	categoryHandler := handlers.NewCategoryHandler(categoryService, logger)
+	categoryService := services.NewCategoryService(categoryRepository)
+	categoryHandler := handlers.NewCategoryHandler(categoryService, logger, errorLogger)
 
 	router.HandleFunc(RouteCategories, func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {

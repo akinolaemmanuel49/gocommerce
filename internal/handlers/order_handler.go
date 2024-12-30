@@ -11,8 +11,8 @@ import (
 	"github.com/akinolaemmanuel49/gocommerce/utils"
 )
 
-func NewOrderHandler(orderService *services.OrderService, logger *log.Logger) *OrderHandler {
-	return &OrderHandler{orderService: orderService, logger: logger}
+func NewOrderHandler(orderService *services.OrderService, logger, errorLogger *log.Logger) *OrderHandler {
+	return &OrderHandler{orderService: orderService, logger: logger, errorLogger: errorLogger}
 }
 
 // Compile-time check that OrderHandler implements HandlerInterface
@@ -36,7 +36,7 @@ func (h *OrderHandler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Respond with the created order
-	utils.WriteJSON(w, r, http.StatusCreated, order)
+	utils.WriteJSON(w, r, http.StatusCreated, order, h.logger)
 }
 
 // Read handles GET /orders/:id requests
@@ -93,7 +93,7 @@ func (h *OrderHandler) ReadAll(w http.ResponseWriter, r *http.Request) {
 		"data":       orders,
 		"nextCursor": nextCursor,
 	}
-	utils.WriteJSON(w, r, http.StatusOK, response)
+	utils.WriteJSON(w, r, http.StatusOK, response, h.logger)
 }
 
 // Update handles PATCH /orders/:id requests

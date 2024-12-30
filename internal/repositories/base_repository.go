@@ -12,6 +12,7 @@ type BaseRepository struct {
 	Collection *mongo.Collection
 }
 
+// NewBaseRepository creates a new instance of NewBaseRepository
 func NewBaseRepository(collection *mongo.Collection) *BaseRepository {
 	return &BaseRepository{Collection: collection}
 }

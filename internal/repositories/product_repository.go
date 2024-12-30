@@ -15,6 +15,7 @@ type ProductRepository struct {
 	*BaseRepository
 }
 
+// NewProductRepository creates a new instance of ProductRepository
 func NewProductRepository(db *mongo.Database) *ProductRepository {
 	return &ProductRepository{
 		BaseRepository: NewBaseRepository(db.Collection("products")),

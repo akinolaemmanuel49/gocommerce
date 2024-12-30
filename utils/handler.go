@@ -2,15 +2,24 @@ package utils
 
 import (
 	"encoding/json"
+	"fmt"
+	"log"
 	"net/http"
 
-	l "github.com/akinolaemmanuel49/gocommerce/log"
+	"github.com/akinolaemmanuel49/gocommerce/common/errors"
 )
 
-func WriteJSON(w http.ResponseWriter, r *http.Request, statusCode int, data interface{}) {
-	logger := l.SetupLogger("service.log", "INFO")
+// ValidateID checks to see if the path provides an :id value
+func ValidateID(ID, entity string) error {
+	if ID == "" {
+		return errors.NewValidationError("ID", fmt.Sprintf("%s ID is required", entity))
+	}
+	return nil
+}
+
+func WriteJSON(w http.ResponseWriter, r *http.Request, statusCode int, data interface{}, logger *log.Logger) {
 	w.Header().Set("Content-Type", "application/json")
-	if rw, ok := w.(*ErrorResponseWriter); ok && !rw.Written {
+	if rw, ok := w.(*errors.ErrorResponseWriter); ok && !rw.Written {
 		rw.WriteHeader(statusCode)
 	} else {
 		w.WriteHeader(statusCode)
@@ -18,31 +27,4 @@ func WriteJSON(w http.ResponseWriter, r *http.Request, statusCode int, data inte
 
 	logger.Printf("%s %s", r.Method, r.URL.Path)
 	json.NewEncoder(w).Encode(data)
-}
-
-// ErrorResponseWriter tracks errors during request handling
-type ErrorResponseWriter struct {
-	http.ResponseWriter
-	StatusCode int
-	Written    bool
-	Err        error
-}
-
-// WriteHeader intercepts the status code
-func (er *ErrorResponseWriter) WriteHeader(code int) {
-	if !er.Written {
-		er.StatusCode = code
-		er.ResponseWriter.WriteHeader(code)
-		er.Written = true
-	}
-
-}
-
-// Write intercepts the response body and detects errors
-func (er *ErrorResponseWriter) Write(body []byte) (int, error) {
-	n, err := er.ResponseWriter.Write(body)
-	if err != nil {
-		er.Err = err
-	}
-	return n, err
 }

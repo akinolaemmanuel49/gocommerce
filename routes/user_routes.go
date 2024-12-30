@@ -12,12 +12,12 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func RegisterUserRoutes(router *mux.Router, db *mongo.Database, logger *log.Logger) {
+func RegisterUserRoutes(router *mux.Router, db *mongo.Database, logger, errorLogger *log.Logger) {
 	const RouteUsers = "/users"
 
 	userRepository := repositories.NewUserRepository(db)
-	userService := services.NewUserService(userRepository, logger)
-	userHandler := handlers.NewUserHandler(userService, logger)
+	userService := services.NewUserService(userRepository)
+	userHandler := handlers.NewUserHandler(userService, logger, errorLogger)
 
 	router.Use(middleware.ErrorMiddleware) // Attach ErrorMiddleware
 

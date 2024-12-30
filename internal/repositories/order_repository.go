@@ -15,6 +15,7 @@ type OrderRepository struct {
 	*BaseRepository
 }
 
+// NewOrderRepository creates a new instance of OrderRepository
 func NewOrderRepository(db *mongo.Database) *OrderRepository {
 	return &OrderRepository{
 		BaseRepository: NewBaseRepository(db.Collection("orders")),

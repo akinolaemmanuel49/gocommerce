@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -13,8 +14,8 @@ import (
 )
 
 // NewUserHandler creates a new instance of UserHandler
-func NewUserHandler(userService *services.UserService, logger *log.Logger) *UserHandler {
-	return &UserHandler{userService: userService, logger: logger}
+func NewUserHandler(userService *services.UserService, logger, errorLogger *log.Logger) *UserHandler {
+	return &UserHandler{userService: userService, logger: logger, errorLogger: errorLogger}
 }
 
 // Compile-time check that UserHandler implements HandlerInterface
@@ -26,38 +27,38 @@ func (h *UserHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 	// Parse request body
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		errors.HandleError(w, r, errors.NewValidationError("*", "Invalid request body"))
+		errors.HandleError(w, r, errors.NewValidationError("", "Invalid request body"), h.errorLogger)
 		return
 	}
 
 	// Call service to create user
 	user, err := h.userService.CreateUser(r.Context(), &req)
 	if err != nil {
-		errors.HandleError(w, r, err)
+		errors.HandleError(w, r, err, h.errorLogger)
 		return
 	}
 
 	// Respond with the created user
-	utils.WriteJSON(w, r, http.StatusCreated, user)
+	utils.WriteJSON(w, r, http.StatusCreated, user, h.logger)
 }
 
 // Read handles GET /user/:id requests
 func (h *UserHandler) Read(w http.ResponseWriter, r *http.Request, ID string) {
 	// Validate the ID
-	if ID == "" {
-		errors.HandleError(w, r, errors.NewValidationError("ID", "User ID is required"))
+	if err := utils.ValidateID(ID, "User"); err != nil {
+		errors.HandleError(w, r, err, h.errorLogger)
 		return
 	}
 
 	// Call service to get user by ID
 	user, err := h.userService.RetrieveUserByID(r.Context(), ID)
 	if err != nil {
-		errors.HandleError(w, r, err)
+		errors.HandleError(w, r, err, h.errorLogger)
 		return
 	}
 
 	// Respond with the user data
-	utils.WriteJSON(w, r, http.StatusOK, user)
+	utils.WriteJSON(w, r, http.StatusOK, user, h.logger)
 }
 
 // ReadAll handles GET /users requests
@@ -96,7 +97,7 @@ func (h *UserHandler) ReadAll(w http.ResponseWriter, r *http.Request) {
 
 	users, nextCursor, err := h.userService.RetrieveAllUsers(ctx, filter, lastID, limit)
 	if err != nil {
-		errors.HandleError(w, r, err)
+		errors.HandleError(w, r, err, h.errorLogger)
 		return
 	}
 
@@ -104,36 +105,51 @@ func (h *UserHandler) ReadAll(w http.ResponseWriter, r *http.Request) {
 		"data":      users,
 		"nextCusor": nextCursor,
 	}
-	utils.WriteJSON(w, r, http.StatusOK, response)
+	utils.WriteJSON(w, r, http.StatusOK, response, h.logger)
 }
 
 // Update handles PATCH /users/:id requests
 func (h *UserHandler) Update(w http.ResponseWriter, r *http.Request, ID string) {
 	// Validate the ID
-	if ID == "" {
-		http.Error(w, "User ID is required", http.StatusBadRequest)
+	if err := utils.ValidateID(ID, "User"); err != nil {
+		errors.HandleError(w, r, err, h.errorLogger)
 		return
 	}
 	var req models.UpdateUser
 
 	// Parse request body
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		errors.HandleError(w, r, errors.NewValidationError("*", "Invalid request body"))
+		errors.HandleError(w, r, errors.NewValidationError("", "Invalid request body"), h.errorLogger)
 		return
 	}
 
 	// Call service to update user
 	user, err := h.userService.UpdateUserByID(r.Context(), ID, &req)
 	if err != nil {
-		errors.HandleError(w, r, err)
+		errors.HandleError(w, r, err, h.errorLogger)
 		return
 	}
 
 	// Respond with updated user
-	utils.WriteJSON(w, r, http.StatusOK, user)
+	utils.WriteJSON(w, r, http.StatusOK, user, h.logger)
 }
 
 // Delete handles PATCH /users/:id/delete requests
-func (h *UserHandler) Delete(w http.ResponseWriter, r *http.Request, id string) {
-	panic("unimplemented") // TODO
+func (h *UserHandler) Delete(w http.ResponseWriter, r *http.Request, ID string) {
+	// Validate the ID
+	if err := utils.ValidateID(ID, "User"); err != nil {
+		errors.HandleError(w, r, err, h.errorLogger)
+		return
+	}
+
+	// Call service to soft-delete user
+	err := h.userService.DeleteUserByID(r.Context(), ID)
+	if err != nil {
+		errors.HandleError(w, r, err, h.errorLogger)
+		return
+	}
+
+	// Respond with confirmation of deletion
+	response := map[string]string{"message": fmt.Sprintf("User with ID: %s was successfully deleted", ID)}
+	utils.WriteJSON(w, r, http.StatusOK, response, h.logger)
 }

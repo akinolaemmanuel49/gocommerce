@@ -2,7 +2,6 @@ package services
 
 import (
 	"context"
-	"log"
 	"time"
 
 	"github.com/akinolaemmanuel49/gocommerce/common/errors"
@@ -14,8 +13,8 @@ import (
 )
 
 // NewCategoryService creates a new instance of CategoryService
-func NewCategoryService(categoryRepository *repositories.CategoryRepository, logger *log.Logger) *CategoryService {
-	return &CategoryService{categoryRepository: categoryRepository, logger: logger}
+func NewCategoryService(categoryRepository *repositories.CategoryRepository) *CategoryService {
+	return &CategoryService{categoryRepository: categoryRepository}
 }
 
 // CreateCategory creates a new instance of a category and commits it to the database

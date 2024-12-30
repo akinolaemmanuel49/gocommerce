@@ -10,6 +10,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/akinolaemmanuel49/gocommerce/common/errors"
 	"github.com/akinolaemmanuel49/gocommerce/configs"
 	"github.com/akinolaemmanuel49/gocommerce/internal/queue"
 	l "github.com/akinolaemmanuel49/gocommerce/log"
@@ -28,6 +29,7 @@ const (
 func main() {
 	// Setup logger
 	logger := l.SetupLogger("service.log", "INFO")
+	errorLogger := l.SetupLogger("service.log", "ERROR")
 
 	// Load config
 	config, err := configs.LoadConfig(".")
@@ -76,7 +78,7 @@ func main() {
 
 	// Setup HTTP routes
 	router := mux.NewRouter()
-	setupRoutes(router, db, logger)
+	setupRoutes(router, db, logger, errorLogger)
 
 	// Start the HTTP server with graceful shutdown
 	server := &http.Server{
@@ -94,21 +96,32 @@ func main() {
 	gracefulShutdown(server)
 }
 
-func setupRoutes(router *mux.Router, db *mongo.Database, logger *log.Logger) {
+func setupRoutes(router *mux.Router, db *mongo.Database, logger, errorLogger *log.Logger) {
 	// Health check
 	router.HandleFunc(RouteHealth, healthHandler)
 
 	// User routes
-	routes.RegisterUserRoutes(router, db, logger)
+	routes.RegisterUserRoutes(router, db, logger, errorLogger)
 
 	// Product routes
-	routes.RegisterProductRoutes(router, db, logger)
+	routes.RegisterProductRoutes(router, db, logger, errorLogger)
 
 	// Order routes
-	routes.RegisterOrderRoutes(router, db, logger)
+	routes.RegisterOrderRoutes(router, db, logger, errorLogger)
 
 	// Category routes
-	routes.RegisterCategoryRoutes(router, db, logger)
+	routes.RegisterCategoryRoutes(router, db, logger, errorLogger)
+
+	// Catch-all for unmatched routes
+	router.NotFoundHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		errorLogger := l.SetupLogger("service.log", "ERROR")
+		errors.HandleError(w, r, errors.NewNotFoundError("route", "path", r.URL.Path), errorLogger)
+	})
+
+	router.MethodNotAllowedHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		errorLogger := l.SetupLogger("service.log", "ERROR")
+		errors.HandleError(w, r, errors.NewMethodNotAllowedError(r.Method), errorLogger)
+	})
 }
 
 func gracefulShutdown(server *http.Server) {
@@ -129,6 +142,8 @@ func gracefulShutdown(server *http.Server) {
 }
 
 func healthHandler(w http.ResponseWriter, r *http.Request) {
+	logger := l.SetupLogger("service.log", "INFO")
+	logger.Printf("%v %v", r.Method, r.URL.Path)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("OK"))
 }

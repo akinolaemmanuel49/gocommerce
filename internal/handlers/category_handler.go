@@ -11,8 +11,8 @@ import (
 	"github.com/akinolaemmanuel49/gocommerce/utils"
 )
 
-func NewCategoryHandler(categoryService *services.CategoryService, logger *log.Logger) *CategoryHandler {
-	return &CategoryHandler{categoryService: categoryService, logger: logger}
+func NewCategoryHandler(categoryService *services.CategoryService, logger, errorLogger *log.Logger) *CategoryHandler {
+	return &CategoryHandler{categoryService: categoryService, logger: logger, errorLogger: errorLogger}
 }
 
 // Compile-time check that CategoryHandler implements HandlerInterface
@@ -36,7 +36,7 @@ func (h *CategoryHandler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Respond with the created category
-	utils.WriteJSON(w, r, http.StatusCreated, category)
+	utils.WriteJSON(w, r, http.StatusCreated, category, h.logger)
 }
 
 // Read handles GET /categories/:id requests
@@ -76,7 +76,7 @@ func (h *CategoryHandler) ReadAll(w http.ResponseWriter, r *http.Request) {
 		"data":       categories,
 		"nextCursor": nextCursor,
 	}
-	utils.WriteJSON(w, r, http.StatusOK, response)
+	utils.WriteJSON(w, r, http.StatusOK, response, h.logger)
 }
 
 // Update handles PATCH /categories/:id/delete requests

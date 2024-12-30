@@ -18,19 +18,23 @@ type HandlerInterface interface {
 type UserHandler struct {
 	userService *services.UserService
 	logger      *log.Logger
+	errorLogger *log.Logger
 }
 
 type ProductHandler struct {
 	productService *services.ProductService
 	logger         *log.Logger
+	errorLogger    *log.Logger
 }
 
 type OrderHandler struct {
 	orderService *services.OrderService
 	logger       *log.Logger
+	errorLogger  *log.Logger
 }
 
 type CategoryHandler struct {
 	categoryService *services.CategoryService
 	logger          *log.Logger
+	errorLogger     *log.Logger
 }

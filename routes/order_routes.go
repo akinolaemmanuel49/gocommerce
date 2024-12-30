@@ -11,12 +11,12 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func RegisterOrderRoutes(router *mux.Router, db *mongo.Database, logger *log.Logger) {
+func RegisterOrderRoutes(router *mux.Router, db *mongo.Database, logger, errorLogger *log.Logger) {
 	const RouteOrders = "/orders"
 
 	orderRepository := repositories.NewOrderRepository(db)
-	orderService := services.NewOrderService(orderRepository, logger)
-	orderHandler := handlers.NewOrderHandler(orderService, logger)
+	orderService := services.NewOrderService(orderRepository)
+	orderHandler := handlers.NewOrderHandler(orderService, logger, errorLogger)
 
 	router.HandleFunc(RouteOrders, func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {

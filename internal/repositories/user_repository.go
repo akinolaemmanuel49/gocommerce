@@ -15,6 +15,7 @@ type UserRepository struct {
 	*BaseRepository
 }
 
+// NewUserRepository creates a new instance of UserRepository
 func NewUserRepository(db *mongo.Database) *UserRepository {
 	return &UserRepository{
 		BaseRepository: NewBaseRepository(db.Collection("users")),
