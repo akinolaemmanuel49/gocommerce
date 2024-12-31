@@ -9,6 +9,7 @@ import (
 	"github.com/akinolaemmanuel49/gocommerce/internal/repositories"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 // NewOrderService creates a new instance of OrderService
@@ -114,4 +115,32 @@ func (s *OrderService) RemoveItemFromOrder(ctx context.Context, ID string, produ
 	}
 	_, err = s.orderRepository.Update(ctx, ID, update)
 	return err
+}
+
+// DeleteOrderByID sets the IsDeleted flag for an order instance to true (performs a soft-delete)
+func (s *OrderService) DeleteOrderByID(ctx context.Context, ID string) error {
+	// Check for existing order
+	existingOrder, err := s.orderRepository.FindByID(ctx, ID)
+	if err != nil && err != mongo.ErrNoDocuments {
+		return err
+	}
+	if err == mongo.ErrNoDocuments {
+		return nil
+	}
+
+	if existingOrder != nil {
+		// Apply transformation, set order IsDeleted field to true
+		order := &models.Order{
+			CommonFields: models.CommonFields{
+				IsDeleted: true,
+				UpdatedAt: time.Now(),
+			},
+		}
+		_, err = s.orderRepository.Update(ctx, ID, order)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
