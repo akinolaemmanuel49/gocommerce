@@ -25,6 +25,7 @@ func NewOrderRepository(db *mongo.Database) *OrderRepository {
 // FindAll retrieves orders based on filters and implements cursor-based pagination
 func (r *OrderRepository) FindAll(ctx context.Context, filter map[string]interface{}, lastID string, limit int) ([]models.Order, string, error) {
 	query := bson.M{}
+	filter["isDeleted"] = false
 	if len(filter) > 0 {
 		query = filter
 	}
@@ -70,7 +71,7 @@ func (r *OrderRepository) FindByID(ctx context.Context, ID string) (*models.Orde
 	if err != nil {
 		return nil, err
 	}
-	filter := bson.M{"_id": objectID}
+	filter := bson.M{"_id": objectID, "isDeleted": false}
 
 	if err := r.Collection.FindOne(ctx, filter).Decode(&order); err != nil {
 		if err == mongo.ErrNoDocuments {

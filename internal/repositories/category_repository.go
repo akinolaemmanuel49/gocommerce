@@ -29,7 +29,7 @@ func (r *CategoryRepository) FindByID(ctx context.Context, ID string) (*models.C
 		return nil, err
 	}
 
-	filter := bson.M{"_id": objID}
+	filter := bson.M{"_id": objID, "isDeleted": false}
 	var category models.Category
 
 	if err := r.Collection.FindOne(ctx, filter).Decode(&category); err != nil {
@@ -44,6 +44,7 @@ func (r *CategoryRepository) FindByID(ctx context.Context, ID string) (*models.C
 // FindAll retrieves categories based on filters and implements cursor-based pagination
 func (r *CategoryRepository) FindAll(ctx context.Context, filter map[string]interface{}, lastID string, limit int) ([]models.Category, string, error) {
 	query := bson.M{}
+	filter["isDeleted"] = false
 	if len(filter) > 0 {
 		query = filter
 	}

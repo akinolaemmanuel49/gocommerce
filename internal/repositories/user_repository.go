@@ -28,7 +28,7 @@ func (r *UserRepository) FindByID(ctx context.Context, ID string) (*models.User,
 		return nil, err
 	}
 
-	filter := bson.M{"_id": objectID}
+	filter := bson.M{"_id": objectID, "isDeleted": false}
 	var user models.User
 
 	if err := r.Collection.FindOne(ctx, filter).Decode(&user); err != nil {
@@ -43,12 +43,11 @@ func (r *UserRepository) FindByID(ctx context.Context, ID string) (*models.User,
 
 // FindByEmail retrieves a user by email
 func (r *UserRepository) FindByEmail(ctx context.Context, email string) (*models.User, error) {
-	filter := bson.M{"email": email}
+	filter := bson.M{"email": email, "isDeleted": false}
 	var user models.User
 
 	if err := r.Collection.FindOne(ctx, filter).Decode(&user); err != nil {
 		if err == mongo.ErrNoDocuments {
-			// return nil, errors.NewNotFoundError("User", "email", email)
 			return nil, err
 		}
 		return nil, err
@@ -60,6 +59,7 @@ func (r *UserRepository) FindByEmail(ctx context.Context, email string) (*models
 // FindAll retrieves users based on filters and implements cursor-based pagination.
 func (r *UserRepository) FindAll(ctx context.Context, filter map[string]interface{}, lastID string, limit int) ([]models.User, string, error) {
 	query := bson.M{}
+	filter["isDeleted"] = false
 	if len(filter) > 0 {
 		query = filter
 	}

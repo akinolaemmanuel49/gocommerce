@@ -25,6 +25,7 @@ func NewProductRepository(db *mongo.Database) *ProductRepository {
 // FindAll retrieves products based on filters and implements cursor-based pagination.
 func (r *ProductRepository) FindAll(ctx context.Context, filter map[string]interface{}, lastID string, limit int) ([]models.Product, string, error) {
 	query := bson.M{}
+	filter["isDeleted"] = false
 	if len(filter) > 0 {
 		query = filter
 	}
@@ -70,7 +71,7 @@ func (r *ProductRepository) FindByID(ctx context.Context, ID string) (*models.Pr
 		return nil, err
 	}
 
-	filter := bson.M{"_id": objID}
+	filter := bson.M{"_id": objID, "isDeleted": false}
 	var product models.Product
 
 	if err := r.Collection.FindOne(ctx, filter).Decode(&product); err != nil {
