@@ -43,7 +43,7 @@ func (r *UserRepository) FindByID(ctx context.Context, ID string) (*models.User,
 
 // FindByEmail retrieves a user by email
 func (r *UserRepository) FindByEmail(ctx context.Context, email string) (*models.User, error) {
-	filter := bson.M{"email": email, "isDeleted": false}
+	filter := bson.M{"email": email}
 	var user models.User
 
 	if err := r.Collection.FindOne(ctx, filter).Decode(&user); err != nil {

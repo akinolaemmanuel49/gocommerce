@@ -34,7 +34,7 @@ func (r *CategoryRepository) FindByID(ctx context.Context, ID string) (*models.C
 
 	if err := r.Collection.FindOne(ctx, filter).Decode(&category); err != nil {
 		if err == mongo.ErrNoDocuments {
-			return nil, errors.NewNotFoundError("Category", "ID", ID)
+			return nil, err
 		}
 		return nil, err
 	}

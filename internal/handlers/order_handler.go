@@ -6,9 +6,11 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/akinolaemmanuel49/gocommerce/common/errors"
 	"github.com/akinolaemmanuel49/gocommerce/internal/models"
 	"github.com/akinolaemmanuel49/gocommerce/internal/services"
 	"github.com/akinolaemmanuel49/gocommerce/utils"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 func NewOrderHandler(orderService *services.OrderService, logger, errorLogger *log.Logger) *OrderHandler {
@@ -24,14 +26,14 @@ func (h *OrderHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 	// Parse request body
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		http.Error(w, "Invalid input", http.StatusBadRequest)
+		errors.HandleError(w, r, errors.NewValidationError("", "Invalid request body"), h.errorLogger)
 		return
 	}
 
 	// Call service to create order
 	order, err := h.orderService.CreateOrder(r.Context(), &input)
 	if err != nil {
-		http.Error(w, "Failed to create order", http.StatusInternalServerError)
+		errors.HandleError(w, r, err, h.errorLogger)
 		return
 	}
 
@@ -39,9 +41,28 @@ func (h *OrderHandler) Create(w http.ResponseWriter, r *http.Request) {
 	utils.WriteJSON(w, r, http.StatusCreated, order, h.logger)
 }
 
-// Read handles GET /orders/:id requests
 func (h *OrderHandler) Read(w http.ResponseWriter, r *http.Request, id string) {
-	panic("unimplemented") // TODO
+	// Validate ID
+	if err := utils.ValidateID(id, "Order"); err != nil {
+		errors.HandleError(w, r, errors.NewValidationError("id", "Invalid order ID"), h.errorLogger)
+		return
+	}
+
+	// Fetch order by ID
+	order, err := h.orderService.RetrieveOrderByID(r.Context(), id)
+	switch err {
+	case mongo.ErrNoDocuments:
+		errors.HandleError(w, r, errors.NewNotFoundError("Order", "ID", id), h.errorLogger)
+		return
+	case nil:
+		// No error
+	default:
+		errors.HandleError(w, r, err, h.errorLogger)
+		return
+	}
+
+	// Respond with the order
+	utils.WriteJSON(w, r, http.StatusOK, order, h.logger)
 }
 
 // ReadAll handles GET /orders requests with optional filters
@@ -83,9 +104,9 @@ func (h *OrderHandler) ReadAll(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	orders, nextCursor, err := h.orderService.RetrieveAllOrders(ctx, nil, lastID, limit)
+	orders, nextCursor, err := h.orderService.RetrieveAllOrders(ctx, filter, lastID, limit)
 	if err != nil {
-		http.Error(w, "Error fetching orders: "+err.Error(), http.StatusInternalServerError)
+		errors.HandleError(w, r, err, h.errorLogger)
 		return
 	}
 
@@ -101,7 +122,20 @@ func (h *OrderHandler) Update(w http.ResponseWriter, r *http.Request, id string)
 	panic("unimplemented") // TODO
 }
 
-// DELETE handles PATCH /orders/:id/delete requests
 func (h *OrderHandler) Delete(w http.ResponseWriter, r *http.Request, id string) {
-	panic("unimplemented") // TODO
+	// Validate ID
+	if err := utils.ValidateID(id, "Order"); err != nil {
+		errors.HandleError(w, r, errors.NewValidationError("id", "Invalid order ID"), h.errorLogger)
+		return
+	}
+
+	// Delete order
+	if err := h.orderService.DeleteOrderByID(r.Context(), id); err != nil {
+		errors.HandleError(w, r, err, h.errorLogger)
+		return
+	}
+
+	// Respond with confirmation
+	response := map[string]string{"message": "Order successfully deleted"}
+	utils.WriteJSON(w, r, http.StatusOK, response, h.logger)
 }

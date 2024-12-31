@@ -6,9 +6,11 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/akinolaemmanuel49/gocommerce/common/errors"
 	"github.com/akinolaemmanuel49/gocommerce/internal/models"
 	"github.com/akinolaemmanuel49/gocommerce/internal/services"
 	"github.com/akinolaemmanuel49/gocommerce/utils"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 func NewProductHandler(productService *services.ProductService, logger, errorLogger *log.Logger) *ProductHandler {
@@ -41,7 +43,27 @@ func (h *ProductHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 // Read handles GET /products/:id requests
 func (h *ProductHandler) Read(w http.ResponseWriter, r *http.Request, id string) {
-	panic("unimplemented") // TODO
+	// Validate the ID
+	if err := utils.ValidateID(id, "Product"); err != nil {
+		errors.HandleError(w, r, errors.NewValidationError("id", "Invalid product ID"), h.errorLogger)
+		return
+	}
+
+	// Call service to get product by ID
+	product, err := h.productService.RetrieveProductByID(r.Context(), id)
+	switch err {
+	case mongo.ErrNoDocuments:
+		errors.HandleError(w, r, errors.NewNotFoundError("Product", "ID", id), h.errorLogger)
+		return
+	case nil:
+		// No error, proceed
+	default:
+		errors.HandleError(w, r, err, h.errorLogger)
+		return
+	}
+
+	// Respond with the product data
+	utils.WriteJSON(w, r, http.StatusOK, product, h.logger)
 }
 
 // ReadAll handles GET /products requests with optional filters
@@ -98,10 +120,46 @@ func (h *ProductHandler) ReadAll(w http.ResponseWriter, r *http.Request) {
 
 // Update handles PATCH /products/:id requests
 func (h *ProductHandler) Update(w http.ResponseWriter, r *http.Request, id string) {
-	panic("unimplemented") // TODO
+	// Validate the ID
+	if err := utils.ValidateID(id, "Product"); err != nil {
+		errors.HandleError(w, r, errors.NewValidationError("id", "Invalid product ID"), h.errorLogger)
+		return
+	}
+
+	var input models.UpdateProduct
+
+	// Parse request body
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		errors.HandleError(w, r, errors.NewValidationError("", "Invalid request body"), h.errorLogger)
+		return
+	}
+
+	// Call service to update product
+	product, err := h.productService.UpdateProductByID(r.Context(), id, &input)
+	if err != nil {
+		errors.HandleError(w, r, err, h.errorLogger)
+		return
+	}
+
+	// Respond with the updated product
+	utils.WriteJSON(w, r, http.StatusOK, product, h.logger)
 }
 
-// Delete handles DELETE /products/:id/delete requests
+// Delete handles PATCH /products/:id/delete requests
 func (h *ProductHandler) Delete(w http.ResponseWriter, r *http.Request, id string) {
-	panic("unimplemented") // TODO
+	// Validate the ID
+	if err := utils.ValidateID(id, "Product"); err != nil {
+		errors.HandleError(w, r, errors.NewValidationError("id", "Invalid product ID"), h.errorLogger)
+		return
+	}
+
+	// Call service to delete product
+	if err := h.productService.DeleteProductByID(r.Context(), id); err != nil {
+		errors.HandleError(w, r, err, h.errorLogger)
+		return
+	}
+
+	// Respond with confirmation of deletion
+	response := map[string]string{"message": "Product successfully deleted"}
+	utils.WriteJSON(w, r, http.StatusOK, response, h.logger)
 }
