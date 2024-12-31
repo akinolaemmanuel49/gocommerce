@@ -178,17 +178,19 @@ func main() {
 	// Setup logger
 	logger, err := l.SetupLogger("service.log", "INFO")
 	if err != nil {
-		log.Fatalf("Error setting up logger: %v", err)
+		log.SetFlags(log.Ldate | log.Ltime)
+		log.Fatalf("%s", fmt.Sprintf("%-7s: Error setting up error logger: %v", "ERROR", err))
 	}
 	errorLogger, err := l.SetupLogger("service.log", "ERROR")
 	if err != nil {
-		log.Fatalf("Error setting up error logger: %v", err)
+		log.SetFlags(log.Ldate | log.Ltime)
+		log.Fatalf("%s", fmt.Sprintf("%-7s: Error setting up error logger: %v", "ERROR", err))
 	}
 
 	// Load config
 	config, err := configs.LoadConfig(".")
 	if err != nil {
-		logger.Fatalf("Error reading config file: %v", err)
+		errorLogger.Fatalf("Error reading config file: %v", err)
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -197,17 +199,17 @@ func main() {
 	// Initialize MongoDB
 	db, err := database.ConnectMongoDB(config.MongoDBURI, config.MongoDBName)
 	if err != nil {
-		logger.Fatalf("Failed to connect to MongoDB: %v", err)
+		errorLogger.Fatalf("Failed to connect to MongoDB: %v", err)
 	}
 	defer func() {
 		if err = db.Client().Disconnect(ctx); err != nil {
-			logger.Printf("Error disconnecting MongoDB: %v", err)
+			errorLogger.Printf("Error disconnecting MongoDB: %v", err)
 		}
 	}()
 
 	// Ping MongoDB to ensure a successful connection
 	if err := db.Client().Database("admin").RunCommand(ctx, bson.D{{"ping", 1}}).Err(); err != nil {
-		logger.Fatalf("Failed to ping MongoDB: %v", err)
+		errorLogger.Fatalf("Failed to ping MongoDB: %v", err)
 	}
 	logger.Println("Connected to MongoDB successfully")
 
@@ -218,12 +220,12 @@ func main() {
 	}
 	defer func() {
 		if err = conn.Close(); err != nil {
-			logger.Printf("Error closing RabbitMQ connection: %v", err)
+			errorLogger.Printf("Error closing RabbitMQ connection: %v", err)
 		}
 	}()
 	defer func() {
 		if err = ch.Close(); err != nil {
-			logger.Printf("Error closing RabbitMQ channel: %v", err)
+			errorLogger.Printf("Error closing RabbitMQ channel: %v", err)
 		}
 	}()
 
@@ -247,7 +249,7 @@ func main() {
 	}()
 
 	// Graceful shutdown
-	gracefulShutdown(server)
+	gracefulShutdown(server, logger, errorLogger)
 }
 
 func setupRoutes(router *mux.Router, db *mongo.Database, logger, errorLogger *log.Logger) {
@@ -277,28 +279,29 @@ func setupRoutes(router *mux.Router, db *mongo.Database, logger, errorLogger *lo
 	})
 }
 
-func gracefulShutdown(server *http.Server) {
+func gracefulShutdown(server *http.Server, logger, errorLogger *log.Logger) {
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
 
 	<-stop
-	log.Println("Shutting down server...")
+	logger.Println("Shutting down server...")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	if err := server.Shutdown(ctx); err != nil {
-		log.Fatalf("Server shutdown failed: %v", err)
+		errorLogger.Fatalf("Server shutdown failed: %v", err)
 	}
 
-	log.Println("Server stopped cleanly.")
+	logger.Println("Server stopped cleanly.")
 }
 
 func healthHandler(w http.ResponseWriter, r *http.Request) {
 	// Log request using the info logger
 	logger, err := l.SetupLogger("service.log", "INFO")
 	if err != nil {
-		log.Fatalf("Error setting up logger: %v", err)
+		log.SetFlags(log.Ldate | log.Ltime)
+		log.Fatalf("%s", fmt.Sprintf("%-7s: Error setting up error logger: %v", "ERROR", err))
 	}
 	logger.Printf("%v %v", r.Method, r.URL.Path)
 	w.WriteHeader(http.StatusOK)
