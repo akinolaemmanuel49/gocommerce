@@ -1,7 +1,5 @@
 # E-Commerce Platform
 
-A scalable and feature-rich e-commerce platform built with **Go** and **MongoDB**, designed to handle high concurrency, provide seamless API integrations, and manage complex workflows using RabbitMQ for task queueing.
-
 ---
 
 ## **Features**
