@@ -1,8 +1,4 @@
-package utils
-
-import (
-	"github.com/akinolaemmanuel49/gocommerce/internal/models"
-)
+package models
 
 func IfNotNil[T any](newVal *T, oldVal T) T {
 	if newVal != nil {
@@ -15,12 +11,12 @@ func StringPtr(s string) *string {
 	return &s
 }
 
-func MergeAddress(newAddr *models.UpdateAddress, oldAddr models.Address) models.Address {
+func MergeAddress(newAddr *UpdateAddress, oldAddr Address) Address {
 	if newAddr == nil {
 		return oldAddr
 	}
 
-	return models.Address{
+	return Address{
 		Street:  IfNotNil(newAddr.Street, oldAddr.Street),
 		City:    IfNotNil(newAddr.City, oldAddr.City),
 		State:   IfNotNil(newAddr.State, oldAddr.State),

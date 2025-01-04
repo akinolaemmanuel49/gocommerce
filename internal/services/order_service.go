@@ -9,7 +9,6 @@ import (
 	"github.com/akinolaemmanuel49/gocommerce/internal/models"
 	"github.com/akinolaemmanuel49/gocommerce/internal/queue"
 	"github.com/akinolaemmanuel49/gocommerce/internal/repositories"
-	"github.com/akinolaemmanuel49/gocommerce/utils"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -136,11 +135,11 @@ func (s *OrderService) ChangeOrderShippingAddressByID(ctx context.Context, ID st
 	// Tranform Address
 	shippingAddress :=
 		&models.Address{
-			Street:  utils.IfNotNil(newAddress.Street, existingOrder.ShippingAddress.Street),
-			City:    utils.IfNotNil(newAddress.City, existingOrder.ShippingAddress.City),
-			State:   utils.IfNotNil(newAddress.State, existingOrder.ShippingAddress.State),
-			Zip:     utils.IfNotNil(newAddress.Zip, existingOrder.ShippingAddress.Zip),
-			Country: utils.IfNotNil(newAddress.Country, existingOrder.ShippingAddress.Country),
+			Street:  models.IfNotNil(newAddress.Street, existingOrder.ShippingAddress.Street),
+			City:    models.IfNotNil(newAddress.City, existingOrder.ShippingAddress.City),
+			State:   models.IfNotNil(newAddress.State, existingOrder.ShippingAddress.State),
+			Zip:     models.IfNotNil(newAddress.Zip, existingOrder.ShippingAddress.Zip),
+			Country: models.IfNotNil(newAddress.Country, existingOrder.ShippingAddress.Country),
 		}
 
 	update := bson.M{"$set": bson.M{"shippingAddress": shippingAddress, "updatedAt": time.Now()}}

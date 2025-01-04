@@ -10,7 +10,6 @@ import (
 	"github.com/akinolaemmanuel49/gocommerce/common/errors"
 	"github.com/akinolaemmanuel49/gocommerce/internal/models"
 	"github.com/akinolaemmanuel49/gocommerce/internal/repositories"
-	"github.com/akinolaemmanuel49/gocommerce/utils"
 )
 
 const (
@@ -99,15 +98,7 @@ func (s *UserService) UpdateUserByID(ctx context.Context, ID string, updatedUser
 	}
 
 	// Transform UpdateUser to User
-	user := &models.User{
-		FirstName: utils.IfNotNil(updatedUser.FirstName, existingUser.FirstName),
-		LastName:  utils.IfNotNil(updatedUser.LastName, existingUser.LastName),
-		Phone:     utils.IfNotNil(updatedUser.Phone, existingUser.Phone),
-		Address:   utils.MergeAddress(updatedUser.Address, existingUser.Address),
-		CommonFields: models.CommonFields{
-			UpdatedAt: time.Now(),
-		},
-	}
+	user := models.UserUpdate(updatedUser, existingUser)
 
 	// Update user in database
 	_, err = s.userRepository.Update(ctx, ID, user)

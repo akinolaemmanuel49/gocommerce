@@ -7,7 +7,6 @@ import (
 	"github.com/akinolaemmanuel49/gocommerce/common/errors"
 	"github.com/akinolaemmanuel49/gocommerce/internal/models"
 	"github.com/akinolaemmanuel49/gocommerce/internal/repositories"
-	"github.com/akinolaemmanuel49/gocommerce/utils"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -20,16 +19,7 @@ func NewCategoryService(categoryRepository *repositories.CategoryRepository) *Ca
 // CreateCategory creates a new instance of a category and commits it to the database
 func (s *CategoryService) CreateCategory(ctx context.Context, newCategory *models.CreateCategory) (*models.Category, error) {
 	// Transform CreateCategory to Category
-	category := &models.Category{
-		Name:        newCategory.Name,
-		Description: newCategory.Description,
-		ParentID:    newCategory.ParentID,
-		Image:       newCategory.Image,
-		CommonFields: models.CommonFields{
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
-		},
-	}
+	category := models.NewCategory(newCategory)
 
 	// Insert category into the database
 	result, err := s.categoryRepository.Insert(ctx, category)
@@ -76,9 +66,9 @@ func (s *CategoryService) UpdateCategoryByID(ctx context.Context, ID string, upd
 
 	// Transform UpdateCategory to Category
 	category := &models.Category{
-		Name:        utils.IfNotNil(updatedCategory.Name, existingCategory.Name),
-		Description: utils.IfNotNil(updatedCategory.Description, existingCategory.Description),
-		Image:       utils.IfNotNil(updatedCategory.Image, existingCategory.Image),
+		Name:        models.IfNotNil(updatedCategory.Name, existingCategory.Name),
+		Description: models.IfNotNil(updatedCategory.Description, existingCategory.Description),
+		Image:       models.IfNotNil(updatedCategory.Image, existingCategory.Image),
 		CommonFields: models.CommonFields{
 			UpdatedAt: time.Now(),
 		},

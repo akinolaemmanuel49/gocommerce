@@ -6,7 +6,6 @@ import (
 
 	"github.com/akinolaemmanuel49/gocommerce/internal/models"
 	"github.com/akinolaemmanuel49/gocommerce/internal/repositories"
-	"github.com/akinolaemmanuel49/gocommerce/utils"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -19,18 +18,7 @@ func NewProductService(productRepository *repositories.ProductRepository) *Produ
 // CreateProduct creates a new instance of a product and commits it to the database
 func (s *ProductService) CreateProduct(ctx context.Context, newProduct *models.CreateProduct) (*models.Product, error) {
 	// Transform CreateProduct to Product
-	product := &models.Product{
-		Name:        newProduct.Name,
-		Description: newProduct.Description,
-		Price:       newProduct.Price,
-		Images:      newProduct.Images,
-		CategoryID:  newProduct.CategoryID,
-		Brand:       newProduct.Brand,
-		CommonFields: models.CommonFields{
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
-		},
-	}
+	product := models.NewProduct(newProduct)
 
 	// Insert product into the database
 	result, err := s.productRepository.Insert(ctx, product)
@@ -77,15 +65,7 @@ func (s *ProductService) UpdateProductByID(ctx context.Context, ID string, updat
 	}
 
 	// Transform UpdateProduct to Product
-	product := &models.Product{
-		Name:        utils.IfNotNil(updatedProduct.Name, existingProduct.Name),
-		Description: utils.IfNotNil(updatedProduct.Description, existingProduct.Description),
-		Price:       utils.IfNotNil(updatedProduct.Price, existingProduct.Price),
-		Brand:       utils.IfNotNil(updatedProduct.Brand, existingProduct.Brand),
-		CommonFields: models.CommonFields{
-			UpdatedAt: time.Now(),
-		},
-	}
+	product := models.ProductUpdate(updatedProduct, existingProduct)
 
 	_, err = s.productRepository.Update(ctx, ID, product)
 	if err != nil {

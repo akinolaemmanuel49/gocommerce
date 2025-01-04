@@ -65,3 +65,15 @@ func NewUser(newUser *CreateUser, HashCost int) (*User, error) {
 
 	return user, nil
 }
+
+func UserUpdate(updatedUser *UpdateUser, existingUser *User) *User {
+	return &User{
+		FirstName: IfNotNil(updatedUser.FirstName, existingUser.FirstName),
+		LastName:  IfNotNil(updatedUser.LastName, existingUser.LastName),
+		Phone:     IfNotNil(updatedUser.Phone, existingUser.Phone),
+		Address:   MergeAddress(updatedUser.Address, existingUser.Address),
+		CommonFields: CommonFields{
+			UpdatedAt: time.Now(),
+		},
+	}
+}
