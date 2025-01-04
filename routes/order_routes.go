@@ -8,10 +8,11 @@ import (
 	"github.com/akinolaemmanuel49/gocommerce/internal/repositories"
 	"github.com/akinolaemmanuel49/gocommerce/internal/services"
 	"github.com/gorilla/mux"
+	amqp "github.com/rabbitmq/amqp091-go"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func RegisterOrderRoutes(router *mux.Router, db *mongo.Database, logger, errorLogger *log.Logger) {
+func RegisterOrderRoutes(router *mux.Router, db *mongo.Database, logger, errorLogger *log.Logger, ch *amqp.Channel) {
 	const RouteOrders = "/orders"
 
 	orderRepository := repositories.NewOrderRepository(db)
@@ -34,9 +35,10 @@ func RegisterOrderRoutes(router *mux.Router, db *mongo.Database, logger, errorLo
 
 		switch r.Method {
 		case "GET":
-			orderHandler.Read(w, r, id)
-		case "PATCH":
-			orderHandler.Update(w, r, id)
+			// orderHandler.Read(w, r, id)
+			orderHandler.Read(w, r, id, ch)
+			// case "PATCH":
+			// 	orderHandler.Update(w, r, id)
 		}
 	})
 
@@ -45,7 +47,7 @@ func RegisterOrderRoutes(router *mux.Router, db *mongo.Database, logger, errorLo
 
 		switch r.Method {
 		case "PATCH":
-			orderHandler.Delete(w, r, id)
+			orderHandler.Delete(w, r, id, ch)
 		}
 	})
 }

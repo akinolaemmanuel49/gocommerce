@@ -71,7 +71,7 @@ func (h *UserHandler) Read(w http.ResponseWriter, r *http.Request, ID string) {
 // ReadAll handles GET /users requests
 func (h *UserHandler) ReadAll(w http.ResponseWriter, r *http.Request) {
 	// Log to stdout
-	h.logger.Printf("%v %v", r.Method, r.URL.Path)
+	// h.logger.Printf("%v %v", r.Method, r.URL.Path)
 
 	ctx := r.Context()
 

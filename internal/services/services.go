@@ -1,6 +1,9 @@
 package services
 
 import (
+	"log"
+
+	"github.com/akinolaemmanuel49/gocommerce/configs"
 	"github.com/akinolaemmanuel49/gocommerce/internal/repositories"
 )
 
@@ -14,6 +17,9 @@ type ProductService struct {
 
 type OrderService struct {
 	orderRepository *repositories.OrderRepository
+	config          *configs.Config
+	logger          *log.Logger
+	errorLogger     *log.Logger
 }
 
 type CategoryService struct {

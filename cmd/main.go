@@ -1,151 +1,3 @@
-// package main
-
-// import (
-// 	"context"
-// 	"fmt"
-// 	"log"
-// 	"net/http"
-// 	"os"
-// 	"os/signal"
-// 	"syscall"
-// 	"time"
-
-// 	"github.com/akinolaemmanuel49/gocommerce/common/errors"
-// 	"github.com/akinolaemmanuel49/gocommerce/configs"
-// 	"github.com/akinolaemmanuel49/gocommerce/internal/queue"
-// 	l "github.com/akinolaemmanuel49/gocommerce/log"
-// 	"github.com/akinolaemmanuel49/gocommerce/routes"
-// 	"github.com/gorilla/mux"
-
-// 	"github.com/akinolaemmanuel49/gocommerce/internal/database"
-// 	"go.mongodb.org/mongo-driver/bson"
-// 	"go.mongodb.org/mongo-driver/mongo"
-// )
-
-// const (
-// 	RouteHealth = "/health"
-// )
-
-// func main() {
-// 	// Setup logger
-// 	logger := l.SetupLogger("service.log", "INFO")
-// 	errorLogger := l.SetupLogger("service.log", "ERROR")
-
-// 	// Load config
-// 	config, err := configs.LoadConfig(".")
-// 	if err != nil {
-// 		logger.Fatalf("Error reading config file: %v", err)
-// 	}
-
-// 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-// 	defer cancel()
-
-// 	// Initialize MongoDB
-// 	db, err := database.ConnectMongoDB(config.MongoDBURI, config.MongoDBName)
-// 	if err != nil {
-// 		logger.Fatalf("Failed to connect to MongoDB: %v", err)
-// 	}
-// 	defer func() {
-// 		if err = db.Client().Disconnect(ctx); err != nil {
-// 			logger.Printf("Error disconnecting MongoDB: %v", err)
-// 		}
-// 	}()
-
-// 	// Ping MongoDB to ensure a successful connection
-// 	if err := db.Client().Database("admin").RunCommand(ctx, bson.D{{"ping", 1}}).Err(); err != nil {
-// 		logger.Fatalf("Failed to ping MongoDB: %v", err)
-// 	}
-// 	logger.Println("Connected to MongoDB successfully")
-
-// 	// Initialize RabbitMQ
-// 	conn, ch, err := queue.ConnectRabbitMQ(&config, logger)
-// 	if err != nil {
-// 		logger.Fatalf("Failed to connect to RabbitMQ: %v", err)
-// 	}
-// 	defer func() {
-// 		if err = conn.Close(); err != nil {
-// 			logger.Printf("Error closing RabbitMQ connection: %v", err)
-// 		}
-// 	}()
-// 	defer func() {
-// 		if err = ch.Close(); err != nil {
-// 			logger.Printf("Error closing RabbitMQ channel: %v", err)
-// 		}
-// 	}()
-
-// 	// Start consuming messages from RabbitMQ
-// 	go queue.ConsumeOrderNotifications(&config, ch)
-
-// 	// Setup HTTP routes
-// 	router := mux.NewRouter()
-// 	setupRoutes(router, db, logger, errorLogger)
-
-// 	// Start the HTTP server with graceful shutdown
-// 	server := &http.Server{
-// 		Addr:    fmt.Sprintf(":%s", config.Port),
-// 		Handler: router,
-// 	}
-// 	go func() {
-// 		logger.Printf("Server is running on http://localhost:%s", config.Port)
-// 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-// 			logger.Fatalf("Server error: %v", err)
-// 		}
-// 	}()
-
-// 	// Graceful shutdown
-// 	gracefulShutdown(server)
-// }
-
-// func setupRoutes(router *mux.Router, db *mongo.Database, logger, errorLogger *log.Logger) {
-// 	// Health check
-// 	router.HandleFunc(RouteHealth, healthHandler)
-
-// 	// User routes
-// 	routes.RegisterUserRoutes(router, db, logger, errorLogger)
-
-// 	// Product routes
-// 	routes.RegisterProductRoutes(router, db, logger, errorLogger)
-
-// 	// Order routes
-// 	routes.RegisterOrderRoutes(router, db, logger, errorLogger)
-
-// 	// Category routes
-// 	routes.RegisterCategoryRoutes(router, db, logger, errorLogger)
-
-// 	// Catch-all for unmatched routes
-// 	router.NotFoundHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-// 		errors.HandleError(w, r, errors.NewNotFoundError("route", "path", r.URL.Path), errorLogger)
-// 	})
-
-// 	router.MethodNotAllowedHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-// 		errors.HandleError(w, r, errors.NewMethodNotAllowedError(r.Method), errorLogger)
-// 	})
-// }
-
-// func gracefulShutdown(server *http.Server) {
-// 	stop := make(chan os.Signal, 1)
-// 	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
-
-// 	<-stop
-// 	log.Println("Shutting down server...")
-
-// 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-// 	defer cancel()
-
-// 	if err := server.Shutdown(ctx); err != nil {
-// 		log.Fatalf("Server shutdown failed: %v", err)
-// 	}
-
-// 	log.Println("Server stopped cleanly.")
-// }
-
-// func healthHandler(w http.ResponseWriter, r *http.Request) {
-// 	logger := l.SetupLogger("service.log", "INFO")
-// 	logger.Printf("%v %v", r.Method, r.URL.Path)
-// 	w.WriteHeader(http.StatusOK)
-// 	w.Write([]byte("OK"))
-// }
-
 package main
 
 import (
@@ -164,6 +16,7 @@ import (
 	l "github.com/akinolaemmanuel49/gocommerce/log"
 	"github.com/akinolaemmanuel49/gocommerce/routes"
 	"github.com/gorilla/mux"
+	amqp "github.com/rabbitmq/amqp091-go"
 
 	"github.com/akinolaemmanuel49/gocommerce/internal/database"
 	"go.mongodb.org/mongo-driver/bson"
@@ -173,6 +26,8 @@ import (
 const (
 	RouteHealth = "/health"
 )
+
+var Config configs.Config
 
 func main() {
 	// Setup logger
@@ -192,6 +47,7 @@ func main() {
 	if err != nil {
 		errorLogger.Fatalf("Error reading config file: %v", err)
 	}
+	Config = config
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -208,16 +64,17 @@ func main() {
 	}()
 
 	// Ping MongoDB to ensure a successful connection
-	if err := db.Client().Database("admin").RunCommand(ctx, bson.D{{"ping", 1}}).Err(); err != nil {
+	if err := db.Client().Database("admin").RunCommand(ctx, bson.M{"ping": 1}).Err(); err != nil {
 		errorLogger.Fatalf("Failed to ping MongoDB: %v", err)
 	}
 	logger.Println("Connected to MongoDB successfully")
 
 	// Initialize RabbitMQ
-	conn, ch, err := queue.ConnectRabbitMQ(&config, logger)
+	conn, ch, err := queue.ConnectRabbitMQ(&config, logger, errorLogger)
 	if err != nil {
 		logger.Fatalf("Failed to connect to RabbitMQ: %v", err)
 	}
+
 	defer func() {
 		if err = conn.Close(); err != nil {
 			errorLogger.Printf("Error closing RabbitMQ connection: %v", err)
@@ -230,11 +87,11 @@ func main() {
 	}()
 
 	// Start consuming messages from RabbitMQ
-	go queue.ConsumeOrderNotifications(&config, ch)
+	go queue.ConsumeOrderNotifications(&config, ch, logger, errorLogger)
 
 	// Setup HTTP routes
 	router := mux.NewRouter()
-	setupRoutes(router, db, logger, errorLogger)
+	setupRoutes(router, db, logger, errorLogger, ch)
 
 	// Start the HTTP server with graceful shutdown
 	server := &http.Server{
@@ -252,7 +109,7 @@ func main() {
 	gracefulShutdown(server, logger, errorLogger)
 }
 
-func setupRoutes(router *mux.Router, db *mongo.Database, logger, errorLogger *log.Logger) {
+func setupRoutes(router *mux.Router, db *mongo.Database, logger, errorLogger *log.Logger, ch *amqp.Channel) {
 	// Health check
 	router.HandleFunc(RouteHealth, healthHandler)
 
@@ -263,7 +120,7 @@ func setupRoutes(router *mux.Router, db *mongo.Database, logger, errorLogger *lo
 	routes.RegisterProductRoutes(router, db, logger, errorLogger)
 
 	// Order routes
-	routes.RegisterOrderRoutes(router, db, logger, errorLogger)
+	routes.RegisterOrderRoutes(router, db, logger, errorLogger, ch)
 
 	// Category routes
 	routes.RegisterCategoryRoutes(router, db, logger, errorLogger)
@@ -296,6 +153,7 @@ func gracefulShutdown(server *http.Server, logger, errorLogger *log.Logger) {
 	logger.Println("Server stopped cleanly.")
 }
 
+// healthHandler handles GET /health requests
 func healthHandler(w http.ResponseWriter, r *http.Request) {
 	// Log request using the info logger
 	logger, err := l.SetupLogger("service.log", "INFO")
@@ -303,7 +161,7 @@ func healthHandler(w http.ResponseWriter, r *http.Request) {
 		log.SetFlags(log.Ldate | log.Ltime)
 		log.Fatalf("%s", fmt.Sprintf("%-7s: Error setting up error logger: %v", "ERROR", err))
 	}
-	logger.Printf("%v %v", r.Method, r.URL.Path)
+	logger.Printf("%s %d %s [User-Agent: %s]", r.Method, http.StatusOK, r.URL.Path, r.UserAgent())
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("OK"))
 }

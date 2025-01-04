@@ -25,6 +25,6 @@ func WriteJSON(w http.ResponseWriter, r *http.Request, statusCode int, data inte
 		w.WriteHeader(statusCode)
 	}
 
-	logger.Printf("%s %s", r.Method, r.URL.Path)
+	logger.Printf("%s %d %s [User-Agent: %s]", r.Method, statusCode, r.URL.Path, r.UserAgent())
 	json.NewEncoder(w).Encode(data)
 }

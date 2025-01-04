@@ -1,9 +1,23 @@
 package models
 
 type OrderItem struct {
+	ProductID string  `bson:"productId,omitempty"`
+	Quantity  int     `bson:"quantity,omitempty"`
+	Price     float64 `bson:"price,omitempty"`
+}
+
+type OrderItemCreate struct {
 	ProductID string  `json:"productId" validate:"required"`
 	Quantity  int     `json:"quantity" validate:"required,min=1"`
 	Price     float64 `json:"price" validate:"required,gt=0"`
+}
+
+type OrderStatusUpdate struct {
+	Status string `json:"status" validate:"required,oneof=pending shipped delivered"`
+}
+
+type OrderShippingAddressUpdate struct {
+	ShippingAddress Address `json:"shippingAddress,omitempty"`
 }
 
 type Order struct {
@@ -13,6 +27,8 @@ type Order struct {
 	TotalPrice      float64     `bson:"totalPrice,omitempty"`
 	Status          string      `bson:"status,omitempty"` // "pending", "shipped", "delivered"
 	ShippingAddress Address     `bson:"shippingAddress,omitempty"`
+	IsLocked        bool        `bson:"isLocked,omitempty"`
+	IsCancelled     bool        `bson:"isCancelled, omitempty"`
 	CommonFields    `bson:"inline"`
 }
 
