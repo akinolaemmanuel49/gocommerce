@@ -20,7 +20,7 @@ func NewUserHandler(userService *services.UserService, logger, errorLogger *log.
 }
 
 // Compile-time check that UserHandler implements HandlerInterface
-var _ HandlerInterface = (*UserHandler)(nil)
+var _ IUserHandler = (*UserHandler)(nil)
 
 // Create handles POST /user requests
 func (h *UserHandler) Create(w http.ResponseWriter, r *http.Request) {

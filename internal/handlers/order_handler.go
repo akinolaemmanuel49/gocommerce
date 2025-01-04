@@ -19,6 +19,8 @@ func NewOrderHandler(orderService *services.OrderService, logger, errorLogger *l
 	return &OrderHandler{orderService: orderService, logger: logger, errorLogger: errorLogger}
 }
 
+var _ IOrderHandler = (*OrderHandler)(nil)
+
 // Create handles POST /orders requests and accepts CreateOrder as input
 func (h *OrderHandler) Create(w http.ResponseWriter, r *http.Request) {
 	var input models.CreateOrder

@@ -19,7 +19,7 @@ func NewCategoryHandler(categoryService *services.CategoryService, logger, error
 }
 
 // Compile-time check that CategoryHandler implements HandlerInterface
-var _ HandlerInterface = (*CategoryHandler)(nil)
+var _ ICategoryHandler = (*CategoryHandler)(nil)
 
 // Create handles POST /categories requests and accepts CreateCategory as input
 func (h *CategoryHandler) Create(w http.ResponseWriter, r *http.Request) {

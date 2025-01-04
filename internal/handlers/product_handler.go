@@ -18,7 +18,7 @@ func NewProductHandler(productService *services.ProductService, logger, errorLog
 }
 
 // Compile-time check that ProductHandler implements HandlerInterface
-var _ HandlerInterface = (*ProductHandler)(nil)
+var _ IProductHandler = (*ProductHandler)(nil)
 
 // Create handles POST /products requests and accepts CreateProduct as input
 func (h *ProductHandler) Create(w http.ResponseWriter, r *http.Request) {
