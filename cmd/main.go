@@ -53,7 +53,7 @@ func main() {
 	defer cancel()
 
 	// Initialize MongoDB
-	db, err := database.ConnectMongoDB(config.MongoDBURI, config.MongoDBName)
+	db, err := database.NewDatabase().Connect(config.MongoDBURI, config.MongoDBName)
 	if err != nil {
 		errorLogger.Fatalf("Failed to connect to MongoDB: %v", err)
 	}
