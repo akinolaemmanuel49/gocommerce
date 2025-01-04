@@ -52,8 +52,9 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
+	_db := database.NewDatabase()
 	// Initialize MongoDB
-	db, err := database.NewDatabase().Connect(config.MongoDBURI, config.MongoDBName)
+	db, err := _db.Connect(config.MongoDBURI, config.MongoDBName)
 	if err != nil {
 		errorLogger.Fatalf("Failed to connect to MongoDB: %v", err)
 	}

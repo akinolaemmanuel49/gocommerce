@@ -8,3 +8,20 @@ type CommonFields struct {
 	UpdatedAt time.Time `bson:"updatedAt,omitempty" json:"updatedAt,omitempty"`
 	IsDeleted bool      `bson:"isDeleted" json:"isDeleted"`
 }
+
+// Address model
+type Address struct {
+	Street  string `json:"street" validate:"required"`
+	City    string `json:"city" validate:"required"`
+	State   string `json:"state" validate:"required"`
+	Zip     string `json:"zip" validate:"required"`
+	Country string `json:"country" validate:"required"`
+}
+
+type UpdateAddress struct {
+	Street  *string `json:"street" validate:"required"`
+	City    *string `json:"city" validate:"required"`
+	State   *string `json:"state" validate:"required"`
+	Zip     *string `json:"zip" validate:"required"`
+	Country *string `json:"country" validate:"required"`
+}

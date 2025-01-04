@@ -6,7 +6,6 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	"golang.org/x/crypto/bcrypt"
 
 	"github.com/akinolaemmanuel49/gocommerce/common/errors"
 	"github.com/akinolaemmanuel49/gocommerce/internal/models"
@@ -35,26 +34,10 @@ func (s *UserService) CreateUser(ctx context.Context, newUser *models.CreateUser
 		return nil, errors.NewConflictError("User", "email", newUser.Email)
 	}
 
-	// Hash password
-	passwordInByte := []byte(newUser.Password)
-	passwordHashInByte, err := bcrypt.GenerateFromPassword(passwordInByte, HashCost)
+	// Transform CreateUser to User
+	user, err := models.NewUser(newUser, HashCost)
 	if err != nil {
 		return nil, err
-	}
-
-	passwordHashString := string(passwordHashInByte)
-
-	// Transform CreateUser to User
-	user := &models.User{
-		Email:        newUser.Email,
-		PasswordHash: passwordHashString,
-		FirstName:    newUser.FirstName,
-		LastName:     newUser.LastName,
-		Role:         newUser.Role,
-		CommonFields: models.CommonFields{
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
-		},
 	}
 
 	// Insert user into the database
@@ -74,7 +57,7 @@ func (s *UserService) CreateUser(ctx context.Context, newUser *models.CreateUser
 }
 
 // VerifyUser accepts user email and password, checks if the email is valid and compares the password hash
-func (s *UserService) VerifyUser(ctx context.Context, userCredentials *models.UserCredentials) {
+func (s *UserService) VerifyUser(ctx context.Context, userCredentials *models.UserCredentials) bool {
 	panic("not implemented")
 }
 

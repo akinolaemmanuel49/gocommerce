@@ -1,21 +1,10 @@
 package models
 
-// Address model
-type Address struct {
-	Street  string `json:"street" validate:"required"`
-	City    string `json:"city" validate:"required"`
-	State   string `json:"state" validate:"required"`
-	Zip     string `json:"zip" validate:"required"`
-	Country string `json:"country" validate:"required"`
-}
+import (
+	"time"
 
-type UpdateAddress struct {
-	Street  *string `json:"street" validate:"required"`
-	City    *string `json:"city" validate:"required"`
-	State   *string `json:"state" validate:"required"`
-	Zip     *string `json:"zip" validate:"required"`
-	Country *string `json:"country" validate:"required"`
-}
+	"golang.org/x/crypto/bcrypt"
+)
 
 // Database model with bson tags
 type User struct {
@@ -50,4 +39,29 @@ type UpdateUser struct {
 type UserCredentials struct {
 	Email    string
 	Password string
+}
+
+func NewUser(newUser *CreateUser, HashCost int) (*User, error) {
+	// Hash password
+	passwordInByte := []byte(newUser.Password)
+	passwordHashInByte, err := bcrypt.GenerateFromPassword(passwordInByte, HashCost)
+	if err != nil {
+		return nil, err
+	}
+
+	passwordHashString := string(passwordHashInByte)
+	user := &User{
+		Email:        newUser.Email,
+		PasswordHash: passwordHashString,
+		FirstName:    newUser.FirstName,
+		LastName:     newUser.LastName,
+		Role:         newUser.Role,
+		CommonFields: CommonFields{
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
+			IsDeleted: false,
+		},
+	}
+
+	return user, nil
 }

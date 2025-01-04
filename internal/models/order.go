@@ -1,5 +1,7 @@
 package models
 
+import "time"
+
 type OrderItem struct {
 	ProductID string  `bson:"productId,omitempty"`
 	Quantity  int     `bson:"quantity,omitempty"`
@@ -43,4 +45,21 @@ type CreateOrder struct {
 type UpdateOrder struct {
 	Status          string  `json:"status,omitempty" validate:"omitempty,oneof=pending shipped delivered"`
 	ShippingAddress Address `json:"shippingAddress,omitempty"`
+}
+
+func NewOrder(newOrder *CreateOrder) *Order {
+	return &Order{
+		UserID:          newOrder.UserID,
+		Items:           newOrder.Items,
+		TotalPrice:      newOrder.TotalPrice,
+		Status:          newOrder.Status,
+		ShippingAddress: newOrder.ShippingAddress,
+		IsLocked:        false,
+		IsCancelled:     false,
+		CommonFields: CommonFields{
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
+			IsDeleted: true,
+		},
+	}
 }

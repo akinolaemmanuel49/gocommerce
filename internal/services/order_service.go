@@ -23,21 +23,14 @@ func NewOrderService(orderRepository *repositories.OrderRepository) *OrderServic
 
 // CreateOrder creates a new instance of an order and commits it to the database
 func (s *OrderService) CreateOrder(ctx context.Context, newOrder *models.CreateOrder) (*models.Order, error) {
-	// Transform CreateOrder to Order
-	order := &models.Order{
-		UserID:          newOrder.UserID,
-		Items:           newOrder.Items,
-		TotalPrice:      newOrder.TotalPrice,
-		Status:          newOrder.Status,
-		ShippingAddress: newOrder.ShippingAddress,
-		IsLocked:        false,
-		IsCancelled:     false,
-		CommonFields: models.CommonFields{
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
-			IsDeleted: false,
-		},
+	// Check for valid user
+	_, err := s.userService.RetrieveUserByID(ctx, newOrder.UserID)
+	if err != nil {
+		return nil, err
 	}
+
+	// Transform CreateOrder to Order
+	order := models.NewOrder(newOrder)
 
 	// Insert order into the database
 	result, err := s.orderRepository.Insert(ctx, order)

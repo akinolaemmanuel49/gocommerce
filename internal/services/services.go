@@ -17,6 +17,7 @@ type ProductService struct {
 
 type OrderService struct {
 	orderRepository *repositories.OrderRepository
+	userService     UserService
 	config          *configs.Config
 	logger          *log.Logger
 	errorLogger     *log.Logger
