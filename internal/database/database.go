@@ -34,12 +34,6 @@ func (db *Database) Connect(uri string, dbName string) (*mongo.Database, error) 
 		return nil, err
 	}
 
-	// Check the connection
-	err = client.Ping(ctx, nil)
-	if err != nil {
-		return nil, err
-	}
-
 	// Assign the connected database to the struct
 	db.database = client.Database(dbName)
 	return db.database, nil

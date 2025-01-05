@@ -112,7 +112,7 @@ func main() {
 
 func setupRoutes(router *mux.Router, db *mongo.Database, logger, errorLogger *log.Logger, ch *amqp.Channel) {
 	// Health check
-	router.HandleFunc(RouteHealth, healthHandler)
+	routes.RegisterHealthRoute(router, logger, errorLogger)
 
 	// User routes
 	routes.RegisterUserRoutes(router, db, logger, errorLogger)
@@ -152,17 +152,4 @@ func gracefulShutdown(server *http.Server, logger, errorLogger *log.Logger) {
 	}
 
 	logger.Println("Server stopped cleanly.")
-}
-
-// healthHandler handles GET /health requests
-func healthHandler(w http.ResponseWriter, r *http.Request) {
-	// Log request using the info logger
-	logger, err := l.SetupLogger("service.log", "INFO")
-	if err != nil {
-		log.SetFlags(log.Ldate | log.Ltime)
-		log.Fatalf("%s", fmt.Sprintf("%-7s: Error setting up error logger: %v", "ERROR", err))
-	}
-	logger.Printf("%s %d %s [User-Agent: %s]", r.Method, http.StatusOK, r.URL.Path, r.UserAgent())
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("OK"))
 }
