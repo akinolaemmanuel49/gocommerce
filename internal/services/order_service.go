@@ -9,33 +9,43 @@ import (
 	"github.com/akinolaemmanuel49/gocommerce/internal/models"
 	"github.com/akinolaemmanuel49/gocommerce/internal/queue"
 	"github.com/akinolaemmanuel49/gocommerce/internal/repositories"
-	amqp "github.com/rabbitmq/amqp091-go"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
 // NewOrderService creates a new instance of OrderService
-func NewOrderService(orderRepository *repositories.OrderRepository) *OrderService {
-	return &OrderService{orderRepository: orderRepository}
+func NewOrderService(orderRepository *repositories.OrderRepository, publisher *queue.Publisher, userService *UserService) *OrderService {
+	return &OrderService{
+		orderRepository: orderRepository,
+		publisher:       publisher,
+		userService:     *userService,
+	}
 }
 
 // CreateOrder creates a new instance of an order and commits it to the database
 func (s *OrderService) CreateOrder(ctx context.Context, newOrder *models.CreateOrder) (*models.Order, error) {
+	fmt.Println("DOES THIS EVEN RUN")
+	fmt.Printf("ISNEWORDERNIL: %v\n", newOrder)
+	fmt.Printf("ISNEWORDERUSERIDNIL: %v\n", newOrder.UserID)
 	// Check for valid user
-	_, err := s.userService.RetrieveUserByID(ctx, newOrder.UserID)
+	debug, err := s.userService.RetrieveUserByID(ctx, newOrder.UserID)
+	fmt.Printf("USERFOUND: %v\n", debug)
 	if err != nil {
 		return nil, err
 	}
+	fmt.Println("VALID USER CHECK PASSED")
 
 	// Transform CreateOrder to Order
 	order := models.NewOrder(newOrder)
+	fmt.Println("TRANSFORM PASSED")
 
 	// Insert order into the database
 	result, err := s.orderRepository.Insert(ctx, order)
 	if err != nil {
 		return nil, err
 	}
+	fmt.Println("INSERTION PASSED")
 
 	// Convert InsertedID to string if it's an ObjectID
 	objectID, ok := result.InsertedID.(primitive.ObjectID)
@@ -43,23 +53,33 @@ func (s *OrderService) CreateOrder(ctx context.Context, newOrder *models.CreateO
 		return nil, err
 	}
 	order.ID = objectID.Hex() // Set the ID to the string representation of the ObjectID
+	fmt.Println("OBJECTID CONVERSION PASSED")
+
+	// // Publish message
+	message := queue.OrderMessage{
+		OrderID:          order.ID,
+		UserID:           order.UserID,
+		EventType:        "OrderCreated",
+		Status:           order.Status,
+		Message:          "Order created successfully",
+		NotificationTime: time.Now(),
+	}
+
+	if err := s.publisher.Publish(ctx, message); err != nil {
+		s.errorLogger.Printf("Failed to publish message: %v", err)
+	}
+	fmt.Println("MESSAGE PASSED")
 
 	return order, nil
 }
 
 // RetrieveOrderByID retrieves an order by its ID
-// func (s *OrderService) RetrieveOrderByID(ctx context.Context, ID string) (*models.Order, error) {
-func (s *OrderService) RetrieveOrderByID(ctx context.Context, ID string, ch *amqp.Channel) (*models.Order, error) {
+func (s *OrderService) RetrieveOrderByID(ctx context.Context, ID string) (*models.Order, error) {
 	order, err := s.orderRepository.FindByID(ctx, ID)
-	fmt.Printf("DEBUG: ORDER => %v\n", order)
-	fmt.Printf("DEBUG: CHANNEL => %v\n", ch)
-	fmt.Println("DEBUG: ", err)
 	if err != nil {
 		return nil, err
 	}
 
-	fmt.Println("DEBUG: RABBITMQ ", s.config.RabbitMQURI)
-	queue.PublishOrderNotification(s.config, ch, order.ID, order.UserID, "sms", "DEBUG: CHECK FOR ERRORS", s.logger, s.errorLogger)
 	return order, nil
 }
 
@@ -74,7 +94,7 @@ func (s *OrderService) RetrieveAllOrders(ctx context.Context, filter map[string]
 }
 
 // ChangeOrderStatusByID alters the status field for an order
-func (s *OrderService) ChangeOrderStatusByID(ctx context.Context, ID string, status string, ch *amqp.Channel) error {
+func (s *OrderService) ChangeOrderStatusByID(ctx context.Context, ID string, status string) error {
 	// Check if the status is valid
 	if status != "pending" && status != "shipped" && status != "delivered" {
 		return errors.NewValidationError("Status", "Invalid status value")
@@ -90,17 +110,20 @@ func (s *OrderService) ChangeOrderStatusByID(ctx context.Context, ID string, sta
 		return errors.NewValidationError("Status", "Unable to alter this resource, because it has been cancelled")
 	}
 
-	if !existingOrder.IsLocked && status == "shipped" || !existingOrder.IsLocked && status == "delivered" {
-		updateWithLock := bson.M{"$set": bson.M{"status": status, "isLocked": true, "updatedAt": time.Now()}}
-		_, err = s.orderRepository.Update(ctx, ID, updateWithLock)
-		if err != nil {
-			return err
-		}
+	// if !existingOrder.IsLocked && status == "shipped" || !existingOrder.IsLocked && status == "delivered" {
+	// 	updateWithLock := bson.M{"$set": bson.M{"status": status, "isLocked": true, "updatedAt": time.Now()}}
+	// 	_, err = s.orderRepository.Update(ctx, ID, updateWithLock)
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// }
+
+	if !existingOrder.IsLocked {
+		return errors.NewValidationError("Status", "Cannot modify this resource, because it is not locked")
 	}
 
 	// Skip update if the status has no change
 	if existingOrder.Status == status {
-		queue.PublishOrderNotification(s.config, ch, existingOrder.ID, existingOrder.UserID, "debug", fmt.Sprintf("Order with ID %s status is already set to %s", ID, status), s.logger, s.errorLogger)
 		return nil
 	}
 
@@ -111,7 +134,6 @@ func (s *OrderService) ChangeOrderStatusByID(ctx context.Context, ID string, sta
 		if err != nil {
 			return err
 		}
-		queue.PublishOrderNotification(s.config, ch, existingOrder.ID, existingOrder.UserID, "debug", fmt.Sprintf("Order with ID %s status was changed from %s to %s", ID, existingOrder.Status, status), s.logger, s.errorLogger)
 		return nil
 	}
 
@@ -119,7 +141,7 @@ func (s *OrderService) ChangeOrderStatusByID(ctx context.Context, ID string, sta
 }
 
 // ChangeOrderShippingAddressByID changes the shipping address for an order, it checks if the resource is locked first
-func (s *OrderService) ChangeOrderShippingAddressByID(ctx context.Context, ID string, newAddress *models.UpdateAddress, ch *amqp.Channel) error {
+func (s *OrderService) ChangeOrderShippingAddressByID(ctx context.Context, ID string, newAddress *models.UpdateAddress) error {
 	// Check whether the resource is available for modification
 	existingOrder, err := s.orderRepository.FindByID(ctx, ID)
 	if err != nil {
@@ -143,7 +165,6 @@ func (s *OrderService) ChangeOrderShippingAddressByID(ctx context.Context, ID st
 		}
 
 	update := bson.M{"$set": bson.M{"shippingAddress": shippingAddress, "updatedAt": time.Now()}}
-	queue.PublishOrderNotification(s.config, ch, existingOrder.ID, existingOrder.UserID, "debug", fmt.Sprintf("Order with ID %s shipping address was changed", ID), s.logger, s.errorLogger)
 	_, err = s.orderRepository.Update(ctx, ID, update)
 	return err
 }
@@ -208,7 +229,7 @@ func (s *OrderService) RemoveItemFromOrderByID(ctx context.Context, ID string, p
 }
 
 // ConfirmOrderByID sets the IsLocked flag for an order instance to true
-func (s *OrderService) ConfirmOrderByID(ctx context.Context, ID string, ch *amqp.Channel) (bool, error) {
+func (s *OrderService) ConfirmOrderByID(ctx context.Context, ID string) (bool, error) {
 	// Check for existing order
 	existingOrder, err := s.orderRepository.FindByID(ctx, ID)
 	if err != nil {
@@ -216,7 +237,6 @@ func (s *OrderService) ConfirmOrderByID(ctx context.Context, ID string, ch *amqp
 	}
 	// Check if the order is already locked
 	if existingOrder.IsLocked {
-		queue.PublishOrderNotification(s.config, ch, existingOrder.ID, existingOrder.UserID, "debug", fmt.Sprintf("Order with ID %s has already been confirmed", ID), s.logger, s.errorLogger)
 		return true, nil
 	}
 	// Build query
@@ -227,12 +247,11 @@ func (s *OrderService) ConfirmOrderByID(ctx context.Context, ID string, ch *amqp
 		return false, err
 	}
 
-	queue.PublishOrderNotification(s.config, ch, existingOrder.ID, existingOrder.UserID, "debug", fmt.Sprintf("Order with ID %s was confirmed", ID), s.logger, s.errorLogger)
 	return true, nil
 }
 
 // CancelOrderByID sets the IsCancelled flag for an order instance to true
-func (s *OrderService) CancelOrderByID(ctx context.Context, ID string, ch *amqp.Channel) (bool, error) {
+func (s *OrderService) CancelOrderByID(ctx context.Context, ID string) (bool, error) {
 	// Check for existing order
 	existingOrder, err := s.orderRepository.FindByID(ctx, ID)
 	if err != nil {
@@ -240,7 +259,6 @@ func (s *OrderService) CancelOrderByID(ctx context.Context, ID string, ch *amqp.
 	}
 	// Check if the order is already cancelled
 	if existingOrder.IsCancelled {
-		queue.PublishOrderNotification(s.config, ch, existingOrder.ID, existingOrder.UserID, "debug", fmt.Sprintf("Order with ID %s has already been cancelled", ID), s.logger, s.errorLogger)
 		return true, nil
 	}
 	// Build query
@@ -250,12 +268,12 @@ func (s *OrderService) CancelOrderByID(ctx context.Context, ID string, ch *amqp.
 	if err != nil {
 		return false, err
 	}
-	queue.PublishOrderNotification(s.config, ch, existingOrder.ID, existingOrder.UserID, "debug", fmt.Sprintf("Order with ID %s was cancelled", ID), s.logger, s.errorLogger)
+
 	return true, nil
 }
 
 // DeleteOrderByID sets the IsDeleted flag for an order instance to true (performs a soft-delete)
-func (s *OrderService) DeleteOrderByID(ctx context.Context, ID string, ch *amqp.Channel) error {
+func (s *OrderService) DeleteOrderByID(ctx context.Context, ID string) error {
 	// Check for existing order
 	existingOrder, err := s.orderRepository.FindByID(ctx, ID)
 	if err != nil && err != mongo.ErrNoDocuments {
@@ -285,6 +303,5 @@ func (s *OrderService) DeleteOrderByID(ctx context.Context, ID string, ch *amqp.
 		}
 	}
 
-	queue.PublishOrderNotification(s.config, ch, existingOrder.ID, existingOrder.UserID, "debug", fmt.Sprintf("Order with ID %s was deleted", ID), s.logger, s.errorLogger)
 	return nil
 }

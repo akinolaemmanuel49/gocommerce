@@ -23,14 +23,14 @@ type OrderShippingAddressUpdate struct {
 }
 
 type Order struct {
-	ID              string      `bson:"_id,omitempty"`
-	UserID          string      `bson:"userId,omitempty"`
-	Items           []OrderItem `bson:"items,omitempty"`
-	TotalPrice      float64     `bson:"totalPrice,omitempty"`
-	Status          string      `bson:"status,omitempty"` // "pending", "shipped", "delivered"
-	ShippingAddress Address     `bson:"shippingAddress,omitempty"`
-	IsLocked        bool        `bson:"isLocked,omitempty"`
-	IsCancelled     bool        `bson:"isCancelled, omitempty"`
+	ID              string      `bson:"_id,omitempty" json:"id,omitempty"`
+	UserID          string      `bson:"userId,omitempty" json:"userId,omitempty"`
+	Items           []OrderItem `bson:"items,omitempty" json:"orderItem,omitempty"`
+	TotalPrice      float64     `bson:"totalPrice,omitempty" json:"totalPrice,omitempty"`
+	Status          string      `bson:"status,omitempty" json:"status,omitempty"` // "pending", "shipped", "delivered"
+	ShippingAddress Address     `bson:"shippingAddress,omitempty" json:"shippingAddress,omitempty"`
+	IsLocked        bool        `bson:"isLocked,omitempty" json:"isLocked,omitempty"`
+	IsCancelled     bool        `bson:"isCancelled, omitempty" json:"isCancelled,omitempty"`
 	CommonFields    `bson:"inline"`
 }
 
@@ -52,7 +52,7 @@ func NewOrder(newOrder *CreateOrder) *Order {
 		UserID:          newOrder.UserID,
 		Items:           newOrder.Items,
 		TotalPrice:      newOrder.TotalPrice,
-		Status:          newOrder.Status,
+		Status:          "pending",
 		ShippingAddress: newOrder.ShippingAddress,
 		IsLocked:        false,
 		IsCancelled:     false,

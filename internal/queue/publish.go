@@ -1,36 +1,88 @@
 package queue
 
 import (
-	"errors"
+	"context"
+	"encoding/json"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/akinolaemmanuel49/gocommerce/configs"
+	l "github.com/akinolaemmanuel49/gocommerce/log"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
-func PublishOrderNotification(config *configs.Config, ch *amqp.Channel, orderID, userID, notificationType, message string, logger, errorLogger *log.Logger) error {
-	msg := fmt.Sprintf(`{"orderID": "%s", "userID": "%s", "type": "%s", "message": "%s"}`, orderID, userID, notificationType, message)
+// OrderMessage represents the structure of the message to be sent
+type OrderMessage struct {
+	OrderID          string    `json:"orderId"`
+	UserID           string    `json:"userId"`
+	EventType        string    `json:"eventType"`                                                  // e.g., "OrderCreated", "OrderConfirmed"
+	Status           string    `json:"status" validate:"required,oneof=pending shipped delivered"` // "pending" "shipped" "delivered"
+	Message          string    `json:"message"`
+	NotificationTime time.Time `json:"notificationTime"`
+}
 
-	if ch == nil {
-		return errors.New("DOOM FLAG")
+// Publisher handles publishing messages to the queue
+type Publisher struct {
+	conn    *amqp.Connection
+	channel *amqp.Channel
+	queue   string
+}
+
+// NewPublisher initializes a new Publisher
+func NewPublisher(config *configs.Config) (*Publisher, error) {
+	// Setup logger
+	logger, err := l.SetupLogger("service.log", "INFO")
+	if err != nil {
+		log.SetFlags(log.Ldate | log.Ltime)
+		log.Fatalf("%s", fmt.Sprintf("%-7s: Error setting up error logger: %v", "ERROR", err))
+	}
+	errorLogger, err := l.SetupLogger("service.log", "ERROR")
+	if err != nil {
+		log.SetFlags(log.Ldate | log.Ltime)
+		log.Fatalf("%s", fmt.Sprintf("%-7s: Error setting up error logger: %v", "ERROR", err))
 	}
 
-	err := ch.Publish(
-		"",                    // Default exchange
-		config.OrderQueueName, // Routing key (queue name)
-		false,                 // Mandatory
-		false,                 // Immediate
-		amqp.Publishing{
-			ContentType: "application/json",
-			Body:        []byte(msg),
-		},
-	)
+	conn, ch, err := ConnectRabbitMQ(config, logger, errorLogger)
+
 	if err != nil {
-		errorLogger.Printf("Failed to publish message: %v", err)
+		return nil, err
+	}
+
+	fmt.Println("CHANNEL CHECK")
+
+	return &Publisher{
+		conn:    conn,
+		channel: ch,
+		queue:   config.OrderQueueName,
+	}, nil
+}
+
+func (p *Publisher) Publish(ctx context.Context, message OrderMessage) error {
+	body, err := json.Marshal(message)
+	if err != nil {
 		return err
 	}
 
-	logger.Printf("Published notification: %s", msg)
-	return nil
+	// Publish the message
+	return p.channel.Publish(
+		"",      // exchange (default)
+		p.queue, // routing key (queue name)
+		false,   // mandatory
+		false,   // immediate
+		amqp.Publishing{
+			ContentType: "application/json",
+			Body:        body,
+		},
+	)
+}
+
+// Close closes the connection and channel
+func (p *Publisher) Close() {
+	if p.channel != nil {
+		p.channel.Close()
+	}
+	if p.conn != nil {
+		p.conn.Close()
+	}
 }

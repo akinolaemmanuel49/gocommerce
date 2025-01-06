@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/akinolaemmanuel49/gocommerce/internal/services"
-	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 type IUserHandler interface {
@@ -34,15 +33,15 @@ type ICategoryHandler interface {
 
 type IOrderHandler interface {
 	Create(w http.ResponseWriter, r *http.Request)
-	Read(w http.ResponseWriter, r *http.Request, id string, ch *amqp.Channel)
+	Read(w http.ResponseWriter, r *http.Request, id string)
 	ReadAll(w http.ResponseWriter, r *http.Request)
-	UpdateOrderStatus(w http.ResponseWriter, r *http.Request, id string, ch *amqp.Channel)
-	UpdateOrderShippingAddress(w http.ResponseWriter, r *http.Request, id string, ch *amqp.Channel)
+	UpdateOrderStatus(w http.ResponseWriter, r *http.Request, id string)
+	UpdateOrderShippingAddress(w http.ResponseWriter, r *http.Request, id string)
 	AddItemToOrder(w http.ResponseWriter, r *http.Request, id string)
 	RemoveItemFromOrder(w http.ResponseWriter, r *http.Request, id string, productID string)
-	ConfirmOrder(w http.ResponseWriter, r *http.Request, id string, ch *amqp.Channel)
-	CancelOrder(w http.ResponseWriter, r *http.Request, id string, ch *amqp.Channel)
-	Delete(w http.ResponseWriter, r *http.Request, id string, ch *amqp.Channel)
+	ConfirmOrder(w http.ResponseWriter, r *http.Request, id string)
+	CancelOrder(w http.ResponseWriter, r *http.Request, id string)
+	Delete(w http.ResponseWriter, r *http.Request, id string)
 }
 
 type UserHandler struct {

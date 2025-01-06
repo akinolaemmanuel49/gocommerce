@@ -1,22 +1,33 @@
 package routes
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 
+	"github.com/akinolaemmanuel49/gocommerce/configs"
 	"github.com/akinolaemmanuel49/gocommerce/internal/handlers"
+	"github.com/akinolaemmanuel49/gocommerce/internal/queue"
 	"github.com/akinolaemmanuel49/gocommerce/internal/repositories"
 	"github.com/akinolaemmanuel49/gocommerce/internal/services"
 	"github.com/gorilla/mux"
-	amqp "github.com/rabbitmq/amqp091-go"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func RegisterOrderRoutes(router *mux.Router, db *mongo.Database, logger, errorLogger *log.Logger, ch *amqp.Channel) {
+func RegisterOrderRoutes(config *configs.Config, router *mux.Router, db *mongo.Database, logger, errorLogger *log.Logger) {
 	const RouteOrders = "/orders"
 
 	orderRepository := repositories.NewOrderRepository(db)
-	orderService := services.NewOrderService(orderRepository)
+	userRepository := repositories.NewUserRepository(db)
+
+	publisher, err := queue.NewPublisher(config)
+	if err != nil {
+		fmt.Println("NEWPUBLISHER FAILED")
+		errorLogger.Fatalf("Failed to initialize RabbitMQ publisher: %v", err)
+	}
+	fmt.Println("NEWPUBLISHER PASSED")
+	userService := services.NewUserService(userRepository)
+	orderService := services.NewOrderService(orderRepository, publisher, userService)
 	orderHandler := handlers.NewOrderHandler(orderService, logger, errorLogger)
 
 	router.HandleFunc(RouteOrders, func(w http.ResponseWriter, r *http.Request) {
@@ -35,10 +46,10 @@ func RegisterOrderRoutes(router *mux.Router, db *mongo.Database, logger, errorLo
 
 		switch r.Method {
 		case "GET":
-			// orderHandler.Read(w, r, id)
-			orderHandler.Read(w, r, id, ch)
+			orderHandler.Read(w, r, id)
+			// orderHandler.Read(w, r, id, ch)
 			// case "PATCH":
-			// 	orderHandler.Update(w, r, id)
+			// orderHandler.Update(w, r, id)
 		}
 	})
 
@@ -47,7 +58,7 @@ func RegisterOrderRoutes(router *mux.Router, db *mongo.Database, logger, errorLo
 
 		switch r.Method {
 		case "PATCH":
-			orderHandler.Delete(w, r, id, ch)
+			orderHandler.Delete(w, r, id)
 		}
 	})
 }

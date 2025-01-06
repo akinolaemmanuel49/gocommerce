@@ -11,7 +11,6 @@ import (
 	"github.com/akinolaemmanuel49/gocommerce/internal/models"
 	"github.com/akinolaemmanuel49/gocommerce/internal/services"
 	"github.com/akinolaemmanuel49/gocommerce/utils"
-	amqp "github.com/rabbitmq/amqp091-go"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -43,7 +42,7 @@ func (h *OrderHandler) Create(w http.ResponseWriter, r *http.Request) {
 }
 
 // func (h *OrderHandler) Read(w http.ResponseWriter, r *http.Request, id string) {
-func (h *OrderHandler) Read(w http.ResponseWriter, r *http.Request, id string, ch *amqp.Channel) {
+func (h *OrderHandler) Read(w http.ResponseWriter, r *http.Request, id string) {
 	// Validate ID
 	if err := utils.ValidateID(id, "Order"); err != nil {
 		errors.HandleError(w, r, errors.NewValidationError("id", "Invalid order ID"), h.errorLogger)
@@ -51,8 +50,7 @@ func (h *OrderHandler) Read(w http.ResponseWriter, r *http.Request, id string, c
 	}
 
 	// Fetch order by ID
-	// order, err := h.orderService.RetrieveOrderByID(r.Context(), id)
-	order, err := h.orderService.RetrieveOrderByID(r.Context(), id, ch)
+	order, err := h.orderService.RetrieveOrderByID(r.Context(), id)
 	switch err {
 	case nil:
 		// No error
@@ -121,7 +119,7 @@ func (h *OrderHandler) ReadAll(w http.ResponseWriter, r *http.Request) {
 }
 
 // UpdateOrderStatus handles PATCH /orders/:id/status requests :::
-func (h *OrderHandler) UpdateOrderStatus(w http.ResponseWriter, r *http.Request, id string, ch *amqp.Channel) {
+func (h *OrderHandler) UpdateOrderStatus(w http.ResponseWriter, r *http.Request, id string) {
 	// Validate ID
 	if err := utils.ValidateID(id, "Order"); err != nil {
 		errors.HandleError(w, r, errors.NewValidationError("id", "Invalid order ID"), h.errorLogger)
@@ -137,7 +135,7 @@ func (h *OrderHandler) UpdateOrderStatus(w http.ResponseWriter, r *http.Request,
 	}
 
 	// Call service to update order status
-	err := h.orderService.ChangeOrderStatusByID(r.Context(), id, input.Status, ch)
+	err := h.orderService.ChangeOrderStatusByID(r.Context(), id, input.Status)
 	if err != nil {
 		errors.HandleError(w, r, err, h.errorLogger)
 		return
@@ -149,7 +147,7 @@ func (h *OrderHandler) UpdateOrderStatus(w http.ResponseWriter, r *http.Request,
 }
 
 // UpdateOrderShippingAddress handles PATCH /orders/:id/address requests :::
-func (h *OrderHandler) UpdateOrderShippingAddress(w http.ResponseWriter, r *http.Request, id string, ch *amqp.Channel) {
+func (h *OrderHandler) UpdateOrderShippingAddress(w http.ResponseWriter, r *http.Request, id string) {
 	// Validate ID
 	if err := utils.ValidateID(id, "Order"); err != nil {
 		errors.HandleError(w, r, errors.NewValidationError("id", "Invalid order ID"), h.errorLogger)
@@ -165,7 +163,7 @@ func (h *OrderHandler) UpdateOrderShippingAddress(w http.ResponseWriter, r *http
 	}
 
 	// Call service to update order address
-	err := h.orderService.ChangeOrderShippingAddressByID(r.Context(), id, &input, ch)
+	err := h.orderService.ChangeOrderShippingAddressByID(r.Context(), id, &input)
 	if err != nil {
 		errors.HandleError(w, r, err, h.errorLogger)
 		return
@@ -229,14 +227,14 @@ func (h *OrderHandler) RemoveItemFromOrder(w http.ResponseWriter, r *http.Reques
 }
 
 // ConfirmOrder handles PATCH /orders/:id/confirm requests
-func (h *OrderHandler) ConfirmOrder(w http.ResponseWriter, r *http.Request, id string, ch *amqp.Channel) {
+func (h *OrderHandler) ConfirmOrder(w http.ResponseWriter, r *http.Request, id string) {
 	if err := utils.ValidateID(id, "Order"); err != nil {
 		errors.HandleError(w, r, errors.NewValidationError("id", "Invalid order ID"), h.errorLogger)
 		return
 	}
 
 	// Call service to confirm order
-	isConfirmed, err := h.orderService.ConfirmOrderByID(r.Context(), id, ch)
+	isConfirmed, err := h.orderService.ConfirmOrderByID(r.Context(), id)
 	if err != nil {
 		errors.HandleError(w, r, err, h.errorLogger)
 		return
@@ -250,14 +248,14 @@ func (h *OrderHandler) ConfirmOrder(w http.ResponseWriter, r *http.Request, id s
 }
 
 // CancelOrder handles PATCH /orders/:id/cancel requests
-func (h *OrderHandler) CancelOrder(w http.ResponseWriter, r *http.Request, id string, ch *amqp.Channel) {
+func (h *OrderHandler) CancelOrder(w http.ResponseWriter, r *http.Request, id string) {
 	if err := utils.ValidateID(id, "Order"); err != nil {
 		errors.HandleError(w, r, errors.NewValidationError("id", "Invalid order ID"), h.errorLogger)
 		return
 	}
 
 	// Call service to cancel order
-	isCancelled, err := h.orderService.CancelOrderByID(r.Context(), id, ch)
+	isCancelled, err := h.orderService.CancelOrderByID(r.Context(), id)
 	if err != nil {
 		errors.HandleError(w, r, err, h.errorLogger)
 		return
@@ -270,7 +268,7 @@ func (h *OrderHandler) CancelOrder(w http.ResponseWriter, r *http.Request, id st
 	utils.WriteJSON(w, r, http.StatusOK, response, h.logger)
 }
 
-func (h *OrderHandler) Delete(w http.ResponseWriter, r *http.Request, id string, ch *amqp.Channel) {
+func (h *OrderHandler) Delete(w http.ResponseWriter, r *http.Request, id string) {
 	// Validate ID
 	if err := utils.ValidateID(id, "Order"); err != nil {
 		errors.HandleError(w, r, errors.NewValidationError("id", "Invalid order ID"), h.errorLogger)
@@ -278,7 +276,7 @@ func (h *OrderHandler) Delete(w http.ResponseWriter, r *http.Request, id string,
 	}
 
 	// Delete order
-	if err := h.orderService.DeleteOrderByID(r.Context(), id, ch); err != nil {
+	if err := h.orderService.DeleteOrderByID(r.Context(), id); err != nil {
 		errors.HandleError(w, r, err, h.errorLogger)
 		return
 	}

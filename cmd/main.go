@@ -12,11 +12,9 @@ import (
 
 	"github.com/akinolaemmanuel49/gocommerce/common/errors"
 	"github.com/akinolaemmanuel49/gocommerce/configs"
-	"github.com/akinolaemmanuel49/gocommerce/internal/queue"
 	l "github.com/akinolaemmanuel49/gocommerce/log"
 	"github.com/akinolaemmanuel49/gocommerce/routes"
 	"github.com/gorilla/mux"
-	amqp "github.com/rabbitmq/amqp091-go"
 
 	"github.com/akinolaemmanuel49/gocommerce/internal/database"
 	"go.mongodb.org/mongo-driver/bson"
@@ -70,29 +68,29 @@ func main() {
 	}
 	logger.Println("Connected to MongoDB successfully")
 
-	// Initialize RabbitMQ
-	conn, ch, err := queue.ConnectRabbitMQ(&config, logger, errorLogger)
-	if err != nil {
-		logger.Fatalf("Failed to connect to RabbitMQ: %v", err)
-	}
+	// // Initialize RabbitMQ
+	// conn, ch, err := queue.ConnectRabbitMQ(&config, logger, errorLogger)
+	// if err != nil {
+	// 	logger.Fatalf("Failed to connect to RabbitMQ: %v", err)
+	// }
 
-	defer func() {
-		if err = conn.Close(); err != nil {
-			errorLogger.Printf("Error closing RabbitMQ connection: %v", err)
-		}
-	}()
-	defer func() {
-		if err = ch.Close(); err != nil {
-			errorLogger.Printf("Error closing RabbitMQ channel: %v", err)
-		}
-	}()
+	// defer func() {
+	// 	if err = conn.Close(); err != nil {
+	// 		errorLogger.Printf("Error closing RabbitMQ connection: %v", err)
+	// 	}
+	// }()
+	// defer func() {
+	// 	if err = ch.Close(); err != nil {
+	// 		errorLogger.Printf("Error closing RabbitMQ channel: %v", err)
+	// 	}
+	// }()
 
 	// Start consuming messages from RabbitMQ
-	go queue.ConsumeOrderNotifications(&config, ch, logger, errorLogger)
+	// queue.ConsumeOrderNotifications(&config, ch, logger, errorLogger)
 
 	// Setup HTTP routes
 	router := mux.NewRouter()
-	setupRoutes(router, db, logger, errorLogger, ch)
+	setupRoutes(&config, router, db, logger, errorLogger)
 
 	// Start the HTTP server with graceful shutdown
 	server := &http.Server{
@@ -110,7 +108,7 @@ func main() {
 	gracefulShutdown(server, logger, errorLogger)
 }
 
-func setupRoutes(router *mux.Router, db *mongo.Database, logger, errorLogger *log.Logger, ch *amqp.Channel) {
+func setupRoutes(config *configs.Config, router *mux.Router, db *mongo.Database, logger, errorLogger *log.Logger) {
 	// Health check
 	routes.RegisterHealthRoute(router, logger, errorLogger)
 
@@ -121,7 +119,7 @@ func setupRoutes(router *mux.Router, db *mongo.Database, logger, errorLogger *lo
 	routes.RegisterProductRoutes(router, db, logger, errorLogger)
 
 	// Order routes
-	routes.RegisterOrderRoutes(router, db, logger, errorLogger, ch)
+	routes.RegisterOrderRoutes(config, router, db, logger, errorLogger)
 
 	// Category routes
 	routes.RegisterCategoryRoutes(router, db, logger, errorLogger)
