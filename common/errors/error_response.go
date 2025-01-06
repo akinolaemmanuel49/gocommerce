@@ -27,7 +27,7 @@ func HandleError(w http.ResponseWriter, r *http.Request, err error, errorLogger 
 	case *InternalServerError:
 		WriteErrorResponse(w, r, http.StatusInternalServerError, "internal server error", errorLogger) // Mask internal details
 	default:
-		log.Printf("Unhandled error: %v", err)
+		errorLogger.Printf("Unhandled error: %v", err)
 		WriteErrorResponse(w, r, http.StatusInternalServerError, "an unexpected error occurred", errorLogger)
 	}
 }

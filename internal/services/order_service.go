@@ -26,6 +26,9 @@ func NewOrderService(orderRepository *repositories.OrderRepository, publisher *q
 func (s *OrderService) CreateOrder(ctx context.Context, newOrder *models.CreateOrder) (*models.Order, error) {
 	// Check for valid user
 	_, err := s.userService.RetrieveUserByID(ctx, newOrder.UserID)
+	if err == mongo.ErrNoDocuments {
+		return nil, errors.NewNotFoundError("User", "ID", newOrder.UserID)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -119,7 +122,8 @@ func (s *OrderService) ChangeOrderStatusByID(ctx context.Context, ID string, sta
 
 	// Ensure status field can only ever be progressively updated
 	if existingOrder.Status == "shipped" && status == "delivered" || existingOrder.Status == "pending" && status == "shipped" {
-		update := bson.M{"$set": bson.M{"status": status, "updatedAt": time.Now()}}
+		// update := bson.M{"$set": bson.M{"status": status, "updatedAt": time.Now()}}
+		update := bson.M{"status": status, "updatedAt": time.Now()}
 		_, err = s.orderRepository.Update(ctx, ID, update)
 		if err != nil {
 			return err
@@ -154,7 +158,7 @@ func (s *OrderService) ChangeOrderShippingAddressByID(ctx context.Context, ID st
 			Country: models.IfNotNil(newAddress.Country, existingOrder.ShippingAddress.Country),
 		}
 
-	update := bson.M{"$set": bson.M{"shippingAddress": shippingAddress, "updatedAt": time.Now()}}
+	update := bson.M{"shippingAddress": shippingAddress, "updatedAt": time.Now()}
 	_, err = s.orderRepository.Update(ctx, ID, update)
 	return err
 }
@@ -211,9 +215,7 @@ func (s *OrderService) RemoveItemFromOrderByID(ctx context.Context, ID string, p
 		updatedItems = append(updatedItems, item)
 	}
 
-	update := bson.M{
-		"$set": bson.M{"items": updatedItems, "totalPrice": order.TotalPrice + totalPriceAdjustment, "updatedAt": time.Now()},
-	}
+	update := bson.M{"items": updatedItems, "totalPrice": order.TotalPrice + totalPriceAdjustment, "updatedAt": time.Now()}
 	_, err = s.orderRepository.Update(ctx, ID, update)
 	return err
 }
