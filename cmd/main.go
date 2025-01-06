@@ -17,6 +17,7 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/akinolaemmanuel49/gocommerce/internal/database"
+	"github.com/akinolaemmanuel49/gocommerce/internal/queue"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -68,25 +69,25 @@ func main() {
 	}
 	logger.Println("Connected to MongoDB successfully")
 
-	// // Initialize RabbitMQ
-	// conn, ch, err := queue.ConnectRabbitMQ(&config, logger, errorLogger)
-	// if err != nil {
-	// 	logger.Fatalf("Failed to connect to RabbitMQ: %v", err)
-	// }
+	// Initialize RabbitMQ
+	conn, ch, err := queue.ConnectRabbitMQ(&config, logger, errorLogger, true)
+	if err != nil {
+		logger.Fatalf("Failed to connect to RabbitMQ: %v", err)
+	}
 
-	// defer func() {
-	// 	if err = conn.Close(); err != nil {
-	// 		errorLogger.Printf("Error closing RabbitMQ connection: %v", err)
-	// 	}
-	// }()
-	// defer func() {
-	// 	if err = ch.Close(); err != nil {
-	// 		errorLogger.Printf("Error closing RabbitMQ channel: %v", err)
-	// 	}
-	// }()
+	defer func() {
+		if err = conn.Close(); err != nil {
+			errorLogger.Printf("Error closing RabbitMQ connection: %v", err)
+		}
+	}()
+	defer func() {
+		if err = ch.Close(); err != nil {
+			errorLogger.Printf("Error closing RabbitMQ channel: %v", err)
+		}
+	}()
 
 	// Start consuming messages from RabbitMQ
-	// queue.ConsumeOrderNotifications(&config, ch, logger, errorLogger)
+	go queue.ConsumeOrderNotifications(&config, ch, logger, errorLogger)
 
 	// Setup HTTP routes
 	router := mux.NewRouter()

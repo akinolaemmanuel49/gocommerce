@@ -13,7 +13,7 @@ func (e *NotFoundError) Error() string {
 	if e.Entity == "" && e.Field == "" && e.Value == "" {
 		return "resource not found"
 	}
-	return fmt.Sprintf("%s with %s: %s not found ", e.Entity, e.Field, e.Value)
+	return fmt.Sprintf("%s with %s: '%s' not found ", e.Entity, e.Field, e.Value)
 }
 
 // NewNotFoundError creates a new instance of NotFoundError

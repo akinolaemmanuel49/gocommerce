@@ -14,8 +14,13 @@ import (
 func RegisterProductRoutes(router *mux.Router, db *mongo.Database, logger, errorLogger *log.Logger) {
 	const RouteProducts = "/products"
 
+	// Initialize the repository
 	productRepository := repositories.NewProductRepository(db)
+
+	// Initialize the service
 	productService := services.NewProductService(productRepository)
+
+	// Initialize the handler
 	productHandler := handlers.NewProductHandler(productService, logger, errorLogger)
 
 	router.HandleFunc(RouteProducts, func(w http.ResponseWriter, r *http.Request) {

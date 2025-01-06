@@ -15,8 +15,13 @@ import (
 func RegisterUserRoutes(router *mux.Router, db *mongo.Database, logger, errorLogger *log.Logger) {
 	const RouteUsers = "/users"
 
+	// Initialize the repository
 	userRepository := repositories.NewUserRepository(db)
+
+	// Initialize the service
 	userService := services.NewUserService(userRepository)
+
+	// Initialize the handler
 	userHandler := handlers.NewUserHandler(userService, logger, errorLogger)
 
 	router.Use(middleware.ErrorMiddleware) // Attach ErrorMiddleware

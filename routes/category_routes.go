@@ -14,8 +14,13 @@ import (
 func RegisterCategoryRoutes(router *mux.Router, db *mongo.Database, logger, errorLogger *log.Logger) {
 	const RouteCategories = "/categories"
 
+	// Initialize the repository
 	categoryRepository := repositories.NewCategoryRepository(db)
+
+	// Initialize the service
 	categoryService := services.NewCategoryService(categoryRepository)
+
+	// Initialize the handler
 	categoryHandler := handlers.NewCategoryHandler(categoryService, logger, errorLogger)
 
 	router.HandleFunc(RouteCategories, func(w http.ResponseWriter, r *http.Request) {

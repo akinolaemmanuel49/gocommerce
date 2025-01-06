@@ -2,7 +2,6 @@ package services
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/akinolaemmanuel49/gocommerce/common/errors"
@@ -25,27 +24,20 @@ func NewOrderService(orderRepository *repositories.OrderRepository, publisher *q
 
 // CreateOrder creates a new instance of an order and commits it to the database
 func (s *OrderService) CreateOrder(ctx context.Context, newOrder *models.CreateOrder) (*models.Order, error) {
-	fmt.Println("DOES THIS EVEN RUN")
-	fmt.Printf("ISNEWORDERNIL: %v\n", newOrder)
-	fmt.Printf("ISNEWORDERUSERIDNIL: %v\n", newOrder.UserID)
 	// Check for valid user
-	debug, err := s.userService.RetrieveUserByID(ctx, newOrder.UserID)
-	fmt.Printf("USERFOUND: %v\n", debug)
+	_, err := s.userService.RetrieveUserByID(ctx, newOrder.UserID)
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("VALID USER CHECK PASSED")
 
 	// Transform CreateOrder to Order
 	order := models.NewOrder(newOrder)
-	fmt.Println("TRANSFORM PASSED")
 
 	// Insert order into the database
 	result, err := s.orderRepository.Insert(ctx, order)
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("INSERTION PASSED")
 
 	// Convert InsertedID to string if it's an ObjectID
 	objectID, ok := result.InsertedID.(primitive.ObjectID)
@@ -53,7 +45,6 @@ func (s *OrderService) CreateOrder(ctx context.Context, newOrder *models.CreateO
 		return nil, err
 	}
 	order.ID = objectID.Hex() // Set the ID to the string representation of the ObjectID
-	fmt.Println("OBJECTID CONVERSION PASSED")
 
 	// // Publish message
 	message := queue.OrderMessage{
@@ -68,7 +59,6 @@ func (s *OrderService) CreateOrder(ctx context.Context, newOrder *models.CreateO
 	if err := s.publisher.Publish(ctx, message); err != nil {
 		s.errorLogger.Printf("Failed to publish message: %v", err)
 	}
-	fmt.Println("MESSAGE PASSED")
 
 	return order, nil
 }

@@ -43,13 +43,11 @@ func NewPublisher(config *configs.Config) (*Publisher, error) {
 		log.Fatalf("%s", fmt.Sprintf("%-7s: Error setting up error logger: %v", "ERROR", err))
 	}
 
-	conn, ch, err := ConnectRabbitMQ(config, logger, errorLogger)
+	conn, ch, err := ConnectRabbitMQ(config, logger, errorLogger, false)
 
 	if err != nil {
 		return nil, err
 	}
-
-	fmt.Println("CHANNEL CHECK")
 
 	return &Publisher{
 		conn:    conn,

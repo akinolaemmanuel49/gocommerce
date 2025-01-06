@@ -1,7 +1,6 @@
 package routes
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 
@@ -17,17 +16,21 @@ import (
 func RegisterOrderRoutes(config *configs.Config, router *mux.Router, db *mongo.Database, logger, errorLogger *log.Logger) {
 	const RouteOrders = "/orders"
 
+	// Initialize repositories
 	orderRepository := repositories.NewOrderRepository(db)
 	userRepository := repositories.NewUserRepository(db)
 
+	// Initialize the publisher
 	publisher, err := queue.NewPublisher(config)
 	if err != nil {
-		fmt.Println("NEWPUBLISHER FAILED")
 		errorLogger.Fatalf("Failed to initialize RabbitMQ publisher: %v", err)
 	}
-	fmt.Println("NEWPUBLISHER PASSED")
+
+	// Initialize services
 	userService := services.NewUserService(userRepository)
 	orderService := services.NewOrderService(orderRepository, publisher, userService)
+
+	// Initialize the handler
 	orderHandler := handlers.NewOrderHandler(orderService, logger, errorLogger)
 
 	router.HandleFunc(RouteOrders, func(w http.ResponseWriter, r *http.Request) {
