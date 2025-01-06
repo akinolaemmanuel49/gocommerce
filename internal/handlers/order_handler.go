@@ -51,6 +51,7 @@ func (h *OrderHandler) Read(w http.ResponseWriter, r *http.Request, id string) {
 
 	// Fetch order by ID
 	order, err := h.orderService.RetrieveOrderByID(r.Context(), id)
+	fmt.Println(order)
 	switch err {
 	case nil:
 		// No error
@@ -234,16 +235,17 @@ func (h *OrderHandler) ConfirmOrder(w http.ResponseWriter, r *http.Request, id s
 	}
 
 	// Call service to confirm order
-	isConfirmed, err := h.orderService.ConfirmOrderByID(r.Context(), id)
+	_, err := h.orderService.ConfirmOrderByID(r.Context(), id)
 	if err != nil {
 		errors.HandleError(w, r, err, h.errorLogger)
 		return
 	}
-	if isConfirmed {
-		response := map[string]string{"message": fmt.Sprintf("Order with id: %s confirmed", id)}
-		utils.WriteJSON(w, r, http.StatusOK, response, h.logger)
-	}
-	response := map[string]string{"message": fmt.Sprintf("Order with id: %s not confirmed", id)}
+	// if !isConfirmed {
+	// 	response := map[string]string{"message": fmt.Sprintf("Order with id: %s not confirmed", id)}
+	// 	utils.WriteJSON(w, r, http.StatusOK, response, h.logger)
+	// }
+
+	response := map[string]string{"message": fmt.Sprintf("Order with id: %s confirmed", id)}
 	utils.WriteJSON(w, r, http.StatusOK, response, h.logger)
 }
 
@@ -255,16 +257,16 @@ func (h *OrderHandler) CancelOrder(w http.ResponseWriter, r *http.Request, id st
 	}
 
 	// Call service to cancel order
-	isCancelled, err := h.orderService.CancelOrderByID(r.Context(), id)
+	_, err := h.orderService.CancelOrderByID(r.Context(), id)
 	if err != nil {
 		errors.HandleError(w, r, err, h.errorLogger)
 		return
 	}
-	if isCancelled {
-		response := map[string]string{"message": fmt.Sprintf("Order with id: %s cancelled", id)}
-		utils.WriteJSON(w, r, http.StatusOK, response, h.logger)
-	}
-	response := map[string]string{"message": fmt.Sprintf("Order with id: %s not cancelled", id)}
+	// if !isCancelled {
+	// 	response := map[string]string{"message": fmt.Sprintf("Order with id: %s cancelled", id)}
+	// 	utils.WriteJSON(w, r, http.StatusOK, response, h.logger)
+	// }
+	response := map[string]string{"message": fmt.Sprintf("Order with id: %s cancelled", id)}
 	utils.WriteJSON(w, r, http.StatusOK, response, h.logger)
 }
 

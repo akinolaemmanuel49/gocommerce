@@ -59,7 +59,7 @@ func NewOrder(newOrder *CreateOrder) *Order {
 		CommonFields: CommonFields{
 			CreatedAt: time.Now(),
 			UpdatedAt: time.Now(),
-			IsDeleted: true,
+			IsDeleted: false,
 		},
 	}
 }
