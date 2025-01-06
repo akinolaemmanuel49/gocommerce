@@ -29,7 +29,7 @@ func (r *BaseRepository) Update(ctx context.Context, id string, updateFields int
 		return nil, err
 	}
 	filter := bson.M{"_id": objectID}
-	update := bson.M{"$set": updateFields}
+	update := updateFields
 	return r.Collection.UpdateOne(ctx, filter, update)
 }
 

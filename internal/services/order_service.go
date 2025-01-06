@@ -158,35 +158,66 @@ func (s *OrderService) ChangeOrderShippingAddressByID(ctx context.Context, ID st
 			Country: models.IfNotNil(newAddress.Country, existingOrder.ShippingAddress.Country),
 		}
 
-	update := bson.M{"shippingAddress": shippingAddress, "updatedAt": time.Now()}
+	update := bson.M{
+		"$set": bson.M{
+			"shippingAddress": shippingAddress,
+			"updatedAt":       time.Now()},
+	}
 	_, err = s.orderRepository.Update(ctx, ID, update)
 	return err
 }
 
-// AddItemToOrderByID adds a product item to the items field
 func (s *OrderService) AddItemToOrderByID(ctx context.Context, ID string, item models.OrderItem) error {
-	// Check whether the resource is available for modification
+	// Retrieve the order by ID
 	order, err := s.orderRepository.FindByID(ctx, ID)
 	if err != nil {
 		return err
 	}
+
+	// Check if the order can be modified
 	if order.IsLocked {
-		return errors.NewValidationError("Items", "Unable to alter this resource, because is locked")
+		return errors.NewValidationError("Items", "Unable to alter this resource, because it is locked")
 	}
 	if order.IsCancelled {
 		return errors.NewValidationError("Items", "Unable to alter this resource, because it has been cancelled")
 	}
 
-	update := bson.M{
-		"$push": bson.M{"items": item},
-		"$inc":  bson.M{"totalPrice": item.Price * float64(item.Quantity)},
-		"$set":  bson.M{"updatedAt": time.Now()},
+	// Flag to track if the item already exists
+	itemExists := false
+
+	// Update the items and total price in memory
+	for i, existingItem := range order.Items {
+		if existingItem.ProductID == item.ProductID {
+			// Item exists, increment quantity and update price
+			order.Items[i].Quantity += item.Quantity
+			order.Items[i].Price += item.Price * float64(item.Quantity)
+			itemExists = true
+			break
+		}
 	}
-	_, err = s.orderRepository.Update(ctx, ID, update)
+
+	// If the item does not exist, add it to the items list
+	if !itemExists {
+		order.Items = append(order.Items, item)
+	}
+
+	// Update the total price
+	order.TotalPrice += item.Price * float64(item.Quantity)
+
+	// Prepare update fields for the database
+	updateFields := bson.M{
+		"$set": bson.M{
+			"items":      order.Items,
+			"totalPrice": order.TotalPrice,
+			"updatedAt":  time.Now(),
+		},
+	}
+
+	// Update the order in the database
+	_, err = s.orderRepository.Update(ctx, ID, updateFields)
 	return err
 }
 
-// RemoveItemFromOrder using the order id removes a product using its product id from the items field
 func (s *OrderService) RemoveItemFromOrderByID(ctx context.Context, ID string, productID string) error {
 	// Check whether the resource is available for modification
 	order, err := s.orderRepository.FindByID(ctx, ID)
@@ -194,17 +225,13 @@ func (s *OrderService) RemoveItemFromOrderByID(ctx context.Context, ID string, p
 		return err
 	}
 	if order.IsLocked {
-		return errors.NewValidationError("Items", "Unable to alter this resource, because is locked")
+		return errors.NewValidationError("Items", "Unable to alter this resource because it is locked")
 	}
 	if order.IsCancelled {
-		return errors.NewValidationError("Items", "Unable to alter this resource, because it has been cancelled")
+		return errors.NewValidationError("Items", "Unable to alter this resource because it has been cancelled")
 	}
 
-	order, err = s.orderRepository.FindByID(ctx, ID)
-	if err != nil {
-		return err
-	}
-
+	// Filter items and calculate the adjustment to the total price
 	var updatedItems []models.OrderItem
 	totalPriceAdjustment := 0.0
 	for _, item := range order.Items {
@@ -215,7 +242,22 @@ func (s *OrderService) RemoveItemFromOrderByID(ctx context.Context, ID string, p
 		updatedItems = append(updatedItems, item)
 	}
 
-	update := bson.M{"items": updatedItems, "totalPrice": order.TotalPrice + totalPriceAdjustment, "updatedAt": time.Now()}
+	// If there are no remaining items, the total price should be 0
+	newTotalPrice := order.TotalPrice + totalPriceAdjustment
+	if len(updatedItems) == 0 {
+		newTotalPrice = 0
+	}
+
+	// Prepare the update fields
+	update := bson.M{
+		"$set": bson.M{
+			"items":      updatedItems,
+			"totalPrice": newTotalPrice,
+			"updatedAt":  time.Now(),
+		},
+	}
+
+	// Update the order in the database
 	_, err = s.orderRepository.Update(ctx, ID, update)
 	return err
 }
@@ -232,7 +274,7 @@ func (s *OrderService) ConfirmOrderByID(ctx context.Context, ID string) (bool, e
 		return true, nil
 	}
 	// Build query
-	lock := bson.M{"isLocked": true}
+	lock := bson.M{"$set": bson.M{"isLocked": true}}
 	// Execute update
 	_, err = s.orderRepository.Update(ctx, ID, lock)
 	if err != nil {
@@ -289,7 +331,9 @@ func (s *OrderService) DeleteOrderByID(ctx context.Context, ID string) error {
 			order.IsLocked = true
 		}
 
-		_, err = s.orderRepository.Update(ctx, ID, order)
+		deleted := bson.M{"$set": order}
+
+		_, err = s.orderRepository.Update(ctx, ID, deleted)
 		if err != nil {
 			return err
 		}

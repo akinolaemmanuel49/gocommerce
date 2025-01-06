@@ -51,7 +51,6 @@ func (h *OrderHandler) Read(w http.ResponseWriter, r *http.Request, id string) {
 
 	// Fetch order by ID
 	order, err := h.orderService.RetrieveOrderByID(r.Context(), id)
-	fmt.Println(order)
 	switch err {
 	case nil:
 		// No error
@@ -203,7 +202,7 @@ func (h *OrderHandler) AddItemToOrder(w http.ResponseWriter, r *http.Request, id
 	utils.WriteJSON(w, r, http.StatusOK, response, h.logger)
 }
 
-// RemoveItemFromOrder handles PATCH /orders/:id/items/:productID requests :::
+// RemoveItemFromOrder handles PATCH /orders/:id/items/remove/:productID requests :::
 func (h *OrderHandler) RemoveItemFromOrder(w http.ResponseWriter, r *http.Request, id string, productID string) {
 	// Validate IDs
 	if err := utils.ValidateID(id, "Order"); err != nil {
@@ -270,6 +269,7 @@ func (h *OrderHandler) CancelOrder(w http.ResponseWriter, r *http.Request, id st
 	utils.WriteJSON(w, r, http.StatusOK, response, h.logger)
 }
 
+// Delete handles PATCH /orders/:id/delete requests
 func (h *OrderHandler) Delete(w http.ResponseWriter, r *http.Request, id string) {
 	// Validate ID
 	if err := utils.ValidateID(id, "Order"); err != nil {

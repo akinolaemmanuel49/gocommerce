@@ -83,22 +83,22 @@ func RegisterOrderRoutes(config *configs.Config, router *mux.Router, db *mongo.D
 		}
 	})
 
-	router.HandleFunc(RouteOrders+"/{id}/items/add", func(w http.ResponseWriter, r *http.Request) {
-		id := mux.Vars(r)["id"] // Extract the `id` path parameter
-
-		switch r.Method {
-		case "PATCH":
-			orderHandler.AddItemToOrder(w, r, id)
-		}
-	})
-
-	router.HandleFunc(RouteOrders+"/{id}/items/{productId}", func(w http.ResponseWriter, r *http.Request) {
+	router.HandleFunc(RouteOrders+"/{id}/items/remove/{productId}", func(w http.ResponseWriter, r *http.Request) {
 		id := mux.Vars(r)["id"]               // Extract the `id` path parameter
 		productId := mux.Vars(r)["productId"] // Extract the `productId` path parameter
 
 		switch r.Method {
 		case "PATCH":
 			orderHandler.RemoveItemFromOrder(w, r, id, productId)
+		}
+	})
+
+	router.HandleFunc(RouteOrders+"/{id}/items/add", func(w http.ResponseWriter, r *http.Request) {
+		id := mux.Vars(r)["id"] // Extract the `id` path parameter
+
+		switch r.Method {
+		case "PATCH":
+			orderHandler.AddItemToOrder(w, r, id)
 		}
 	})
 
