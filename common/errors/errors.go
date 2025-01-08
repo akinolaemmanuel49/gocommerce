@@ -57,7 +57,7 @@ type ConflictError struct {
 }
 
 func (e *ConflictError) Error() string {
-	return fmt.Sprintf("%s with %s: %s already exists", e.Entity, e.Field, e.Value)
+	return fmt.Sprintf(" %s with %s: %s already exists", e.Entity, e.Field, e.Value)
 }
 
 // NewConflictError creates a new instance of ConflictError

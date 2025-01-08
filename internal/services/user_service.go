@@ -10,6 +10,7 @@ import (
 	"github.com/akinolaemmanuel49/gocommerce/common/errors"
 	"github.com/akinolaemmanuel49/gocommerce/internal/models"
 	"github.com/akinolaemmanuel49/gocommerce/internal/repositories"
+	"github.com/akinolaemmanuel49/gocommerce/utils"
 )
 
 const (
@@ -31,6 +32,39 @@ func (s *UserService) CreateUser(ctx context.Context, newUser *models.CreateUser
 
 	if existingUser != nil {
 		return nil, errors.NewConflictError("User", "email", newUser.Email)
+	}
+
+	// Ensure required fields are present and valid
+	if newUser.Email == "" {
+		return nil, errors.NewValidationError("User", "Email is required")
+	}
+
+	if !utils.ValidateEmail(newUser.Email) {
+		return nil, errors.NewValidationError("User", "Email is invalid")
+	}
+
+	if newUser.Password == "" {
+		return nil, errors.NewValidationError("User", "Password is required")
+	}
+
+	if len(newUser.Password) < 8 {
+		return nil, errors.NewValidationError("User", "Password must be at least 8 characters long")
+	}
+
+	if newUser.FirstName == "" {
+		return nil, errors.NewValidationError("User", "First name is required")
+	}
+
+	if newUser.LastName == "" {
+		return nil, errors.NewValidationError("User", "Last name is required")
+	}
+
+	if newUser.Role == "" {
+		return nil, errors.NewValidationError("User", "Role is required")
+	}
+
+	if newUser.Role != "admin" && newUser.Role != "customer" {
+		return nil, errors.NewValidationError("User", "Role must be either 'admin' or 'customer'")
 	}
 
 	// Transform CreateUser to User
