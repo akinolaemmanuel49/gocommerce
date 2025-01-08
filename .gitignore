@@ -21,3 +21,7 @@ dist/
 
 # Environment variables
 .env
+
+# Development/Private files
+curl_commands.sh
+gocommerce.env
