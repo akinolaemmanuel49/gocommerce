@@ -24,3 +24,6 @@ dist/
 
 # Development/Private files
 gocommerce.env
+
+# Binaries
+gocommerce
