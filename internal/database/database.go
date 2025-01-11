@@ -22,7 +22,10 @@ type Database struct {
 func (db *Database) Connect(uri string, dbName string) (*mongo.Database, error) {
 	// SetServerAPIOptions method to set the version of the Stable API on the client
 	serverAPI := options.ServerAPI(options.ServerAPIVersion1)
-	opts := options.Client().ApplyURI(uri).SetServerAPIOptions(serverAPI)
+	opts := options.Client().
+		ApplyURI(uri).
+		// SetMaxPoolSize(500). // Max pool size for free tier is 100
+		SetServerAPIOptions(serverAPI)
 
 	// Create a context with a timeout
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
