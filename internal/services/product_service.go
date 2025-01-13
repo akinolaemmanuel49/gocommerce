@@ -6,6 +6,7 @@ import (
 
 	"github.com/akinolaemmanuel49/gocommerce/internal/models"
 	"github.com/akinolaemmanuel49/gocommerce/internal/repositories"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -67,7 +68,11 @@ func (s *ProductService) UpdateProductByID(ctx context.Context, ID string, updat
 	// Transform UpdateProduct to Product
 	product := models.ProductUpdate(updatedProduct, existingProduct)
 
-	_, err = s.productRepository.Update(ctx, ID, product)
+	update := bson.M{
+		"$set": product,
+	}
+
+	_, err = s.productRepository.Update(ctx, ID, update)
 	if err != nil {
 		return nil, err
 	}

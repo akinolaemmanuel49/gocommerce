@@ -38,3 +38,14 @@ func NewCategory(newCategory *CreateCategory) *Category {
 		},
 	}
 }
+
+func CategoryUpdate(updatedCategory *UpdateCategory, existingCategory *Category) *Category {
+	return &Category{
+		Name:        IfNotNil(updatedCategory.Name, existingCategory.Name),
+		Description: IfNotNil(updatedCategory.Description, existingCategory.Description),
+		Image:       IfNotNil(updatedCategory.Image, existingCategory.Image),
+		CommonFields: CommonFields{
+			UpdatedAt: time.Now(),
+		},
+	}
+}

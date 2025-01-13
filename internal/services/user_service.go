@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 
@@ -134,8 +135,12 @@ func (s *UserService) UpdateUserByID(ctx context.Context, ID string, updatedUser
 	// Transform UpdateUser to User
 	user := models.UserUpdate(updatedUser, existingUser)
 
+	update := bson.M{
+		"$set": user,
+	}
+
 	// Update user in database
-	_, err = s.userRepository.Update(ctx, ID, user)
+	_, err = s.userRepository.Update(ctx, ID, update)
 	if err != nil {
 		return nil, err
 	}
