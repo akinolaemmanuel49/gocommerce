@@ -111,8 +111,8 @@ func main() {
 
 func setupRoutes(config *configs.Config, router *mux.Router, db *mongo.Database, logger, errorLogger *log.Logger) {
 	// Health check
-	routes.RegisterHealthRoute(router, logger, errorLogger)
-	// routes.RegisterHealthRoute(router, logger, errorLogger, config)
+	// routes.RegisterHealthRoute(router, logger, errorLogger)
+	routes.RegisterHealthRoute(router, logger, errorLogger, config)
 
 	// User routes
 	routes.RegisterUserRoutes(router, db, logger, errorLogger)
