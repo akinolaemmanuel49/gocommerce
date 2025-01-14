@@ -4,14 +4,19 @@
 
 ## **Todo**
 - [x] Implement all CRUD routes and expose them
-- [ ] Update deletion logic. Add "$set" to all queries.
-- [ ] Document implemented API routes using POSTMAN
+- [x] Update deletion logic. Add "$set" to all queries.
+- [x] Document implemented and planned API routes using POSTMAN
     - [x] Orders
-    - [ ] Users
-    - [ ] Products
-    - [ ] Categories
+    - [x] Users
+    - [x] Products
+    - [x] Categories
+    - [x] Carts
+- [ ] Implement carts repository.
+- [ ] Implement carts service.
+- [ ] Implement carts handler.
+- [ ] Implement auto set shipping address to owner address if present.
 - [ ] Implement messaging for orders, whenever the status of an order changes, a message is sent to the queue, which is then sent to the email address of the user that owns the order.
-- [ ] Write tests
+- [ ] Write tests.
 
 ---
 
