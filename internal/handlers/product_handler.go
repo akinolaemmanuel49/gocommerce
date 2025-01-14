@@ -145,7 +145,7 @@ func (h *ProductHandler) Update(w http.ResponseWriter, r *http.Request, id strin
 	utils.WriteJSON(w, r, http.StatusOK, product, h.logger)
 }
 
-// Delete handles DELETE /products/:id/delete requests
+// Delete handles DELETE /products/:id requests
 func (h *ProductHandler) Delete(w http.ResponseWriter, r *http.Request, id string) {
 	// Validate the ID
 	if err := utils.ValidateID(id, "Product"); err != nil {

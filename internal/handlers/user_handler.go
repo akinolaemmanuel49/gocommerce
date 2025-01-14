@@ -141,7 +141,7 @@ func (h *UserHandler) Update(w http.ResponseWriter, r *http.Request, ID string) 
 	utils.WriteJSON(w, r, http.StatusOK, user, h.logger)
 }
 
-// Delete handles DELETE /users/:id/delete requests
+// Delete handles DELETE /users/:id requests
 func (h *UserHandler) Delete(w http.ResponseWriter, r *http.Request, ID string) {
 	// Validate the ID
 	if err := utils.ValidateID(ID, "User"); err != nil {

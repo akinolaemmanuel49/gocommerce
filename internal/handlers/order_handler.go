@@ -118,7 +118,7 @@ func (h *OrderHandler) ReadAll(w http.ResponseWriter, r *http.Request) {
 	utils.WriteJSON(w, r, http.StatusOK, response, h.logger)
 }
 
-// UpdateOrderStatus handles PUT /orders/:id/status requests :::
+// UpdateOrderStatus handles PUT /orders/:id/status requests
 func (h *OrderHandler) UpdateOrderStatus(w http.ResponseWriter, r *http.Request, id string) {
 	// Validate ID
 	if err := utils.ValidateID(id, "Order"); err != nil {
@@ -146,7 +146,7 @@ func (h *OrderHandler) UpdateOrderStatus(w http.ResponseWriter, r *http.Request,
 	utils.WriteJSON(w, r, http.StatusOK, response, h.logger)
 }
 
-// UpdateOrderShippingAddress handles PUT /orders/:id/address requests :::
+// UpdateOrderShippingAddress handles PUT /orders/:id/address requests
 func (h *OrderHandler) UpdateOrderShippingAddress(w http.ResponseWriter, r *http.Request, id string) {
 	// Validate ID
 	if err := utils.ValidateID(id, "Order"); err != nil {
@@ -174,7 +174,7 @@ func (h *OrderHandler) UpdateOrderShippingAddress(w http.ResponseWriter, r *http
 	utils.WriteJSON(w, r, http.StatusOK, response, h.logger)
 }
 
-// AddItemToOrder handles PUT /orders/:id/items/add requests :::
+// AddItemToOrder handles PUT /orders/:id/items/add requests
 func (h *OrderHandler) AddItemToOrder(w http.ResponseWriter, r *http.Request, id string) {
 	// Validate ID
 	if err := utils.ValidateID(id, "Order"); err != nil {
@@ -202,7 +202,7 @@ func (h *OrderHandler) AddItemToOrder(w http.ResponseWriter, r *http.Request, id
 	utils.WriteJSON(w, r, http.StatusOK, response, h.logger)
 }
 
-// RemoveItemFromOrder handles PUT /orders/:id/items/remove/:productID requests :::
+// RemoveItemFromOrder handles PUT /orders/:id/items/remove/:productID requests
 func (h *OrderHandler) RemoveItemFromOrder(w http.ResponseWriter, r *http.Request, id string, productID string) {
 	// Validate IDs
 	if err := utils.ValidateID(id, "Order"); err != nil {
@@ -269,7 +269,7 @@ func (h *OrderHandler) CancelOrder(w http.ResponseWriter, r *http.Request, id st
 	utils.WriteJSON(w, r, http.StatusOK, response, h.logger)
 }
 
-// Delete handles DELETE /orders/:id/delete requests
+// Delete handles DELETE /orders/:id requests
 func (h *OrderHandler) Delete(w http.ResponseWriter, r *http.Request, id string) {
 	// Validate ID
 	if err := utils.ValidateID(id, "Order"); err != nil {
