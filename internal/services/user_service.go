@@ -174,7 +174,9 @@ func (s *UserService) DeleteUserByID(ctx context.Context, ID string) error {
 			},
 		}
 
-		_, err = s.userRepository.Update(ctx, ID, user)
+		deleted := bson.M{"$set": user}
+
+		_, err = s.userRepository.Update(ctx, ID, deleted)
 		if err != nil {
 			return err
 		}

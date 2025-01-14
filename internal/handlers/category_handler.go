@@ -103,7 +103,7 @@ func (h *CategoryHandler) ReadAll(w http.ResponseWriter, r *http.Request) {
 	utils.WriteJSON(w, r, http.StatusOK, response, h.logger)
 }
 
-// Update handles PATCH /categories/:id/delete requests
+// Update handles PUT /categories/:id/delete requests
 func (h *CategoryHandler) Update(w http.ResponseWriter, r *http.Request, ID string) {
 	// Validate the ID
 	if err := utils.ValidateID(ID, "Category"); err != nil {
@@ -129,7 +129,7 @@ func (h *CategoryHandler) Update(w http.ResponseWriter, r *http.Request, ID stri
 	utils.WriteJSON(w, r, http.StatusOK, user, h.logger)
 }
 
-// Delete handles PATCH /categories/:id/delete requests
+// Delete handles DELETE /categories/:id/delete requests
 func (h *CategoryHandler) Delete(w http.ResponseWriter, r *http.Request, ID string) {
 	// Validate the ID
 	if err := utils.ValidateID(ID, "Category"); err != nil {

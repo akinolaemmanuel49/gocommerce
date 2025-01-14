@@ -101,7 +101,9 @@ func (s *CategoryService) DeleteCategoryByID(ctx context.Context, ID string) err
 			},
 		}
 
-		_, err = s.categoryRepository.Update(ctx, ID, category)
+		deleted := bson.M{"$set": category}
+
+		_, err = s.categoryRepository.Update(ctx, ID, deleted)
 		if err != nil {
 			return err
 		}

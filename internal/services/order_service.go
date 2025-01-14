@@ -14,11 +14,12 @@ import (
 )
 
 // NewOrderService creates a new instance of OrderService
-func NewOrderService(orderRepository *repositories.OrderRepository, publisher *queue.Publisher, userService *UserService) *OrderService {
+func NewOrderService(orderRepository *repositories.OrderRepository, publisher *queue.Publisher, userService *UserService, productService *ProductService) *OrderService {
 	return &OrderService{
 		orderRepository: orderRepository,
 		publisher:       publisher,
 		userService:     *userService,
+		productService:  *productService,
 	}
 }
 
@@ -184,6 +185,15 @@ func (s *OrderService) AddItemToOrderByID(ctx context.Context, ID string, item m
 
 	// Flag to track if the item already exists
 	itemExists := false
+
+	// Check if product is valid
+	product, err := s.productService.RetrieveProductByID(ctx, item.ProductID)
+	if err != nil {
+		return errors.NewNotFoundError("Product", "ID", item.ProductID)
+	}
+
+	// Set the item price
+	item.Price = product.Price
 
 	// Update the items and total price in memory
 	for i, existingItem := range order.Items {

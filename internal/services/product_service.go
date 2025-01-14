@@ -105,7 +105,10 @@ func (s *ProductService) DeleteProductByID(ctx context.Context, ID string) error
 				UpdatedAt: time.Now(),
 			},
 		}
-		_, err = s.productRepository.Update(ctx, ID, product)
+
+		deleted := bson.M{"$set": product}
+
+		_, err = s.productRepository.Update(ctx, ID, deleted)
 		if err != nil {
 			return err
 		}

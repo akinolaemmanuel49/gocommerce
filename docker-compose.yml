@@ -1,28 +1,28 @@
 services:
   gocommerce:
-      image: gocommerce:latest
-      build:
-        context: .
-        dockerfile: Dockerfile
-      ports:
-        - "8000-8009:8000"
-      environment:
-        - PORT=8000
-        - MONGODB_URI=mongodb://mongo:27017
-        - MONGODB_NAME=gocommerce
-        - RABBITMQ_URI=amqp://guest:guest@rabbitmq:5672
-        - ORDER_QUEUE_NAME=orderNotifications
-        - DEFAULT_TIMEOUT=30
-      deploy:
-        mode: replicated
-        replicas: 10
-      depends_on:
-        mongo:
-          condition: service_healthy
-          restart: true
-        rabbitmq:
-          condition: service_healthy
-          restart: true
+    image: gocommerce:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000-8009:8000"
+    environment:
+      - PORT=8000
+      - MONGODB_URI=mongodb://mongo:27017
+      - MONGODB_NAME=gocommerce
+      - RABBITMQ_URI=amqp://guest:guest@rabbitmq:5672
+      - ORDER_QUEUE_NAME=orderNotifications
+      - DEFAULT_TIMEOUT=30
+    deploy:
+      mode: replicated
+      replicas: 10
+    depends_on:
+      mongo:
+        condition: service_healthy
+        restart: true
+      rabbitmq:
+        condition: service_healthy
+        restart: true
 
   mongo:
     image: mongo:latest

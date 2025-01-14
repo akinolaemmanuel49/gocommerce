@@ -43,19 +43,12 @@ func RegisterUserRoutes(router *mux.Router, db *mongo.Database, logger, errorLog
 		switch r.Method {
 		case "GET":
 			userHandler.Read(w, r, id)
-		case "PATCH":
+		case "PUT":
 			userHandler.Update(w, r, id)
+		case "DELETE":
+			userHandler.Delete(w, r, id)
 		default:
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		}
-	})
-
-	router.HandleFunc(RouteUsers+"/{id}/delete", func(w http.ResponseWriter, r *http.Request) {
-		id := mux.Vars(r)["id"] // Extract the `id` path parameter
-
-		switch r.Method {
-		case "PATCH":
-			userHandler.Delete(w, r, id)
 		}
 	})
 }
