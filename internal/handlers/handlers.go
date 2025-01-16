@@ -44,6 +44,14 @@ type IOrderHandler interface {
 	Delete(w http.ResponseWriter, r *http.Request, id string)
 }
 
+type ICartHandler interface {
+	Create(w http.ResponseWriter, r *http.Request)
+	Read(w http.ResponseWriter, r *http.Request, id string)
+	ReadAll(w http.ResponseWriter, r *http.Request)
+	AddProductToCart(w http.ResponseWriter, r *http.Request, id string)
+	RemoveProductFromCart(w http.ResponseWriter, r *http.Request, id string, productID string)
+	Delete(w http.ResponseWriter, r *http.Request, id string)
+}
 type UserHandler struct {
 	userService *services.UserService
 	logger      *log.Logger
@@ -66,4 +74,10 @@ type CategoryHandler struct {
 	categoryService *services.CategoryService
 	logger          *log.Logger
 	errorLogger     *log.Logger
+}
+
+type CartHandler struct {
+	cartService *services.CartService
+	logger      *log.Logger
+	errorLogger *log.Logger
 }

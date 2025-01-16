@@ -25,6 +25,11 @@ type CartItem struct {
 	Quantity int     `json:"quantity" bson:"quantity"`
 }
 
+type CartItemUpdate struct {
+	ProductID string `json:"id" validate:"required"`
+	Quantity  int    `json:"quantity" validate:"required"`
+}
+
 func NewCart(newCart *CreateCart) *Cart {
 	return &Cart{
 		UserID:     newCart.UserID,
