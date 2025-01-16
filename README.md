@@ -11,12 +11,13 @@
     - [x] Products
     - [x] Categories
     - [x] Carts
-- [ ] Implement carts repository.
-- [ ] Implement carts service.
-- [ ] Implement carts handler.
+- [x] Implement carts repository.
+- [x] Implement carts service.
+- [x] Implement carts handler.
+- [ ] Refactor orders feature
 - [ ] Implement auto set shipping address to owner address if present.
 - [ ] Implement messaging for orders, whenever the status of an order changes, a message is sent to the queue, which is then sent to the email address of the user that owns the order.
-- [ ] Write tests.
+- [ ] Write tests
 
 ---
 
