@@ -28,3 +28,9 @@ type OrderService struct {
 type CategoryService struct {
 	categoryRepository *repositories.CategoryRepository
 }
+
+type CartService struct {
+	cartRepository *repositories.CartRepository
+	userService    UserService
+	productService ProductService
+}

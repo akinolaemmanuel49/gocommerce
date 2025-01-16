@@ -168,6 +168,7 @@ func (s *OrderService) ChangeOrderShippingAddressByID(ctx context.Context, ID st
 	return err
 }
 
+// AddItemToOrderByID adds an item to an order, it checks if the resource is locked first
 func (s *OrderService) AddItemToOrderByID(ctx context.Context, ID string, item models.OrderItem) error {
 	// Retrieve the order by ID
 	order, err := s.orderRepository.FindByID(ctx, ID)
@@ -228,6 +229,7 @@ func (s *OrderService) AddItemToOrderByID(ctx context.Context, ID string, item m
 	return err
 }
 
+// RemoveItemFromOrderByID removes an item from an order, it checks if the resource is locked first
 func (s *OrderService) RemoveItemFromOrderByID(ctx context.Context, ID string, productID string) error {
 	// Check whether the resource is available for modification
 	order, err := s.orderRepository.FindByID(ctx, ID)
