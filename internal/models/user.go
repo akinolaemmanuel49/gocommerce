@@ -3,7 +3,7 @@ package models
 import (
 	"time"
 
-	"golang.org/x/crypto/bcrypt"
+	"github.com/akinolaemmanuel49/gocommerce/internal/auth/utils"
 )
 
 // Database model with bson tags
@@ -42,14 +42,12 @@ type UserCredentials struct {
 }
 
 func NewUser(newUser *CreateUser, HashCost int) (*User, error) {
-	// Hash password
-	passwordInByte := []byte(newUser.Password)
-	passwordHashInByte, err := bcrypt.GenerateFromPassword(passwordInByte, HashCost)
+	// Hash the password
+	passwordHashString, err := utils.HashPassword(newUser.Password, HashCost)
 	if err != nil {
 		return nil, err
 	}
 
-	passwordHashString := string(passwordHashInByte)
 	user := &User{
 		Email:        newUser.Email,
 		PasswordHash: passwordHashString,

@@ -90,18 +90,14 @@ func NewValidationError(field, err string) error {
 	}
 }
 
-// represents an error for invalid input
-type UnauthorizedError struct {
-	Err string
-}
+// UnauthorizedError represents an error for unauthorized access
+type UnauthorizedError struct{}
 
 func (e *UnauthorizedError) Error() string {
 	return "Invalid authentication credentials"
 }
 
 // NewUnauthorizedError creates a new instance of UnauthorizedError
-func NewUnauthorizedError(err string) error {
-	return &UnauthorizedError{
-		Err: err,
-	}
+func NewUnauthorizedError() error {
+	return &UnauthorizedError{}
 }

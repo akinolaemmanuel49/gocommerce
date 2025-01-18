@@ -7,7 +7,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	"golang.org/x/crypto/bcrypt"
 
 	"github.com/akinolaemmanuel49/gocommerce/common/errors"
 	"github.com/akinolaemmanuel49/gocommerce/internal/models"
@@ -89,12 +88,6 @@ func (s *UserService) CreateUser(ctx context.Context, newUser *models.CreateUser
 	user.ID = objectID.Hex() // Set the ID to the string representation of the ObjectID
 
 	return user, nil
-}
-
-// VerifyUser accepts plain password and hashed password, compares them then, returns true if it is a match, false otherwise
-func (s *UserService) VerifyUser(ctx context.Context, plainPassword string, hashedPassword string) bool {
-	err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(plainPassword))
-	return err == nil
 }
 
 // RetrieveUserByID retrieves a user by ID
