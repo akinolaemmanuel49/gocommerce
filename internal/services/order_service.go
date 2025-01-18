@@ -26,7 +26,7 @@ func NewOrderService(orderRepository *repositories.OrderRepository, publisher *q
 // CreateOrder creates a new instance of an order and commits it to the database
 func (s *OrderService) CreateOrder(ctx context.Context, newOrder *models.CreateOrder) (*models.Order, error) {
 	// Check for valid user
-	_, err := s.userService.RetrieveUserByID(ctx, newOrder.UserID)
+	user, err := s.userService.RetrieveUserByID(ctx, newOrder.UserID)
 	if err == mongo.ErrNoDocuments {
 		return nil, errors.NewNotFoundError("User", "ID", newOrder.UserID)
 	}
@@ -35,7 +35,7 @@ func (s *OrderService) CreateOrder(ctx context.Context, newOrder *models.CreateO
 	}
 
 	// Transform CreateOrder to Order
-	order := models.NewOrder(newOrder)
+	order := models.NewOrder(newOrder, user)
 
 	// Insert order into the database
 	result, err := s.orderRepository.Insert(ctx, order)

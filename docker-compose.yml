@@ -13,6 +13,7 @@ services:
       - RABBITMQ_URI=amqp://guest:guest@rabbitmq:5672
       - ORDER_QUEUE_NAME=orderNotifications
       - DEFAULT_TIMEOUT=30
+      - JWT_SECRET_KEY=jwt-secret-key
     deploy:
       mode: replicated
       replicas: 10
