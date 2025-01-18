@@ -24,17 +24,18 @@ func HandleError(w http.ResponseWriter, r *http.Request, err error, errorLogger 
 		WriteErrorResponse(w, r, http.StatusConflict, err.Error(), errorLogger)
 	case *NotFoundError:
 		WriteErrorResponse(w, r, http.StatusNotFound, err.Error(), errorLogger)
+	case *UnauthorizedError:
+		WriteErrorResponse(w, r, http.StatusUnauthorized, err.Error(), errorLogger)
 	case *InternalServerError:
-		WriteErrorResponse(w, r, http.StatusInternalServerError, "internal server error", errorLogger) // Mask internal details
+		WriteErrorResponse(w, r, http.StatusInternalServerError, "Internal server error", errorLogger) // Mask internal details
 	default:
 		errorLogger.Printf("Unhandled error: %v", err)
-		WriteErrorResponse(w, r, http.StatusInternalServerError, "an unexpected error occurred", errorLogger)
+		WriteErrorResponse(w, r, http.StatusInternalServerError, "An unexpected error occurred", errorLogger)
 	}
 }
 
 func WriteErrorResponse(w http.ResponseWriter, r *http.Request, statusCode int, message string, errorLogger *log.Logger) {
 	w.WriteHeader(statusCode)
-	// w.(*ErrorResponseWriter).WriteHeader(statusCode)
 	errorLogger.Printf("%s %d %s [User-Agent: %s]: %v", r.Method, statusCode, r.URL.Path, r.UserAgent(), message)
 	if err := json.NewEncoder(w).Encode(ErrorResponse{Error: message}); err != nil {
 		http.Error(w, `{"error":"failed to encode error response"}`, http.StatusInternalServerError)
