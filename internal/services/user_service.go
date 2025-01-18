@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 
@@ -89,11 +90,6 @@ func (s *UserService) CreateUser(ctx context.Context, newUser *models.CreateUser
 	return user, nil
 }
 
-// VerifyUser accepts user email and password, checks if the email is valid and compares the password hash
-func (s *UserService) VerifyUser(ctx context.Context, userCredentials *models.UserCredentials) bool {
-	panic("not implemented")
-}
-
 // RetrieveUserByID retrieves a user by ID
 func (s *UserService) RetrieveUserByID(ctx context.Context, ID string) (*models.User, error) {
 	user, err := s.userRepository.FindByID(ctx, ID)
@@ -120,7 +116,14 @@ func (s *UserService) RetrieveAllUsers(ctx context.Context, filter map[string]in
 		return nil, "", err
 	}
 
-	return users, nextCursor, nil
+	var responseUsers []models.User
+
+	for _, user := range users {
+		responseUser, _ := models.ResponseUser(&user)
+		responseUsers = append(responseUsers, *responseUser)
+	}
+
+	return responseUsers, nextCursor, nil
 }
 
 // UpdateUserByID updates an instance of a user and commits it to the database
@@ -134,8 +137,12 @@ func (s *UserService) UpdateUserByID(ctx context.Context, ID string, updatedUser
 	// Transform UpdateUser to User
 	user := models.UserUpdate(updatedUser, existingUser)
 
+	update := bson.M{
+		"$set": user,
+	}
+
 	// Update user in database
-	_, err = s.userRepository.Update(ctx, ID, user)
+	_, err = s.userRepository.Update(ctx, ID, update)
 	if err != nil {
 		return nil, err
 	}
@@ -169,7 +176,9 @@ func (s *UserService) DeleteUserByID(ctx context.Context, ID string) error {
 			},
 		}
 
-		_, err = s.userRepository.Update(ctx, ID, user)
+		deleted := bson.M{"$set": user}
+
+		_, err = s.userRepository.Update(ctx, ID, deleted)
 		if err != nil {
 			return err
 		}

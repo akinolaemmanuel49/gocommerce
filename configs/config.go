@@ -11,6 +11,7 @@ type Config struct {
 	OrderQueueName string `mapstructure:"ORDER_QUEUE_NAME"`
 	Port           string `mapstructure:"PORT"`
 	DefaultTimeout string `mapstructure:"DEFAULT_TIMEOUT"`
+	JWTSecretKey   string `mapstructure:"JWT_SECRET_KEY"`
 }
 
 func LoadConfig(path string) (config Config, err error) {

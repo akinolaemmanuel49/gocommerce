@@ -24,7 +24,7 @@ func (db *Database) Connect(uri string, dbName string) (*mongo.Database, error) 
 	serverAPI := options.ServerAPI(options.ServerAPIVersion1)
 	opts := options.Client().
 		ApplyURI(uri).
-		// SetMaxPoolSize(500). // Max pool size for free tier is 100
+		// SetMaxPoolSize(1000). // Max pool size for free tier is 100
 		SetServerAPIOptions(serverAPI)
 
 	// Create a context with a timeout

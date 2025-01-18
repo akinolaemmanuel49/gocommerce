@@ -18,12 +18,17 @@ type ProductService struct {
 type OrderService struct {
 	orderRepository *repositories.OrderRepository
 	userService     UserService
-	// config          *configs.Config
-	publisher *queue.Publisher
-	// logger          *log.Logger
-	errorLogger *log.Logger
+	cartService     CartService
+	publisher       *queue.Publisher
+	errorLogger     *log.Logger
 }
 
 type CategoryService struct {
 	categoryRepository *repositories.CategoryRepository
+}
+
+type CartService struct {
+	cartRepository *repositories.CartRepository
+	userService    UserService
+	productService ProductService
 }

@@ -3,6 +3,7 @@ module github.com/akinolaemmanuel49/gocommerce
 go 1.22.3
 
 require (
+	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/gorilla/mux v1.8.1
 	github.com/rabbitmq/amqp091-go v1.10.0
 	github.com/spf13/viper v1.19.0

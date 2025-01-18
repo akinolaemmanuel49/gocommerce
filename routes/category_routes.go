@@ -7,6 +7,7 @@ import (
 	"github.com/akinolaemmanuel49/gocommerce/internal/handlers"
 	"github.com/akinolaemmanuel49/gocommerce/internal/repositories"
 	"github.com/akinolaemmanuel49/gocommerce/internal/services"
+	"github.com/akinolaemmanuel49/gocommerce/middlewares"
 	"github.com/gorilla/mux"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -22,6 +23,8 @@ func RegisterCategoryRoutes(router *mux.Router, db *mongo.Database, logger, erro
 
 	// Initialize the handler
 	categoryHandler := handlers.NewCategoryHandler(categoryService, logger, errorLogger)
+
+	router.Use(middlewares.ErrorMiddleware) // Attach ErrorMiddleware
 
 	router.HandleFunc(RouteCategories, func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
@@ -40,19 +43,12 @@ func RegisterCategoryRoutes(router *mux.Router, db *mongo.Database, logger, erro
 		switch r.Method {
 		case "GET":
 			categoryHandler.Read(w, r, id)
-		case "PATCH":
+		case "PUT":
 			categoryHandler.Update(w, r, id)
+		case "DELETE":
+			categoryHandler.Delete(w, r, id)
 		default:
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		}
-	})
-
-	router.HandleFunc(RouteCategories+"/{id}/delete", func(w http.ResponseWriter, r *http.Request) {
-		id := mux.Vars(r)["id"] // Extract the `id` path parameter
-
-		switch r.Method {
-		case "PATCH":
-			categoryHandler.Delete(w, r, id)
 		}
 	})
 }

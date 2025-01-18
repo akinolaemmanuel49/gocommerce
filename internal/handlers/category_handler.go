@@ -67,7 +67,7 @@ func (h *CategoryHandler) Read(w http.ResponseWriter, r *http.Request, ID string
 	utils.WriteJSON(w, r, http.StatusOK, category, h.logger)
 }
 
-// ReadAll handles GET /categories requests with optional filter
+// ReadAll handles GET /categories requests with optional filters
 func (h *CategoryHandler) ReadAll(w http.ResponseWriter, r *http.Request) {
 	// Log to stdout
 	h.logger.Printf("%v %v", r.Method, r.URL.Path)
@@ -103,7 +103,7 @@ func (h *CategoryHandler) ReadAll(w http.ResponseWriter, r *http.Request) {
 	utils.WriteJSON(w, r, http.StatusOK, response, h.logger)
 }
 
-// Update handles PATCH /categories/:id/delete requests
+// Update handles PUT /categories/:id requests
 func (h *CategoryHandler) Update(w http.ResponseWriter, r *http.Request, ID string) {
 	// Validate the ID
 	if err := utils.ValidateID(ID, "Category"); err != nil {
@@ -129,7 +129,7 @@ func (h *CategoryHandler) Update(w http.ResponseWriter, r *http.Request, ID stri
 	utils.WriteJSON(w, r, http.StatusOK, user, h.logger)
 }
 
-// Delete handles PATCH /categories/:id/delete requests
+// Delete handles DELETE /categories/:id requests
 func (h *CategoryHandler) Delete(w http.ResponseWriter, r *http.Request, ID string) {
 	// Validate the ID
 	if err := utils.ValidateID(ID, "Category"); err != nil {

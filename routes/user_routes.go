@@ -7,7 +7,7 @@ import (
 	"github.com/akinolaemmanuel49/gocommerce/internal/handlers"
 	"github.com/akinolaemmanuel49/gocommerce/internal/repositories"
 	"github.com/akinolaemmanuel49/gocommerce/internal/services"
-	"github.com/akinolaemmanuel49/gocommerce/middleware"
+	"github.com/akinolaemmanuel49/gocommerce/middlewares"
 	"github.com/gorilla/mux"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -24,7 +24,7 @@ func RegisterUserRoutes(router *mux.Router, db *mongo.Database, logger, errorLog
 	// Initialize the handler
 	userHandler := handlers.NewUserHandler(userService, logger, errorLogger)
 
-	router.Use(middleware.ErrorMiddleware) // Attach ErrorMiddleware
+	router.Use(middlewares.ErrorMiddleware) // Attach ErrorMiddleware
 
 	router.HandleFunc(RouteUsers, func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
@@ -43,19 +43,12 @@ func RegisterUserRoutes(router *mux.Router, db *mongo.Database, logger, errorLog
 		switch r.Method {
 		case "GET":
 			userHandler.Read(w, r, id)
-		case "PATCH":
+		case "PUT":
 			userHandler.Update(w, r, id)
+		case "DELETE":
+			userHandler.Delete(w, r, id)
 		default:
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		}
-	})
-
-	router.HandleFunc(RouteUsers+"/{id}/delete", func(w http.ResponseWriter, r *http.Request) {
-		id := mux.Vars(r)["id"] // Extract the `id` path parameter
-
-		switch r.Method {
-		case "PATCH":
-			userHandler.Delete(w, r, id)
 		}
 	})
 }

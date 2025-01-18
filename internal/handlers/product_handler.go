@@ -118,7 +118,7 @@ func (h *ProductHandler) ReadAll(w http.ResponseWriter, r *http.Request) {
 	utils.WriteJSON(w, r, http.StatusOK, response, h.logger)
 }
 
-// Update handles PATCH /products/:id requests
+// Update handles PUT /products/:id requests
 func (h *ProductHandler) Update(w http.ResponseWriter, r *http.Request, id string) {
 	// Validate the ID
 	if err := utils.ValidateID(id, "Product"); err != nil {
@@ -145,7 +145,7 @@ func (h *ProductHandler) Update(w http.ResponseWriter, r *http.Request, id strin
 	utils.WriteJSON(w, r, http.StatusOK, product, h.logger)
 }
 
-// Delete handles PATCH /products/:id/delete requests
+// Delete handles DELETE /products/:id requests
 func (h *ProductHandler) Delete(w http.ResponseWriter, r *http.Request, id string) {
 	// Validate the ID
 	if err := utils.ValidateID(id, "Product"); err != nil {

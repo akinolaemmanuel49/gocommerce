@@ -7,6 +7,7 @@ import (
 	"github.com/akinolaemmanuel49/gocommerce/common/errors"
 	"github.com/akinolaemmanuel49/gocommerce/internal/models"
 	"github.com/akinolaemmanuel49/gocommerce/internal/repositories"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -65,17 +66,14 @@ func (s *CategoryService) UpdateCategoryByID(ctx context.Context, ID string, upd
 	}
 
 	// Transform UpdateCategory to Category
-	category := &models.Category{
-		Name:        models.IfNotNil(updatedCategory.Name, existingCategory.Name),
-		Description: models.IfNotNil(updatedCategory.Description, existingCategory.Description),
-		Image:       models.IfNotNil(updatedCategory.Image, existingCategory.Image),
-		CommonFields: models.CommonFields{
-			UpdatedAt: time.Now(),
-		},
+	category := models.CategoryUpdate(updatedCategory, existingCategory)
+
+	update := bson.M{
+		"$set": category,
 	}
 
 	// Update category in database
-	_, err = s.categoryRepository.Update(ctx, ID, category)
+	_, err = s.categoryRepository.Update(ctx, ID, update)
 	if err != nil {
 		return nil, err
 	}
@@ -103,7 +101,9 @@ func (s *CategoryService) DeleteCategoryByID(ctx context.Context, ID string) err
 			},
 		}
 
-		_, err = s.categoryRepository.Update(ctx, ID, category)
+		deleted := bson.M{"$set": category}
+
+		_, err = s.categoryRepository.Update(ctx, ID, deleted)
 		if err != nil {
 			return err
 		}

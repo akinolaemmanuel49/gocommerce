@@ -24,6 +24,7 @@ var _ IUserHandler = (*UserHandler)(nil)
 
 // Create handles POST /user requests
 func (h *UserHandler) Create(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	var req models.CreateUser
 
 	// Parse request body
@@ -33,7 +34,7 @@ func (h *UserHandler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Call service to create user
-	user, err := h.userService.CreateUser(r.Context(), &req)
+	user, err := h.userService.CreateUser(ctx, &req)
 	if err != nil {
 		errors.HandleError(w, r, err, h.errorLogger)
 		return
@@ -64,8 +65,14 @@ func (h *UserHandler) Read(w http.ResponseWriter, r *http.Request, ID string) {
 		return
 	}
 
+	responseUser, err := models.ResponseUser(user)
+	if err != nil {
+		errors.HandleError(w, r, errors.NewValidationError("", "An error occurred while trying to parse user"), h.errorLogger)
+		return
+	}
+
 	// Respond with the user data
-	utils.WriteJSON(w, r, http.StatusOK, user, h.logger)
+	utils.WriteJSON(w, r, http.StatusOK, responseUser, h.logger)
 }
 
 // ReadAll handles GET /users requests
@@ -115,7 +122,7 @@ func (h *UserHandler) ReadAll(w http.ResponseWriter, r *http.Request) {
 	utils.WriteJSON(w, r, http.StatusOK, response, h.logger)
 }
 
-// Update handles PATCH /users/:id requests
+// Update handles PUT /users/:id requests
 func (h *UserHandler) Update(w http.ResponseWriter, r *http.Request, ID string) {
 	// Validate the ID
 	if err := utils.ValidateID(ID, "User"); err != nil {
@@ -141,7 +148,7 @@ func (h *UserHandler) Update(w http.ResponseWriter, r *http.Request, ID string) 
 	utils.WriteJSON(w, r, http.StatusOK, user, h.logger)
 }
 
-// Delete handles PATCH /users/:id/delete requests
+// Delete handles DELETE /users/:id requests
 func (h *UserHandler) Delete(w http.ResponseWriter, r *http.Request, ID string) {
 	// Validate the ID
 	if err := utils.ValidateID(ID, "User"); err != nil {

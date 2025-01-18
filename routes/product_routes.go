@@ -7,6 +7,7 @@ import (
 	"github.com/akinolaemmanuel49/gocommerce/internal/handlers"
 	"github.com/akinolaemmanuel49/gocommerce/internal/repositories"
 	"github.com/akinolaemmanuel49/gocommerce/internal/services"
+	"github.com/akinolaemmanuel49/gocommerce/middlewares"
 	"github.com/gorilla/mux"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -22,6 +23,8 @@ func RegisterProductRoutes(router *mux.Router, db *mongo.Database, logger, error
 
 	// Initialize the handler
 	productHandler := handlers.NewProductHandler(productService, logger, errorLogger)
+
+	router.Use(middlewares.ErrorMiddleware) // Attach ErrorMiddleware
 
 	router.HandleFunc(RouteProducts, func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
@@ -40,19 +43,12 @@ func RegisterProductRoutes(router *mux.Router, db *mongo.Database, logger, error
 		switch r.Method {
 		case "GET":
 			productHandler.Read(w, r, id)
-		case "PATCH":
+		case "PUT":
 			productHandler.Update(w, r, id)
+		case "DELETE":
+			productHandler.Delete(w, r, id)
 		default:
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		}
-	})
-
-	router.HandleFunc(RouteProducts+"/{id}/delete", func(w http.ResponseWriter, r *http.Request) {
-		id := mux.Vars(r)["id"] // Extract the `id` path parameter
-
-		switch r.Method {
-		case "PATCH":
-			productHandler.Delete(w, r, id)
 		}
 	})
 }
