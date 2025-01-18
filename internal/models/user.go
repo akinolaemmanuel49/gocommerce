@@ -19,6 +19,24 @@ type User struct {
 	CommonFields `bson:"inline"`
 }
 
+func ResponseUser(user *User) (*User, error) {
+	responseUser := &User{
+		Email:     user.Email,
+		FirstName: user.FirstName,
+		LastName:  user.LastName,
+		Address:   user.Address,
+		Phone:     user.Phone,
+		Role:      user.Role,
+		CommonFields: CommonFields{
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
+			IsDeleted: false,
+		},
+	}
+
+	return responseUser, nil
+}
+
 // Request DTO for creating a user
 type CreateUser struct {
 	Email     string `json:"email" validate:"required,email"`
@@ -34,11 +52,6 @@ type UpdateUser struct {
 	LastName  *string        `json:"lastName,omitempty"`
 	Phone     *string        `json:"phone,omitempty"`
 	Address   *UpdateAddress `json:"address,omitempty"`
-}
-
-type UserCredentials struct {
-	Email    string
-	Password string
 }
 
 func NewUser(newUser *CreateUser, HashCost int) (*User, error) {

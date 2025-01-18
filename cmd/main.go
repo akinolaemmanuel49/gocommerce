@@ -129,6 +129,9 @@ func setupRoutes(config *configs.Config, router *mux.Router, db *mongo.Database,
 	// Order routes
 	routes.RegisterOrderRoutes(config, router, db, logger, errorLogger)
 
+	// Auth routes
+	routes.RegisterAuthRoutes(config, router, db, logger, errorLogger)
+
 	// Catch-all for unmatched routes
 	router.NotFoundHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		errors.HandleError(w, r, errors.NewNotFoundError("route", "path", r.URL.Path), errorLogger)

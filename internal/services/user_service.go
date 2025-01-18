@@ -116,7 +116,14 @@ func (s *UserService) RetrieveAllUsers(ctx context.Context, filter map[string]in
 		return nil, "", err
 	}
 
-	return users, nextCursor, nil
+	var responseUsers []models.User
+
+	for _, user := range users {
+		responseUser, _ := models.ResponseUser(&user)
+		responseUsers = append(responseUsers, *responseUser)
+	}
+
+	return responseUsers, nextCursor, nil
 }
 
 // UpdateUserByID updates an instance of a user and commits it to the database
