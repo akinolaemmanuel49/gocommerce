@@ -20,6 +20,7 @@ func RegisterOrderRoutes(config *configs.Config, router *mux.Router, db *mongo.D
 	orderRepository := repositories.NewOrderRepository(db)
 	userRepository := repositories.NewUserRepository(db)
 	productRepository := repositories.NewProductRepository(db)
+	cartRepository := repositories.NewCartRepository(db)
 
 	// Initialize the publisher
 	publisher, err := queue.NewPublisher(config)
@@ -30,7 +31,8 @@ func RegisterOrderRoutes(config *configs.Config, router *mux.Router, db *mongo.D
 	// Initialize services
 	userService := services.NewUserService(userRepository)
 	productService := services.NewProductService(productRepository)
-	orderService := services.NewOrderService(orderRepository, publisher, userService, productService)
+	cartService := services.NewCartService(cartRepository, *userService, *productService)
+	orderService := services.NewOrderService(orderRepository, publisher, userService, cartService)
 
 	// Initialize the handler
 	orderHandler := handlers.NewOrderHandler(orderService, logger, errorLogger)
@@ -75,22 +77,23 @@ func RegisterOrderRoutes(config *configs.Config, router *mux.Router, db *mongo.D
 		}
 	})
 
-	router.HandleFunc(RouteOrders+"/{id}/items/remove/{productId}", func(w http.ResponseWriter, r *http.Request) {
-		id := mux.Vars(r)["id"]               // Extract the `id` path parameter
-		productId := mux.Vars(r)["productId"] // Extract the `productId` path parameter
+	router.HandleFunc(RouteOrders+"/{id}/carts/remove/{cartId}", func(w http.ResponseWriter, r *http.Request) {
+		id := mux.Vars(r)["id"]         // Extract the `id` path parameter
+		cartId := mux.Vars(r)["cartId"] // Extract the `cartId` path parameter
 
 		switch r.Method {
 		case "PUT":
-			orderHandler.RemoveItemFromOrder(w, r, id, productId)
+			orderHandler.RemoveCartFromOrder(w, r, id, cartId)
 		}
 	})
 
-	router.HandleFunc(RouteOrders+"/{id}/items/add", func(w http.ResponseWriter, r *http.Request) {
-		id := mux.Vars(r)["id"] // Extract the `id` path parameter
+	router.HandleFunc(RouteOrders+"/{id}/carts/add/{cartId}", func(w http.ResponseWriter, r *http.Request) {
+		id := mux.Vars(r)["id"]         // Extract the `id` path parameter
+		cartId := mux.Vars(r)["cartId"] // Extract the `cartId` path parameter
 
 		switch r.Method {
 		case "PUT":
-			orderHandler.AddItemToOrder(w, r, id)
+			orderHandler.AddCartToOrder(w, r, id, cartId)
 		}
 	})
 

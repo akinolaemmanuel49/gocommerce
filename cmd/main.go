@@ -117,14 +117,17 @@ func setupRoutes(config *configs.Config, router *mux.Router, db *mongo.Database,
 	// User routes
 	routes.RegisterUserRoutes(router, db, logger, errorLogger)
 
+	// Category routes
+	routes.RegisterCategoryRoutes(router, db, logger, errorLogger)
+
 	// Product routes
 	routes.RegisterProductRoutes(router, db, logger, errorLogger)
 
+	// Cart Routes
+	routes.RegisterCartRoutes(config, router, db, logger, errorLogger)
+
 	// Order routes
 	routes.RegisterOrderRoutes(config, router, db, logger, errorLogger)
-
-	// Category routes
-	routes.RegisterCategoryRoutes(router, db, logger, errorLogger)
 
 	// Catch-all for unmatched routes
 	router.NotFoundHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

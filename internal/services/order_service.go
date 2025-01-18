@@ -14,12 +14,12 @@ import (
 )
 
 // NewOrderService creates a new instance of OrderService
-func NewOrderService(orderRepository *repositories.OrderRepository, publisher *queue.Publisher, userService *UserService, productService *ProductService) *OrderService {
+func NewOrderService(orderRepository *repositories.OrderRepository, publisher *queue.Publisher, userService *UserService, cartService *CartService) *OrderService {
 	return &OrderService{
 		orderRepository: orderRepository,
 		publisher:       publisher,
 		userService:     *userService,
-		productService:  *productService,
+		cartService:     *cartService,
 	}
 }
 
@@ -104,14 +104,6 @@ func (s *OrderService) ChangeOrderStatusByID(ctx context.Context, ID string, sta
 		return errors.NewValidationError("Status", "Unable to alter this resource, because it has been cancelled")
 	}
 
-	// if !existingOrder.IsLocked && status == "shipped" || !existingOrder.IsLocked && status == "delivered" {
-	// 	updateWithLock := bson.M{"$set": bson.M{"status": status, "isLocked": true, "updatedAt": time.Now()}}
-	// 	_, err = s.orderRepository.Update(ctx, ID, updateWithLock)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// }
-
 	if !existingOrder.IsLocked {
 		return errors.NewValidationError("Status", "Cannot modify this resource, because it is not locked")
 	}
@@ -123,7 +115,6 @@ func (s *OrderService) ChangeOrderStatusByID(ctx context.Context, ID string, sta
 
 	// Ensure status field can only ever be progressively updated
 	if existingOrder.Status == "shipped" && status == "delivered" || existingOrder.Status == "pending" && status == "shipped" {
-		// update := bson.M{"$set": bson.M{"status": status, "updatedAt": time.Now()}}
 		update := bson.M{"status": status, "updatedAt": time.Now()}
 		_, err = s.orderRepository.Update(ctx, ID, update)
 		if err != nil {
@@ -168,8 +159,8 @@ func (s *OrderService) ChangeOrderShippingAddressByID(ctx context.Context, ID st
 	return err
 }
 
-// AddItemToOrderByID adds an item to an order, it checks if the resource is locked first
-func (s *OrderService) AddItemToOrderByID(ctx context.Context, ID string, item models.OrderItem) error {
+// AddCartToOrderByID adds a cart to an order, it checks if the resource is locked first
+func (s *OrderService) AddCartToOrderByID(ctx context.Context, ID string, cartID string) error {
 	// Retrieve the order by ID
 	order, err := s.orderRepository.FindByID(ctx, ID)
 	if err != nil {
@@ -178,47 +169,34 @@ func (s *OrderService) AddItemToOrderByID(ctx context.Context, ID string, item m
 
 	// Check if the order can be modified
 	if order.IsLocked {
-		return errors.NewValidationError("Items", "Unable to alter this resource, because it is locked")
+		return errors.NewValidationError("Cart", "Unable to alter this resource, because it is locked")
 	}
 	if order.IsCancelled {
-		return errors.NewValidationError("Items", "Unable to alter this resource, because it has been cancelled")
+		return errors.NewValidationError("Cart", "Unable to alter this resource, because it has been cancelled")
 	}
 
-	// Flag to track if the item already exists
-	itemExists := false
-
-	// Check if product is valid
-	product, err := s.productService.RetrieveProductByID(ctx, item.ProductID)
+	// Check if cart is valid
+	cart, err := s.cartService.RetrieveCartByID(ctx, cartID)
 	if err != nil {
-		return errors.NewNotFoundError("Product", "ID", item.ProductID)
+		return errors.NewNotFoundError("Cart", "ID", cartID)
 	}
 
-	// Set the item price
-	item.Price = product.Price
-
-	// Update the items and total price in memory
-	for i, existingItem := range order.Items {
-		if existingItem.ProductID == item.ProductID {
-			// Item exists, increment quantity and update price
-			order.Items[i].Quantity += item.Quantity
-			order.Items[i].Price += item.Price * float64(item.Quantity)
-			itemExists = true
-			break
+	// Check for cart in order, if present return conflict error
+	for _, c := range order.Carts {
+		if c.ID == cartID {
+			return errors.NewConflictError("Cart", "ID", cartID)
 		}
 	}
 
-	// If the item does not exist, add it to the items list
-	if !itemExists {
-		order.Items = append(order.Items, item)
-	}
-
-	// Update the total price
-	order.TotalPrice += item.Price * float64(item.Quantity)
+	// Add cart to carts and increment order total price
+	order.Carts = append(order.Carts, *cart)
+	// Set the total price for orders
+	order.TotalPrice += cart.TotalPrice
 
 	// Prepare update fields for the database
 	updateFields := bson.M{
 		"$set": bson.M{
-			"items":      order.Items,
+			"carts":      order.Carts,
 			"totalPrice": order.TotalPrice,
 			"updatedAt":  time.Now(),
 		},
@@ -229,41 +207,47 @@ func (s *OrderService) AddItemToOrderByID(ctx context.Context, ID string, item m
 	return err
 }
 
-// RemoveItemFromOrderByID removes an item from an order, it checks if the resource is locked first
-func (s *OrderService) RemoveItemFromOrderByID(ctx context.Context, ID string, productID string) error {
+// RemoveCartFromOrderByID removes a cart from an order, it checks if the resource is locked first
+func (s *OrderService) RemoveCartFromOrderByID(ctx context.Context, ID string, cartID string) error {
 	// Check whether the resource is available for modification
 	order, err := s.orderRepository.FindByID(ctx, ID)
 	if err != nil {
 		return err
 	}
 	if order.IsLocked {
-		return errors.NewValidationError("Items", "Unable to alter this resource because it is locked")
+		return errors.NewValidationError("Carts", "Unable to alter this resource because it is locked")
 	}
 	if order.IsCancelled {
-		return errors.NewValidationError("Items", "Unable to alter this resource because it has been cancelled")
+		return errors.NewValidationError("Carts", "Unable to alter this resource because it has been cancelled")
 	}
 
-	// Filter items and calculate the adjustment to the total price
-	var updatedItems []models.OrderItem
+	// Check if cart with matching id is present in order carts
+	_, err = s.cartService.RetrieveCartByID(ctx, cartID)
+	if err != nil {
+		return errors.NewNotFoundError("Cart", "ID", cartID)
+	}
+
+	// Remove cart with matching id from order carts
+	var updatedCart []models.Cart
 	totalPriceAdjustment := 0.0
-	for _, item := range order.Items {
-		if item.ProductID == productID {
-			totalPriceAdjustment -= item.Price * float64(item.Quantity)
+	for _, c := range order.Carts {
+		if c.ID == cartID {
+			totalPriceAdjustment -= c.TotalPrice
 			continue
 		}
-		updatedItems = append(updatedItems, item)
+		updatedCart = append(updatedCart, c)
 	}
 
-	// If there are no remaining items, the total price should be 0
+	// If there are no remaining carts, the total price should be 0
 	newTotalPrice := order.TotalPrice + totalPriceAdjustment
-	if len(updatedItems) == 0 {
+	if len(updatedCart) == 0 {
 		newTotalPrice = 0
 	}
 
 	// Prepare the update fields
 	update := bson.M{
 		"$set": bson.M{
-			"items":      updatedItems,
+			"carts":      updatedCart,
 			"totalPrice": newTotalPrice,
 			"updatedAt":  time.Now(),
 		},

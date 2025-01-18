@@ -7,7 +7,6 @@ type Cart struct {
 	UserID       string     `json:"userId" bson:"userId"`
 	Items        []CartItem `json:"items" bson:"items"`
 	TotalPrice   float64    `json:"totalPrice" bson:"totalPrice"`
-	IsOrdered    bool       `json:"isOrdered" bson:"isOrdered"`
 	Name         string     `json:"name,omitempty" bson:"name,omitempty"`
 	CommonFields `bson:"inline"`
 }
@@ -34,7 +33,6 @@ func NewCart(newCart *CreateCart) *Cart {
 	return &Cart{
 		UserID:     newCart.UserID,
 		TotalPrice: 0,
-		IsOrdered:  false,
 		Name:       newCart.Name,
 		CommonFields: CommonFields{
 			CreatedAt: time.Now(),

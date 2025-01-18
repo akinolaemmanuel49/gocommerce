@@ -174,55 +174,53 @@ func (h *OrderHandler) UpdateOrderShippingAddress(w http.ResponseWriter, r *http
 	utils.WriteJSON(w, r, http.StatusOK, response, h.logger)
 }
 
-// AddItemToOrder handles PUT /orders/:id/items/add requests
-func (h *OrderHandler) AddItemToOrder(w http.ResponseWriter, r *http.Request, id string) {
+// AddCartToOrder handles PUT /orders/:id/carts/add/:cartID requests
+func (h *OrderHandler) AddCartToOrder(w http.ResponseWriter, r *http.Request, id string, cartID string) {
+	ctx := r.Context()
 	// Validate ID
 	if err := utils.ValidateID(id, "Order"); err != nil {
 		errors.HandleError(w, r, errors.NewValidationError("id", "Invalid order ID"), h.errorLogger)
 		return
 	}
-
-	var input models.OrderItem
-
-	// Parse request body
-	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		errors.HandleError(w, r, errors.NewValidationError("", "Invalid request body"), h.errorLogger)
+	if err := utils.ValidateID(id, "Cart"); err != nil {
+		errors.HandleError(w, r, errors.NewValidationError("id", "Invalid cart ID"), h.errorLogger)
 		return
 	}
 
-	// Call service to add new item to order
-	err := h.orderService.AddItemToOrderByID(r.Context(), id, input)
+	// Call service to add new cart to order
+	err := h.orderService.AddCartToOrderByID(ctx, id, cartID)
 	if err != nil {
 		errors.HandleError(w, r, err, h.errorLogger)
 		return
 	}
 
 	// Respond with success message
-	response := map[string]string{"message": "Add order item was successful"}
+	response := map[string]string{"message": "Add cart to order was successful"}
 	utils.WriteJSON(w, r, http.StatusOK, response, h.logger)
 }
 
-// RemoveItemFromOrder handles PUT /orders/:id/items/remove/:productID requests
-func (h *OrderHandler) RemoveItemFromOrder(w http.ResponseWriter, r *http.Request, id string, productID string) {
+// RemoveCartFromOrder handles PUT /orders/:id/carts/remove/:cartID requests
+func (h *OrderHandler) RemoveCartFromOrder(w http.ResponseWriter, r *http.Request, id string, cartID string) {
+	ctx := r.Context()
 	// Validate IDs
 	if err := utils.ValidateID(id, "Order"); err != nil {
 		errors.HandleError(w, r, errors.NewValidationError("id", "Invalid order ID"), h.errorLogger)
 		return
 	}
-	if err := utils.ValidateID(productID, "Product"); err != nil {
-		errors.HandleError(w, r, errors.NewValidationError("id", "Invalid product ID"), h.errorLogger)
+	if err := utils.ValidateID(cartID, "Cart"); err != nil {
+		errors.HandleError(w, r, errors.NewValidationError("id", "Invalid cart ID"), h.errorLogger)
 		return
 	}
 
-	// Call service to add new item to order
-	err := h.orderService.RemoveItemFromOrderByID(r.Context(), id, productID)
+	// Call service to add new cart to order
+	err := h.orderService.RemoveCartFromOrderByID(ctx, id, cartID)
 	if err != nil {
 		errors.HandleError(w, r, err, h.errorLogger)
 		return
 	}
 
 	// Respond with success message
-	response := map[string]string{"message": "Remove order item was successful"}
+	response := map[string]string{"message": "Remove cart from order was successful"}
 	utils.WriteJSON(w, r, http.StatusOK, response, h.logger)
 }
 
