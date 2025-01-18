@@ -1,0 +1,70 @@
+services:
+  # gocommerce:
+  #   image: gocommerce:latest
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "8000-8009:8000"
+  #   environment:
+  #     - PORT=8000
+  #     - MONGODB_URI=mongodb://mongo:27017
+  #     - MONGODB_NAME=gocommerce
+  #     - RABBITMQ_URI=amqp://guest:guest@rabbitmq:5672
+  #     - ORDER_QUEUE_NAME=orderNotifications
+  #     - DEFAULT_TIMEOUT=30
+  #   deploy:
+  #     mode: replicated
+  #     replicas: 10
+  #   depends_on:
+  #     mongo:
+  #       condition: service_healthy
+  #       restart: true
+  #     rabbitmq:
+  #       condition: service_healthy
+  #       restart: true
+
+  mongo:
+    image: mongo:latest
+    container_name: mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: echo 'db.runCommand("ping")'
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 1m
+
+  rabbitmq:
+    image: rabbitmq:management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 30s
+      timeout: 30s
+      retries: 5
+      start_period: 1m
+
+  # nginx:
+  #   image: nginx:latest
+  #   container_name: nginx
+  #   ports:
+  #     - "80:80"
+  #   volumes:
+  #     - ./nginx.conf:/etc/nginx/nginx.conf:ro
+  #   depends_on:
+  #     - gocommerce
+  #     - mongo
+  #     - rabbitmq
+
+volumes:
+  mongo_data:

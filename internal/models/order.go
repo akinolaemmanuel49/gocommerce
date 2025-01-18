@@ -47,13 +47,13 @@ type UpdateOrder struct {
 	ShippingAddress Address `json:"shippingAddress,omitempty"`
 }
 
-func NewOrder(newOrder *CreateOrder) *Order {
+func NewOrder(newOrder *CreateOrder, user *User) *Order {
 	return &Order{
 		UserID:          newOrder.UserID,
 		Items:           newOrder.Items,
 		TotalPrice:      newOrder.TotalPrice,
 		Status:          "pending",
-		ShippingAddress: newOrder.ShippingAddress,
+		ShippingAddress: user.Address,
 		IsLocked:        false,
 		IsCancelled:     false,
 		CommonFields: CommonFields{

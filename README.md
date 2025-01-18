@@ -2,6 +2,29 @@
 
 ---
 
+## **Todo**
+- [x] Implement all CRUD routes and expose them
+- [x] Update deletion logic. Add "$set" to all queries.
+- [x] Document implemented and planned API routes using POSTMAN
+    - [x] Orders
+    - [x] Users
+    - [x] Products
+    - [x] Categories
+    - [x] Carts
+    - [x] Auth
+- [x] Implement carts repository.
+- [x] Implement carts service.
+- [x] Implement carts handler.
+- [x] Refactor orders feature.
+- [x] Implement authentication feature (JWT Authentication).
+- [x] Implement auto set shipping address to owner address if present.
+- [x] Implement messaging for orders, whenever the status of an order changes, a message is sent to the queue.
+- [ ] Add route protection to concerned routes.
+- [ ] Implement email messaging for order creation, status changes and cancellation.
+- [ ] Write tests
+
+---
+
 ## **Features**
 
 - [ ] **Product Catalog**: Search, filter, and browse through products.
