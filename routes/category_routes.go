@@ -7,6 +7,7 @@ import (
 	"github.com/akinolaemmanuel49/gocommerce/internal/handlers"
 	"github.com/akinolaemmanuel49/gocommerce/internal/repositories"
 	"github.com/akinolaemmanuel49/gocommerce/internal/services"
+	"github.com/akinolaemmanuel49/gocommerce/middlewares"
 	"github.com/gorilla/mux"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -22,6 +23,8 @@ func RegisterCategoryRoutes(router *mux.Router, db *mongo.Database, logger, erro
 
 	// Initialize the handler
 	categoryHandler := handlers.NewCategoryHandler(categoryService, logger, errorLogger)
+
+	router.Use(middlewares.ErrorMiddleware) // Attach ErrorMiddleware
 
 	router.HandleFunc(RouteCategories, func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {

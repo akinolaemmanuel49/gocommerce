@@ -9,6 +9,7 @@ import (
 	"github.com/akinolaemmanuel49/gocommerce/internal/queue"
 	"github.com/akinolaemmanuel49/gocommerce/internal/repositories"
 	"github.com/akinolaemmanuel49/gocommerce/internal/services"
+	"github.com/akinolaemmanuel49/gocommerce/middlewares"
 	"github.com/gorilla/mux"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -36,6 +37,8 @@ func RegisterOrderRoutes(config *configs.Config, router *mux.Router, db *mongo.D
 
 	// Initialize the handler
 	orderHandler := handlers.NewOrderHandler(orderService, logger, errorLogger)
+
+	router.Use(middlewares.ErrorMiddleware) // Attach ErrorMiddleware
 
 	router.HandleFunc(RouteOrders, func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {

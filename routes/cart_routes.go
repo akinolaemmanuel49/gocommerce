@@ -8,6 +8,7 @@ import (
 	"github.com/akinolaemmanuel49/gocommerce/internal/handlers"
 	"github.com/akinolaemmanuel49/gocommerce/internal/repositories"
 	"github.com/akinolaemmanuel49/gocommerce/internal/services"
+	"github.com/akinolaemmanuel49/gocommerce/middlewares"
 	"github.com/gorilla/mux"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -27,6 +28,8 @@ func RegisterCartRoutes(config *configs.Config, router *mux.Router, db *mongo.Da
 
 	// Initialize the handler
 	cartHandler := handlers.NewCartHandler(cartService, logger, errorLogger)
+
+	router.Use(middlewares.ErrorMiddleware) // Attach ErrorMiddleware
 
 	router.HandleFunc(RouteCarts, func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
