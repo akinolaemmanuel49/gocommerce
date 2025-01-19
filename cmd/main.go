@@ -12,6 +12,7 @@ import (
 
 	"github.com/akinolaemmanuel49/gocommerce/common/errors"
 	"github.com/akinolaemmanuel49/gocommerce/configs"
+	auth_routes "github.com/akinolaemmanuel49/gocommerce/internal/auth/routes"
 	l "github.com/akinolaemmanuel49/gocommerce/log"
 	"github.com/akinolaemmanuel49/gocommerce/routes"
 	"github.com/gorilla/mux"
@@ -130,7 +131,7 @@ func setupRoutes(config *configs.Config, router *mux.Router, db *mongo.Database,
 	routes.RegisterOrderRoutes(config, router, db, logger, errorLogger)
 
 	// Auth routes
-	routes.RegisterAuthRoutes(config, router, db, logger, errorLogger)
+	auth_routes.RegisterAuthRoutes(config, router, db, logger, errorLogger)
 
 	// Catch-all for unmatched routes
 	router.NotFoundHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

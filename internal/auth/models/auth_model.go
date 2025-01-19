@@ -8,8 +8,7 @@ type UserCredentials struct {
 }
 
 type Token struct {
-	AccessToken  string
-	RefreshToken string
+	Token string `json:"token"`
 }
 
 type JWTClaims struct {

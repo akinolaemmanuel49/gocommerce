@@ -32,7 +32,7 @@ func RegisterAuthRoutes(config *configs.Config, router *mux.Router, db *mongo.Da
 
 	router.HandleFunc(RouteAuth+"/login", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
-		case "GET":
+		case "POST":
 			authHandler.Login(w, r)
 		default:
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
