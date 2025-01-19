@@ -27,13 +27,13 @@ func (s *AuthService) Login(ctx context.Context, email string, password string) 
 
 	// Verify password
 	if !utils.VerifyPassword(password, user.PasswordHash) {
-		return nil, errors.NewUnauthorizedError()
+		return nil, errors.NewAuthorizationError("Invalid password")
 	}
 
 	// Generate token
 	stringToken, err := utils.GenerateJWT([]byte(s.config.JWTSecretKey), user.ID, user.Role)
 	if err != nil {
-		return nil, errors.NewUnauthorizedError()
+		return nil, errors.NewAuthorizationError("Failed to generate token")
 	}
 
 	token := &models.Token{Token: stringToken}

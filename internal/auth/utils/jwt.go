@@ -38,7 +38,7 @@ func ParseJWT(jwtSecretKey []byte, tokenString string) (*models.JWTClaims, error
 	token, err := jwt.ParseWithClaims(tokenString, &models.JWTClaims{}, func(token *jwt.Token) (interface{}, error) {
 		// Ensure the signing method is HMAC
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, errors.NewUnauthorizedError()
+			return nil, errors.NewAuthorizationError("Invalid signing method")
 		}
 		return jwtSecretKey, nil
 	})
@@ -49,7 +49,7 @@ func ParseJWT(jwtSecretKey []byte, tokenString string) (*models.JWTClaims, error
 	// Extract and return the claims
 	claims, ok := token.Claims.(*models.JWTClaims)
 	if !ok || !token.Valid {
-		return nil, errors.NewUnauthorizedError()
+		return nil, errors.NewAuthorizationError("Invalid token")
 	}
 
 	return claims, nil
