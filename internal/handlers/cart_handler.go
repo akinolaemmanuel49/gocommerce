@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -174,7 +175,11 @@ func (h *CartHandler) Delete(w http.ResponseWriter, r *http.Request, id string) 
 		return
 	}
 
-	// Respond with confirmation
-	response := map[string]string{"message": "Cart successfully deleted"}
+	// Build response map
+	response := map[string]interface{}{
+		"message": fmt.Sprintf("Cart with ID: %s was successfully deleted", id),
+	}
+
+	// Write response to client
 	utils.WriteJSON(w, r, http.StatusOK, response, h.logger)
 }

@@ -10,6 +10,7 @@ import (
 	"github.com/akinolaemmanuel49/gocommerce/common/errors"
 	auth_middlewares "github.com/akinolaemmanuel49/gocommerce/internal/auth/middlewares"
 	"github.com/akinolaemmanuel49/gocommerce/internal/auth/models"
+	"github.com/gorilla/mux"
 )
 
 // ValidateID checks to see if the path provides an :id value :: Possibly deprecated
@@ -31,6 +32,13 @@ func WriteJSON(w http.ResponseWriter, r *http.Request, statusCode int, data inte
 
 	logger.Printf("%s %d %s [User-Agent: %s]", r.Method, statusCode, r.URL.Path, r.UserAgent())
 	json.NewEncoder(w).Encode(data)
+}
+
+// GetIDFromURL gets the ID from the URL
+func GetIDFromURL(r *http.Request) string {
+	vars := mux.Vars(r)
+	id := vars["id"]
+	return id
 }
 
 // IsAuthorized checks if the user is authorized to access a protected route

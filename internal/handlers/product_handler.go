@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -10,6 +11,7 @@ import (
 	"github.com/akinolaemmanuel49/gocommerce/internal/models"
 	"github.com/akinolaemmanuel49/gocommerce/internal/services"
 	"github.com/akinolaemmanuel49/gocommerce/utils"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -22,6 +24,17 @@ var _ IProductHandler = (*ProductHandler)(nil)
 
 // Create handles POST /products requests and accepts CreateProduct as input
 func (h *ProductHandler) Create(w http.ResponseWriter, r *http.Request) {
+	// Initialize context
+	ctx := r.Context()
+
+	// Get claims from context and check if user is an admin
+	_, err := utils.IsAdmin(ctx)
+	if err != nil {
+		errors.HandleError(w, r, err, h.errorLogger)
+		return
+	}
+
+	// Initialize request body
 	var input models.CreateProduct
 
 	// Parse request body
@@ -31,13 +44,13 @@ func (h *ProductHandler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Call service to create product
-	product, err := h.productService.CreateProduct(r.Context(), &input)
+	product, err := h.productService.CreateProduct(ctx, &input)
 	if err != nil {
 		http.Error(w, "Failed to create product", http.StatusInternalServerError)
 		return
 	}
 
-	// Respond with the created product
+	// Write response to client
 	utils.WriteJSON(w, r, http.StatusCreated, product, h.logger)
 }
 
@@ -52,11 +65,11 @@ func (h *ProductHandler) Read(w http.ResponseWriter, r *http.Request, id string)
 	// Call service to get product by ID
 	product, err := h.productService.RetrieveProductByID(r.Context(), id)
 	switch err {
+	case nil:
+		// No error, proceed
 	case mongo.ErrNoDocuments:
 		errors.HandleError(w, r, errors.NewNotFoundError("Product", "ID", id), h.errorLogger)
 		return
-	case nil:
-		// No error, proceed
 	default:
 		errors.HandleError(w, r, err, h.errorLogger)
 		return
@@ -68,9 +81,7 @@ func (h *ProductHandler) Read(w http.ResponseWriter, r *http.Request, id string)
 
 // ReadAll handles GET /products requests with optional filters
 func (h *ProductHandler) ReadAll(w http.ResponseWriter, r *http.Request) {
-	// Log to stdout
-	h.logger.Printf("%v %v", r.Method, r.URL.Path)
-
+	// Initialize context
 	ctx := r.Context()
 
 	// Parse query parameters for filters and pagination
@@ -87,8 +98,11 @@ func (h *ProductHandler) ReadAll(w http.ResponseWriter, r *http.Request) {
 
 	// Build filter map
 	filter := map[string]interface{}{}
+	if name := query.Get("name"); name != "" {
+		filter["name"] = bson.M{"$regex": name, "$options": "i"}
+	}
 	if category := query.Get("category"); category != "" {
-		filter["category"] = category
+		filter["category"] = bson.M{"$regex": category, "$options": "i"}
 	}
 	if priceMin := query.Get("priceMin"); priceMin != "" {
 		if min, err := strconv.ParseFloat(priceMin, 64); err == nil {
@@ -105,27 +119,42 @@ func (h *ProductHandler) ReadAll(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// Call service to read all products
 	products, nextCursor, err := h.productService.RetrieveAllProducts(ctx, filter, lastID, limit)
 	if err != nil {
 		http.Error(w, "Error fetching products: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
+	// Build response map
 	response := map[string]interface{}{
 		"data":       products,
 		"nextCursor": nextCursor,
 	}
+
+	// Write response to client
 	utils.WriteJSON(w, r, http.StatusOK, response, h.logger)
 }
 
 // Update handles PUT /products/:id requests
 func (h *ProductHandler) Update(w http.ResponseWriter, r *http.Request, id string) {
+	// Initialize context
+	ctx := r.Context()
+
+	// Get claims from context and check if user is an admin
+	_, err := utils.IsAdmin(ctx)
+	if err != nil {
+		errors.HandleError(w, r, err, h.errorLogger)
+		return
+	}
+
 	// Validate the ID
 	if err := utils.ValidateID(id, "Product"); err != nil {
 		errors.HandleError(w, r, errors.NewValidationError("id", "Invalid product ID"), h.errorLogger)
 		return
 	}
 
+	// Initialize request body
 	var input models.UpdateProduct
 
 	// Parse request body
@@ -141,12 +170,22 @@ func (h *ProductHandler) Update(w http.ResponseWriter, r *http.Request, id strin
 		return
 	}
 
-	// Respond with the updated product
+	// Write response to client
 	utils.WriteJSON(w, r, http.StatusOK, product, h.logger)
 }
 
 // Delete handles DELETE /products/:id requests
 func (h *ProductHandler) Delete(w http.ResponseWriter, r *http.Request, id string) {
+	// Initialize context
+	ctx := r.Context()
+
+	// Get claims from context and check if user is an admin
+	_, err := utils.IsAdmin(ctx)
+	if err != nil {
+		errors.HandleError(w, r, err, h.errorLogger)
+		return
+	}
+
 	// Validate the ID
 	if err := utils.ValidateID(id, "Product"); err != nil {
 		errors.HandleError(w, r, errors.NewValidationError("id", "Invalid product ID"), h.errorLogger)
@@ -159,7 +198,11 @@ func (h *ProductHandler) Delete(w http.ResponseWriter, r *http.Request, id strin
 		return
 	}
 
-	// Respond with confirmation of deletion
-	response := map[string]string{"message": "Product successfully deleted"}
+	// Build response map
+	response := map[string]interface{}{
+		"message": fmt.Sprintf("Product with ID: %s was successfully deleted", id),
+	}
+
+	// Write response to client
 	utils.WriteJSON(w, r, http.StatusOK, response, h.logger)
 }

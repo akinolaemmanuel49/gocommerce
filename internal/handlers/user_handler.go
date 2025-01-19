@@ -44,7 +44,7 @@ func (h *UserHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Respond with the created user
+	// Write response to client
 	utils.WriteJSON(w, r, http.StatusCreated, user, h.logger)
 }
 
@@ -77,7 +77,7 @@ func (h *UserHandler) Read(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Call service to get user by ID
+	// Call service to read user by ID
 	user, err := h.userService.RetrieveUserByID(ctx, userIDToRead)
 	switch err {
 	case nil:
@@ -90,7 +90,7 @@ func (h *UserHandler) Read(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Respond with the user data
+	// Write response to client
 	utils.WriteJSON(w, r, http.StatusOK, user, h.logger)
 }
 
@@ -139,16 +139,20 @@ func (h *UserHandler) ReadAll(w http.ResponseWriter, r *http.Request) {
 		filter["role"] = role
 	}
 
+	// Call service to read all users
 	users, nextCursor, err := h.userService.RetrieveAllUsers(ctx, filter, lastID, limit)
 	if err != nil {
 		errors.HandleError(w, r, err, h.errorLogger)
 		return
 	}
 
+	// Build response map
 	response := map[string]interface{}{
 		"data":      users,
 		"nextCusor": nextCursor,
 	}
+
+	// Write response to client
 	utils.WriteJSON(w, r, http.StatusOK, response, h.logger)
 }
 
@@ -197,7 +201,7 @@ func (h *UserHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Respond with updated user
+	// Write response to client
 	utils.WriteJSON(w, r, http.StatusOK, user, h.logger)
 }
 
@@ -237,7 +241,11 @@ func (h *UserHandler) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Respond with confirmation of deletion
-	response := map[string]string{"message": fmt.Sprintf("User with ID: %s was successfully deleted", userIDToDelete)}
+	// Build response map
+	response := map[string]interface{}{
+		"message": fmt.Sprintf("User with ID: %s was successfully deleted", userIDToDelete),
+	}
+
+	// Write response to client
 	utils.WriteJSON(w, r, http.StatusOK, response, h.logger)
 }

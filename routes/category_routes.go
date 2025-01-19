@@ -4,6 +4,8 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/akinolaemmanuel49/gocommerce/configs"
+	auth_middlewares "github.com/akinolaemmanuel49/gocommerce/internal/auth/middlewares"
 	"github.com/akinolaemmanuel49/gocommerce/internal/handlers"
 	"github.com/akinolaemmanuel49/gocommerce/internal/repositories"
 	"github.com/akinolaemmanuel49/gocommerce/internal/services"
@@ -12,8 +14,9 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func RegisterCategoryRoutes(router *mux.Router, db *mongo.Database, logger, errorLogger *log.Logger) {
+func RegisterCategoryRoutes(config *configs.Config, router *mux.Router, db *mongo.Database, logger, errorLogger *log.Logger) {
 	const RouteCategories = "/categories"
+	jwtSecretKey := []byte(config.JWTSecretKey)
 
 	// Initialize the repository
 	categoryRepository := repositories.NewCategoryRepository(db)
@@ -24,31 +27,13 @@ func RegisterCategoryRoutes(router *mux.Router, db *mongo.Database, logger, erro
 	// Initialize the handler
 	categoryHandler := handlers.NewCategoryHandler(categoryService, logger, errorLogger)
 
-	router.Use(middlewares.ErrorMiddleware) // Attach ErrorMiddleware
+	router.Use(middlewares.ErrorMiddleware)                         // Attach ErrorMiddleware
+	authMiddleware := auth_middlewares.AuthMiddleware(jwtSecretKey) // Attach AuthMiddleware
 
-	router.HandleFunc(RouteCategories, func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case "GET":
-			categoryHandler.ReadAll(w, r)
-		case "POST":
-			categoryHandler.Create(w, r)
-		default:
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		}
-	})
-
-	router.HandleFunc(RouteCategories+"/{id}", func(w http.ResponseWriter, r *http.Request) {
-		id := mux.Vars(r)["id"] // Extract the `id` path parameter
-
-		switch r.Method {
-		case "GET":
-			categoryHandler.Read(w, r, id)
-		case "PUT":
-			categoryHandler.Update(w, r, id)
-		case "DELETE":
-			categoryHandler.Delete(w, r, id)
-		default:
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		}
-	})
+	// Attach routes
+	router.Handle(RouteCategories, authMiddleware(http.HandlerFunc(categoryHandler.Create))).Methods("POST")
+	router.Handle(RouteCategories+"/{id}", http.HandlerFunc(categoryHandler.Read)).Methods("GET")
+	router.Handle(RouteCategories+"/all", http.HandlerFunc(categoryHandler.ReadAll)).Methods("GET")
+	router.Handle(RouteCategories+"/{id}", authMiddleware(http.HandlerFunc(categoryHandler.Update))).Methods("PUT")
+	router.Handle(RouteCategories+"/{id}", authMiddleware(http.HandlerFunc(categoryHandler.Delete))).Methods("DELETE")
 }

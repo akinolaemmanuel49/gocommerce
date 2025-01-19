@@ -20,6 +20,11 @@
 - [x] Implement auto set shipping address to owner address if present.
 - [x] Implement messaging for orders, whenever the status of an order changes, a message is sent to the queue.
 - [ ] Add route protection to concerned routes.
+    - [x] Users
+    - [ ] Orders
+    - [ ] Products
+    - [ ] Categories
+    - [ ] Carts
 - [ ] Implement email messaging for order creation, status changes and cancellation.
 - [ ] Write tests
 

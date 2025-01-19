@@ -11,6 +11,7 @@ import (
 	"github.com/akinolaemmanuel49/gocommerce/internal/models"
 	"github.com/akinolaemmanuel49/gocommerce/internal/services"
 	"github.com/akinolaemmanuel49/gocommerce/utils"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -43,14 +44,18 @@ func (h *OrderHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 // func (h *OrderHandler) Read(w http.ResponseWriter, r *http.Request, id string) {
 func (h *OrderHandler) Read(w http.ResponseWriter, r *http.Request, id string) {
+	// Initialize context
+	ctx := r.Context()
+
 	// Validate ID
 	if err := utils.ValidateID(id, "Order"); err != nil {
 		errors.HandleError(w, r, errors.NewValidationError("id", "Invalid order ID"), h.errorLogger)
 		return
 	}
 
-	// Fetch order by ID
-	order, err := h.orderService.RetrieveOrderByID(r.Context(), id)
+	// Call service to read order by ID
+	order, err := h.orderService.RetrieveOrderByID(ctx, id)
+
 	switch err {
 	case nil:
 		// No error
@@ -62,15 +67,13 @@ func (h *OrderHandler) Read(w http.ResponseWriter, r *http.Request, id string) {
 		return
 	}
 
-	// Respond with the order
+	// Write response to client
 	utils.WriteJSON(w, r, http.StatusOK, order, h.logger)
 }
 
 // ReadAll handles GET /orders requests with optional filters
 func (h *OrderHandler) ReadAll(w http.ResponseWriter, r *http.Request) {
-	// Log to stdout
-	h.logger.Printf("%v %v", r.Method, r.URL.Path)
-
+	// Initialize context
 	ctx := r.Context()
 
 	// Parse query parameters for filters and pagination
@@ -85,47 +88,56 @@ func (h *OrderHandler) ReadAll(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Build filter map
+	// Build filter map from query parameters
 	filter := map[string]interface{}{}
-	if category := query.Get("category"); category != "" {
-		filter["category"] = category
+	if status := query.Get("status"); status != "" {
+		filter["status"] = status
 	}
-	if priceMin := query.Get("priceMin"); priceMin != "" {
-		if min, err := strconv.ParseFloat(priceMin, 64); err == nil {
-			filter["price"] = map[string]interface{}{"$gte": min}
+	if isCancelled := query.Get("isCancelled"); isCancelled != "" {
+		if b, err := strconv.ParseBool(isCancelled); err == nil {
+			filter["isCancelled"] = b
 		}
 	}
-	if priceMax := query.Get("priceMax"); priceMax != "" {
-		if max, err := strconv.ParseFloat(priceMax, 64); err == nil {
-			if priceFilter, exists := filter["price"].(map[string]interface{}); exists {
-				priceFilter["$lte"] = max
-			} else {
-				filter["price"] = map[string]interface{}{"$lte": max}
-			}
+	if isLocked := query.Get("isLocked"); isLocked != "" {
+		if b, err := strconv.ParseBool(isLocked); err == nil {
+			filter["isLocked"] = b
 		}
+	}
+	dateStart := query.Get("dateStart")
+	dateEnd := query.Get("dateEnd")
+	if dateStart != "" && dateEnd != "" {
+		filter["createdAt"] = bson.M{"$gte": dateStart, "$lte": dateEnd}
 	}
 
+	// Call service to read all orders
 	orders, nextCursor, err := h.orderService.RetrieveAllOrders(ctx, filter, lastID, limit)
 	if err != nil {
 		errors.HandleError(w, r, err, h.errorLogger)
 		return
 	}
 
+	// Build response map
 	response := map[string]interface{}{
 		"data":       orders,
 		"nextCursor": nextCursor,
 	}
+
+	// Write response to client
 	utils.WriteJSON(w, r, http.StatusOK, response, h.logger)
 }
 
 // UpdateOrderStatus handles PUT /orders/:id/status requests
 func (h *OrderHandler) UpdateOrderStatus(w http.ResponseWriter, r *http.Request, id string) {
+	// Initialize context
+	ctx := r.Context()
+
 	// Validate ID
 	if err := utils.ValidateID(id, "Order"); err != nil {
 		errors.HandleError(w, r, errors.NewValidationError("id", "Invalid order ID"), h.errorLogger)
 		return
 	}
 
+	// Initialize request body
 	var input models.OrderStatusUpdate
 
 	// Parse request body
@@ -135,25 +147,33 @@ func (h *OrderHandler) UpdateOrderStatus(w http.ResponseWriter, r *http.Request,
 	}
 
 	// Call service to update order status
-	err := h.orderService.ChangeOrderStatusByID(r.Context(), id, input.Status)
+	err := h.orderService.ChangeOrderStatusByID(ctx, id, input.Status)
 	if err != nil {
 		errors.HandleError(w, r, err, h.errorLogger)
 		return
 	}
 
-	// Respond with success message
-	response := map[string]string{"message": "Order status update was successful"}
+	// Build response map
+	response := map[string]interface{}{
+		"message": "Order status update was successful",
+	}
+
+	// Write response to client
 	utils.WriteJSON(w, r, http.StatusOK, response, h.logger)
 }
 
 // UpdateOrderShippingAddress handles PUT /orders/:id/address requests
 func (h *OrderHandler) UpdateOrderShippingAddress(w http.ResponseWriter, r *http.Request, id string) {
+	// Initialize context
+	ctx := r.Context()
+
 	// Validate ID
 	if err := utils.ValidateID(id, "Order"); err != nil {
 		errors.HandleError(w, r, errors.NewValidationError("id", "Invalid order ID"), h.errorLogger)
 		return
 	}
 
+	// Initialize request body
 	var input models.UpdateAddress
 
 	// Parse request body
@@ -163,21 +183,27 @@ func (h *OrderHandler) UpdateOrderShippingAddress(w http.ResponseWriter, r *http
 	}
 
 	// Call service to update order address
-	err := h.orderService.ChangeOrderShippingAddressByID(r.Context(), id, &input)
+	err := h.orderService.ChangeOrderShippingAddressByID(ctx, id, &input)
 	if err != nil {
 		errors.HandleError(w, r, err, h.errorLogger)
 		return
 	}
 
-	// Respond with success message
-	response := map[string]string{"message": "Order shipping address update was successful"}
+	// Build response map
+	response := map[string]interface{}{
+		"message": "Order shipping address update was successful",
+	}
+
+	// Write response to client
 	utils.WriteJSON(w, r, http.StatusOK, response, h.logger)
 }
 
 // AddCartToOrder handles PUT /orders/:id/carts/add/:cartID requests
 func (h *OrderHandler) AddCartToOrder(w http.ResponseWriter, r *http.Request, id string, cartID string) {
+	// Initialize context
 	ctx := r.Context()
-	// Validate ID
+
+	// Validate the IDs
 	if err := utils.ValidateID(id, "Order"); err != nil {
 		errors.HandleError(w, r, errors.NewValidationError("id", "Invalid order ID"), h.errorLogger)
 		return
@@ -194,15 +220,21 @@ func (h *OrderHandler) AddCartToOrder(w http.ResponseWriter, r *http.Request, id
 		return
 	}
 
-	// Respond with success message
-	response := map[string]string{"message": "Add cart to order was successful"}
+	// Build response map
+	response := map[string]interface{}{
+		"message": "Add cart to order was successful",
+	}
+
+	// Write response to client
 	utils.WriteJSON(w, r, http.StatusOK, response, h.logger)
 }
 
 // RemoveCartFromOrder handles PUT /orders/:id/carts/remove/:cartID requests
 func (h *OrderHandler) RemoveCartFromOrder(w http.ResponseWriter, r *http.Request, id string, cartID string) {
+	// Initialize context
 	ctx := r.Context()
-	// Validate IDs
+
+	// Validate the IDs
 	if err := utils.ValidateID(id, "Order"); err != nil {
 		errors.HandleError(w, r, errors.NewValidationError("id", "Invalid order ID"), h.errorLogger)
 		return
@@ -226,44 +258,55 @@ func (h *OrderHandler) RemoveCartFromOrder(w http.ResponseWriter, r *http.Reques
 
 // ConfirmOrder handles PUT /orders/:id/confirm requests
 func (h *OrderHandler) ConfirmOrder(w http.ResponseWriter, r *http.Request, id string) {
+	// Initialize context
+	ctx := r.Context()
+
+	// Validate the ID
 	if err := utils.ValidateID(id, "Order"); err != nil {
 		errors.HandleError(w, r, errors.NewValidationError("id", "Invalid order ID"), h.errorLogger)
 		return
 	}
 
 	// Call service to confirm order
-	_, err := h.orderService.ConfirmOrderByID(r.Context(), id)
+	_, err := h.orderService.ConfirmOrderByID(ctx, id)
 	if err != nil {
 		errors.HandleError(w, r, err, h.errorLogger)
 		return
 	}
-	// if !isConfirmed {
-	// 	response := map[string]string{"message": fmt.Sprintf("Order with id: %s not confirmed", id)}
-	// 	utils.WriteJSON(w, r, http.StatusOK, response, h.logger)
-	// }
 
-	response := map[string]string{"message": fmt.Sprintf("Order with id: %s confirmed", id)}
+	// Build response map
+	response := map[string]interface{}{
+		"message": fmt.Sprintf("Order with id: %s confirmed", id),
+	}
+
+	// Write response to client
 	utils.WriteJSON(w, r, http.StatusOK, response, h.logger)
 }
 
 // CancelOrder handles PUT /orders/:id/cancel requests
 func (h *OrderHandler) CancelOrder(w http.ResponseWriter, r *http.Request, id string) {
+	// Initialize context
+	ctx := r.Context()
+
+	// Validate the ID
 	if err := utils.ValidateID(id, "Order"); err != nil {
 		errors.HandleError(w, r, errors.NewValidationError("id", "Invalid order ID"), h.errorLogger)
 		return
 	}
 
 	// Call service to cancel order
-	_, err := h.orderService.CancelOrderByID(r.Context(), id)
+	_, err := h.orderService.CancelOrderByID(ctx, id)
 	if err != nil {
 		errors.HandleError(w, r, err, h.errorLogger)
 		return
 	}
-	// if !isCancelled {
-	// 	response := map[string]string{"message": fmt.Sprintf("Order with id: %s cancelled", id)}
-	// 	utils.WriteJSON(w, r, http.StatusOK, response, h.logger)
-	// }
-	response := map[string]string{"message": fmt.Sprintf("Order with id: %s cancelled", id)}
+
+	// Build response map
+	response := map[string]interface{}{
+		"message": fmt.Sprintf("Order with id: %s cancelled", id),
+	}
+
+	// Write response to client
 	utils.WriteJSON(w, r, http.StatusOK, response, h.logger)
 }
 
@@ -275,13 +318,17 @@ func (h *OrderHandler) Delete(w http.ResponseWriter, r *http.Request, id string)
 		return
 	}
 
-	// Delete order
+	// Call service to delete order
 	if err := h.orderService.DeleteOrderByID(r.Context(), id); err != nil {
 		errors.HandleError(w, r, err, h.errorLogger)
 		return
 	}
 
-	// Respond with confirmation
-	response := map[string]string{"message": "Order successfully deleted"}
+	// Build response map
+	response := map[string]interface{}{
+		"message": fmt.Sprintf("Order with ID: %s was successfully deleted", id),
+	}
+
+	// Write response to client
 	utils.WriteJSON(w, r, http.StatusOK, response, h.logger)
 }
