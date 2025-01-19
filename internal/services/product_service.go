@@ -18,6 +18,12 @@ func NewProductService(productRepository *repositories.ProductRepository) *Produ
 
 // CreateProduct creates a new instance of a product and commits it to the database
 func (s *ProductService) CreateProduct(ctx context.Context, newProduct *models.CreateProduct) (*models.Product, error) {
+	// Check if category is valid
+	_, err := s.RetrieveCategoryByID(ctx, newProduct.CategoryID)
+	if err != nil {
+		return nil, err
+	}
+
 	// Transform CreateProduct to Product
 	product := models.NewProduct(newProduct)
 

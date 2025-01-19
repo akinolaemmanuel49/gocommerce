@@ -16,15 +16,13 @@ import (
 func NewCartService(cartRepository *repositories.CartRepository, userService UserService, productService ProductService) *CartService {
 	return &CartService{
 		cartRepository: cartRepository,
-		userService:    userService,
-		productService: productService,
 	}
 }
 
 // CreateCart creates a new instance of a cart in the database
 func (s *CartService) CreateCart(ctx context.Context, newCart *models.CreateCart) (*models.Cart, error) {
 	// Check for valid user
-	_, err := s.userService.userRepository.FindByID(ctx, newCart.UserID)
+	_, err := s.userRepository.FindByID(ctx, newCart.UserID)
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +59,7 @@ func (s *CartService) AddProductToCart(ctx context.Context, cartID string, produ
 	}
 
 	// Retrieve product by ID
-	product, err := s.productService.RetrieveProductByID(ctx, productID)
+	product, err := s.productRepository.FindByID(ctx, productID)
 	if err != nil {
 		return nil, err
 	}

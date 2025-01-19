@@ -32,8 +32,8 @@ func RegisterCategoryRoutes(config *configs.Config, router *mux.Router, db *mong
 
 	// Attach routes
 	router.Handle(RouteCategories, authMiddleware(http.HandlerFunc(categoryHandler.Create))).Methods("POST")
-	router.Handle(RouteCategories+"/{id}", http.HandlerFunc(categoryHandler.Read)).Methods("GET")
 	router.Handle(RouteCategories+"/all", http.HandlerFunc(categoryHandler.ReadAll)).Methods("GET")
+	router.Handle(RouteCategories+"/{id}", http.HandlerFunc(categoryHandler.Read)).Methods("GET")
 	router.Handle(RouteCategories+"/{id}", authMiddleware(http.HandlerFunc(categoryHandler.Update))).Methods("PUT")
 	router.Handle(RouteCategories+"/{id}", authMiddleware(http.HandlerFunc(categoryHandler.Delete))).Methods("DELETE")
 }

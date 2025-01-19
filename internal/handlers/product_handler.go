@@ -55,27 +55,33 @@ func (h *ProductHandler) Create(w http.ResponseWriter, r *http.Request) {
 }
 
 // Read handles GET /products/:id requests
-func (h *ProductHandler) Read(w http.ResponseWriter, r *http.Request, id string) {
+func (h *ProductHandler) Read(w http.ResponseWriter, r *http.Request) {
+	// Initialize context
+	ctx := r.Context()
+
+	// Get ID from URL
+	ID := utils.GetIDFromURL(r)
+
 	// Validate the ID
-	if err := utils.ValidateID(id, "Product"); err != nil {
+	if err := utils.ValidateID(ID, "Product"); err != nil {
 		errors.HandleError(w, r, errors.NewValidationError("id", "Invalid product ID"), h.errorLogger)
 		return
 	}
 
 	// Call service to get product by ID
-	product, err := h.productService.RetrieveProductByID(r.Context(), id)
+	product, err := h.productService.RetrieveProductByID(ctx, ID)
 	switch err {
 	case nil:
 		// No error, proceed
 	case mongo.ErrNoDocuments:
-		errors.HandleError(w, r, errors.NewNotFoundError("Product", "ID", id), h.errorLogger)
+		errors.HandleError(w, r, errors.NewNotFoundError("Product", "ID", ID), h.errorLogger)
 		return
 	default:
 		errors.HandleError(w, r, err, h.errorLogger)
 		return
 	}
 
-	// Respond with the product data
+	// Write response to client
 	utils.WriteJSON(w, r, http.StatusOK, product, h.logger)
 }
 
@@ -137,7 +143,7 @@ func (h *ProductHandler) ReadAll(w http.ResponseWriter, r *http.Request) {
 }
 
 // Update handles PUT /products/:id requests
-func (h *ProductHandler) Update(w http.ResponseWriter, r *http.Request, id string) {
+func (h *ProductHandler) Update(w http.ResponseWriter, r *http.Request) {
 	// Initialize context
 	ctx := r.Context()
 
@@ -148,9 +154,12 @@ func (h *ProductHandler) Update(w http.ResponseWriter, r *http.Request, id strin
 		return
 	}
 
+	// Get ID from URL
+	ID := utils.GetIDFromURL(r)
+
 	// Validate the ID
-	if err := utils.ValidateID(id, "Product"); err != nil {
-		errors.HandleError(w, r, errors.NewValidationError("id", "Invalid product ID"), h.errorLogger)
+	if err := utils.ValidateID(ID, "Product"); err != nil {
+		errors.HandleError(w, r, err, h.errorLogger)
 		return
 	}
 
@@ -164,7 +173,7 @@ func (h *ProductHandler) Update(w http.ResponseWriter, r *http.Request, id strin
 	}
 
 	// Call service to update product
-	product, err := h.productService.UpdateProductByID(r.Context(), id, &input)
+	product, err := h.productService.UpdateProductByID(ctx, ID, &input)
 	if err != nil {
 		errors.HandleError(w, r, err, h.errorLogger)
 		return
@@ -175,7 +184,7 @@ func (h *ProductHandler) Update(w http.ResponseWriter, r *http.Request, id strin
 }
 
 // Delete handles DELETE /products/:id requests
-func (h *ProductHandler) Delete(w http.ResponseWriter, r *http.Request, id string) {
+func (h *ProductHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	// Initialize context
 	ctx := r.Context()
 
@@ -186,21 +195,24 @@ func (h *ProductHandler) Delete(w http.ResponseWriter, r *http.Request, id strin
 		return
 	}
 
+	// Get ID from URL
+	ID := utils.GetIDFromURL(r)
+
 	// Validate the ID
-	if err := utils.ValidateID(id, "Product"); err != nil {
-		errors.HandleError(w, r, errors.NewValidationError("id", "Invalid product ID"), h.errorLogger)
+	if err := utils.ValidateID(ID, "Product"); err != nil {
+		errors.HandleError(w, r, err, h.errorLogger)
 		return
 	}
 
 	// Call service to delete product
-	if err := h.productService.DeleteProductByID(r.Context(), id); err != nil {
+	if err := h.productService.DeleteProductByID(ctx, ID); err != nil {
 		errors.HandleError(w, r, err, h.errorLogger)
 		return
 	}
 
 	// Build response map
 	response := map[string]interface{}{
-		"message": fmt.Sprintf("Product with ID: %s was successfully deleted", id),
+		"message": fmt.Sprintf("Product with ID: %s was successfully deleted", ID),
 	}
 
 	// Write response to client

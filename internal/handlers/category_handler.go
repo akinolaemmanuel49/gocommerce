@@ -62,7 +62,7 @@ func (h *CategoryHandler) Read(w http.ResponseWriter, r *http.Request) {
 	// Get ID from URL
 	ID := utils.GetIDFromURL(r)
 
-	// Validate ID
+	// Validate the ID
 	if err := utils.ValidateID(ID, "Category"); err != nil {
 		errors.HandleError(w, r, err, h.errorLogger)
 		return

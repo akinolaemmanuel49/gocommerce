@@ -4,6 +4,8 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/akinolaemmanuel49/gocommerce/configs"
+	auth_middlewares "github.com/akinolaemmanuel49/gocommerce/internal/auth/middlewares"
 	"github.com/akinolaemmanuel49/gocommerce/internal/handlers"
 	"github.com/akinolaemmanuel49/gocommerce/internal/repositories"
 	"github.com/akinolaemmanuel49/gocommerce/internal/services"
@@ -12,8 +14,9 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func RegisterProductRoutes(router *mux.Router, db *mongo.Database, logger, errorLogger *log.Logger) {
+func RegisterProductRoutes(config *configs.Config, router *mux.Router, db *mongo.Database, logger, errorLogger *log.Logger) {
 	const RouteProducts = "/products"
+	jwtSecretKey := []byte(config.JWTSecretKey)
 
 	// Initialize the repository
 	productRepository := repositories.NewProductRepository(db)
@@ -25,30 +28,12 @@ func RegisterProductRoutes(router *mux.Router, db *mongo.Database, logger, error
 	productHandler := handlers.NewProductHandler(productService, logger, errorLogger)
 
 	router.Use(middlewares.ErrorMiddleware) // Attach ErrorMiddleware
+	authMiddleware := auth_middlewares.AuthMiddleware(jwtSecretKey)
 
-	router.HandleFunc(RouteProducts, func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case "GET":
-			productHandler.ReadAll(w, r)
-		case "POST":
-			productHandler.Create(w, r)
-		default:
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		}
-	})
-
-	router.HandleFunc(RouteProducts+"/{id}", func(w http.ResponseWriter, r *http.Request) {
-		id := mux.Vars(r)["id"] // Extract the `id` path parameter
-
-		switch r.Method {
-		case "GET":
-			productHandler.Read(w, r, id)
-		case "PUT":
-			productHandler.Update(w, r, id)
-		case "DELETE":
-			productHandler.Delete(w, r, id)
-		default:
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		}
-	})
+	// Attach routes
+	router.Handle(RouteProducts, authMiddleware(http.HandlerFunc(productHandler.Create))).Methods("POST")
+	router.Handle(RouteProducts+"/all", http.HandlerFunc(productHandler.ReadAll)).Methods("GET")
+	router.Handle(RouteProducts+"/{id}", http.HandlerFunc(productHandler.Read)).Methods("GET")
+	router.Handle(RouteProducts+"/{id}", authMiddleware(http.HandlerFunc(productHandler.Update))).Methods("PUT")
+	router.Handle(RouteProducts+"/{id}", authMiddleware(http.HandlerFunc(productHandler.Delete))).Methods("DELETE")
 }

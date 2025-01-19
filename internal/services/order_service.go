@@ -18,15 +18,13 @@ func NewOrderService(orderRepository *repositories.OrderRepository, publisher *q
 	return &OrderService{
 		orderRepository: orderRepository,
 		publisher:       publisher,
-		userService:     *userService,
-		cartService:     *cartService,
 	}
 }
 
 // CreateOrder creates a new instance of an order and commits it to the database
 func (s *OrderService) CreateOrder(ctx context.Context, newOrder *models.CreateOrder) (*models.Order, error) {
 	// Check for valid user
-	user, err := s.userService.RetrieveUserByID(ctx, newOrder.UserID)
+	user, err := s.userRepository.FindByID(ctx, newOrder.UserID)
 	if err == mongo.ErrNoDocuments {
 		return nil, errors.NewNotFoundError("User", "ID", newOrder.UserID)
 	}
@@ -176,7 +174,7 @@ func (s *OrderService) AddCartToOrderByID(ctx context.Context, ID string, cartID
 	}
 
 	// Check if cart is valid
-	cart, err := s.cartService.RetrieveCartByID(ctx, cartID)
+	cart, err := s.cartRepository.FindByID(ctx, cartID)
 	if err != nil {
 		return errors.NewNotFoundError("Cart", "ID", cartID)
 	}
@@ -222,7 +220,7 @@ func (s *OrderService) RemoveCartFromOrderByID(ctx context.Context, ID string, c
 	}
 
 	// Check if cart with matching id is present in order carts
-	_, err = s.cartService.RetrieveCartByID(ctx, cartID)
+	_, err = s.cartRepository.FindByID(ctx, cartID)
 	if err != nil {
 		return errors.NewNotFoundError("Cart", "ID", cartID)
 	}

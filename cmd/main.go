@@ -122,7 +122,7 @@ func setupRoutes(config *configs.Config, router *mux.Router, db *mongo.Database,
 	routes.RegisterCategoryRoutes(config, router, db, logger, errorLogger)
 
 	// Product routes
-	routes.RegisterProductRoutes(router, db, logger, errorLogger)
+	routes.RegisterProductRoutes(config, router, db, logger, errorLogger)
 
 	// Cart Routes
 	routes.RegisterCartRoutes(config, router, db, logger, errorLogger)
