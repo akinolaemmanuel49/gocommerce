@@ -21,6 +21,7 @@ type User struct {
 
 func ResponseUser(user *User) (*User, error) {
 	responseUser := &User{
+		ID:        user.ID,
 		Email:     user.Email,
 		FirstName: user.FirstName,
 		LastName:  user.LastName,

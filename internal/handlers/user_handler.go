@@ -11,6 +11,7 @@ import (
 	"github.com/akinolaemmanuel49/gocommerce/internal/models"
 	"github.com/akinolaemmanuel49/gocommerce/internal/services"
 	"github.com/akinolaemmanuel49/gocommerce/utils"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -24,8 +25,10 @@ var _ IUserHandler = (*UserHandler)(nil)
 
 // Create handles POST /user requests [PUBLIC]
 func (h *UserHandler) Create(w http.ResponseWriter, r *http.Request) {
+	// Initialize context
 	ctx := r.Context()
 
+	// Initialize request body
 	var req models.CreateUser
 
 	// Parse request body
@@ -50,6 +53,10 @@ func (h *UserHandler) Read(w http.ResponseWriter, r *http.Request) {
 	// Initialize context
 	ctx := r.Context()
 
+	// Parse query parameters
+	query := r.URL.Query()
+	id := query.Get("id")
+
 	// Get claims from context
 	claims, err := utils.IsAuthorized(ctx)
 	if err != nil {
@@ -57,8 +64,21 @@ func (h *UserHandler) Read(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Check if user is trying to read another user, and if so, check if user is an admin
+	var userIDToRead string
+	if id != claims.UserID {
+		if claims.Role != "admin" {
+			errors.HandleError(w, r, errors.NewForbiddenError("You are not authorized to update this user"), h.errorLogger)
+			return
+		} else if id != "" && claims.Role == "admin" {
+			userIDToRead = id // Admin can read any user
+		} else {
+			userIDToRead = claims.UserID // Customer can only read self
+		}
+	}
+
 	// Call service to get user by ID
-	user, err := h.userService.RetrieveUserByID(ctx, claims.UserID)
+	user, err := h.userService.RetrieveUserByID(ctx, userIDToRead)
 	switch err {
 	case nil:
 		// No error continue execution
@@ -98,21 +118,26 @@ func (h *UserHandler) ReadAll(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// TODO:: more filters
-	// Build filter map
+	// Build filter map from query parameters
 	filter := map[string]interface{}{}
 	if firstName := query.Get("firstName"); firstName != "" {
-		filter["firstName"] = firstName
+		filter["firstName"] = bson.M{"$regex": firstName, "$options": "i"}
 	}
 	if lastName := query.Get("lastName"); lastName != "" {
-		filter["lastName"] = lastName
+		filter["lastName"] = bson.M{"$regex": lastName, "$options": "i"}
 	}
 	if email := query.Get("email"); email != "" {
-		filter["email"] = email
+		filter["email"] = bson.M{"$regex": email, "$options": "i"}
 	}
-	// if country := query.Get("country"); country != "" {
-	// 	filter["country"] = country
-	// }
+	if country := query.Get("country"); country != "" {
+		filter["address.country"] = bson.M{"$regex": country, "$options": "i"}
+	}
+	if state := query.Get("state"); state != "" {
+		filter["address.state"] = bson.M{"$regex": state, "$options": "i"}
+	}
+	if role := query.Get("role"); role != "" {
+		filter["role"] = role
+	}
 
 	users, nextCursor, err := h.userService.RetrieveAllUsers(ctx, filter, lastID, limit)
 	if err != nil {
@@ -132,6 +157,10 @@ func (h *UserHandler) Update(w http.ResponseWriter, r *http.Request) {
 	// Initialize context
 	ctx := r.Context()
 
+	// Parse query parameters
+	query := r.URL.Query()
+	id := query.Get("id")
+
 	// Get claims from context
 	claims, err := utils.IsAuthorized(ctx)
 	if err != nil {
@@ -148,8 +177,21 @@ func (h *UserHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Check if user is trying to update another user, and if so, check if user is an admin
+	var userIDToUpdate string
+	if id != claims.UserID {
+		if claims.Role != "admin" {
+			errors.HandleError(w, r, errors.NewForbiddenError("You are not authorized to update this user"), h.errorLogger)
+			return
+		} else if id != "" && claims.Role == "admin" {
+			userIDToUpdate = id // Admin can update any user
+		} else {
+			userIDToUpdate = claims.UserID // Customer can only update self
+		}
+	}
+
 	// Call service to update user
-	user, err := h.userService.UpdateUserByID(ctx, claims.UserID, &req)
+	user, err := h.userService.UpdateUserByID(ctx, userIDToUpdate, &req)
 	if err != nil {
 		errors.HandleError(w, r, err, h.errorLogger)
 		return
@@ -164,6 +206,10 @@ func (h *UserHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	// Initialize context
 	ctx := r.Context()
 
+	// Parse query parameters
+	query := r.URL.Query()
+	id := query.Get("id")
+
 	// Get claims from context
 	claims, err := utils.IsAuthorized(ctx)
 	if err != nil {
@@ -171,14 +217,27 @@ func (h *UserHandler) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Check if user is trying to delete another user, and if so, check if user is an admin
+	var userIDToDelete string
+	if id != claims.UserID {
+		if claims.Role != "admin" {
+			errors.HandleError(w, r, errors.NewForbiddenError("You are not authorized to delete this user"), h.errorLogger)
+			return
+		} else if id != "" && claims.Role == "admin" {
+			userIDToDelete = id // Admin can delete any user
+		} else {
+			userIDToDelete = claims.UserID // Customer can only delete self
+		}
+	}
+
 	// Call service to soft-delete user
-	err = h.userService.DeleteUserByID(ctx, claims.UserID)
+	err = h.userService.DeleteUserByID(ctx, userIDToDelete)
 	if err != nil {
 		errors.HandleError(w, r, err, h.errorLogger)
 		return
 	}
 
 	// Respond with confirmation of deletion
-	response := map[string]string{"message": fmt.Sprintf("User with ID: %s was successfully deleted", claims.UserID)}
+	response := map[string]string{"message": fmt.Sprintf("User with ID: %s was successfully deleted", userIDToDelete)}
 	utils.WriteJSON(w, r, http.StatusOK, response, h.logger)
 }

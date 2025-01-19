@@ -8,7 +8,7 @@ import (
 func StringToObjectID(ID string) (primitive.ObjectID, error) {
 	objectID, err := primitive.ObjectIDFromHex(ID)
 	if err != nil {
-		return primitive.NilObjectID, errors.NewValidationError("ID", "invalid ID format")
+		return primitive.NilObjectID, errors.NewValidationError("ID", "Invalid ID format")
 	}
 	return objectID, nil
 }
