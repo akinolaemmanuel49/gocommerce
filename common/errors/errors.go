@@ -101,3 +101,15 @@ func (e *UnauthorizedError) Error() string {
 func NewUnauthorizedError() error {
 	return &UnauthorizedError{}
 }
+
+// ForbiddenError represents an error for forbidden access
+type ForbiddenError struct{}
+
+func (e *ForbiddenError) Error() string {
+	return "Forbidden"
+}
+
+// NewForbiddenError creates a new instance of ForbiddenError
+func NewForbiddenError() error {
+	return &ForbiddenError{}
+}

@@ -4,6 +4,8 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/akinolaemmanuel49/gocommerce/configs"
+	auth_middlewares "github.com/akinolaemmanuel49/gocommerce/internal/auth/middlewares"
 	"github.com/akinolaemmanuel49/gocommerce/internal/handlers"
 	"github.com/akinolaemmanuel49/gocommerce/internal/repositories"
 	"github.com/akinolaemmanuel49/gocommerce/internal/services"
@@ -12,8 +14,9 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func RegisterUserRoutes(router *mux.Router, db *mongo.Database, logger, errorLogger *log.Logger) {
+func RegisterUserRoutes(config *configs.Config, router *mux.Router, db *mongo.Database, logger, errorLogger *log.Logger) {
 	const RouteUsers = "/users"
+	jwtSecretKey := []byte(config.JWTSecretKey)
 
 	// Initialize the repository
 	userRepository := repositories.NewUserRepository(db)
@@ -24,31 +27,13 @@ func RegisterUserRoutes(router *mux.Router, db *mongo.Database, logger, errorLog
 	// Initialize the handler
 	userHandler := handlers.NewUserHandler(userService, logger, errorLogger)
 
-	router.Use(middlewares.ErrorMiddleware) // Attach ErrorMiddleware
+	router.Use(middlewares.ErrorMiddleware)                         // Attach ErrorMiddleware
+	authMiddleware := auth_middlewares.AuthMiddleware(jwtSecretKey) // Attach AuthMiddleware
 
-	router.HandleFunc(RouteUsers, func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case "GET":
-			userHandler.ReadAll(w, r)
-		case "POST":
-			userHandler.Create(w, r)
-		default:
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		}
-	})
-
-	router.HandleFunc(RouteUsers+"/{id}", func(w http.ResponseWriter, r *http.Request) {
-		id := mux.Vars(r)["id"] // Extract the `id` path parameter
-
-		switch r.Method {
-		case "GET":
-			userHandler.Read(w, r, id)
-		case "PUT":
-			userHandler.Update(w, r, id)
-		case "DELETE":
-			userHandler.Delete(w, r, id)
-		default:
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		}
-	})
+	// Attach routes
+	router.Handle(RouteUsers, http.HandlerFunc(userHandler.Create)).Methods("POST")
+	router.Handle(RouteUsers, authMiddleware(http.HandlerFunc(userHandler.Read))).Methods("GET")
+	router.Handle(RouteUsers+"/all", authMiddleware(http.HandlerFunc(userHandler.ReadAll))).Methods("GET")
+	router.Handle(RouteUsers, authMiddleware(http.HandlerFunc(userHandler.Update))).Methods("PUT")
+	router.Handle(RouteUsers, authMiddleware(http.HandlerFunc(userHandler.Delete))).Methods("DELETE")
 }

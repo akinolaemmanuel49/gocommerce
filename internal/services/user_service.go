@@ -96,7 +96,13 @@ func (s *UserService) RetrieveUserByID(ctx context.Context, ID string) (*models.
 	if err != nil {
 		return nil, err
 	}
-	return user, nil
+
+	responseUser, err := models.ResponseUser(user)
+	if err != nil {
+		return nil, err
+	}
+
+	return responseUser, nil
 }
 
 // RetrieveUserByEmail retrieves a user by email
@@ -153,7 +159,12 @@ func (s *UserService) UpdateUserByID(ctx context.Context, ID string, updatedUser
 		return nil, err
 	}
 
-	return updatedRecord, nil
+	responseUser, err := models.ResponseUser(updatedRecord)
+	if err != nil {
+		return nil, err
+	}
+
+	return responseUser, nil
 }
 
 // DeleteUserByID sets the IsDeleted flag for a user instance to true (performs a soft-delete)

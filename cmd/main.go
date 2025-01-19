@@ -116,7 +116,7 @@ func setupRoutes(config *configs.Config, router *mux.Router, db *mongo.Database,
 	routes.RegisterHealthRoute(router, logger, errorLogger, config)
 
 	// User routes
-	routes.RegisterUserRoutes(router, db, logger, errorLogger)
+	routes.RegisterUserRoutes(config, router, db, logger, errorLogger)
 
 	// Category routes
 	routes.RegisterCategoryRoutes(router, db, logger, errorLogger)

@@ -22,9 +22,10 @@ func NewUserHandler(userService *services.UserService, logger, errorLogger *log.
 // Compile-time check that UserHandler implements HandlerInterface
 var _ IUserHandler = (*UserHandler)(nil)
 
-// Create handles POST /user requests
+// Create handles POST /user requests [PUBLIC]
 func (h *UserHandler) Create(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+
 	var req models.CreateUser
 
 	// Parse request body
@@ -44,43 +45,46 @@ func (h *UserHandler) Create(w http.ResponseWriter, r *http.Request) {
 	utils.WriteJSON(w, r, http.StatusCreated, user, h.logger)
 }
 
-// Read handles GET /user/:id requests
-func (h *UserHandler) Read(w http.ResponseWriter, r *http.Request, ID string) {
-	// Validate the ID
-	if err := utils.ValidateID(ID, "User"); err != nil {
+// Read handles GET /user requests [CUSTOMER]
+func (h *UserHandler) Read(w http.ResponseWriter, r *http.Request) {
+	// Initialize context
+	ctx := r.Context()
+
+	// Get claims from context
+	claims, err := utils.IsAuthorized(ctx)
+	if err != nil {
 		errors.HandleError(w, r, err, h.errorLogger)
 		return
 	}
 
 	// Call service to get user by ID
-	user, err := h.userService.RetrieveUserByID(r.Context(), ID)
+	user, err := h.userService.RetrieveUserByID(ctx, claims.UserID)
 	switch err {
 	case nil:
 		// No error continue execution
 	case mongo.ErrNoDocuments:
-		errors.HandleError(w, r, errors.NewNotFoundError("User", "ID", ID), h.errorLogger)
+		errors.HandleError(w, r, errors.NewNotFoundError("User", "ID", claims.UserID), h.errorLogger)
 		return
 	default:
 		errors.HandleError(w, r, err, h.errorLogger)
 		return
 	}
 
-	responseUser, err := models.ResponseUser(user)
-	if err != nil {
-		errors.HandleError(w, r, errors.NewValidationError("", "An error occurred while trying to parse user"), h.errorLogger)
-		return
-	}
-
 	// Respond with the user data
-	utils.WriteJSON(w, r, http.StatusOK, responseUser, h.logger)
+	utils.WriteJSON(w, r, http.StatusOK, user, h.logger)
 }
 
-// ReadAll handles GET /users requests
+// ReadAll handles GET /users requests [ADMIN]
 func (h *UserHandler) ReadAll(w http.ResponseWriter, r *http.Request) {
-	// Log to stdout
-	// h.logger.Printf("%v %v", r.Method, r.URL.Path)
-
+	// Initialize context
 	ctx := r.Context()
+
+	// Get claims from context and check if user is an admin
+	_, err := utils.IsAdmin(ctx)
+	if err != nil {
+		errors.HandleError(w, r, err, h.errorLogger)
+		return
+	}
 
 	// Parse query parameters for pagination
 	query := r.URL.Query()
@@ -94,6 +98,7 @@ func (h *UserHandler) ReadAll(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// TODO:: more filters
 	// Build filter map
 	filter := map[string]interface{}{}
 	if firstName := query.Get("firstName"); firstName != "" {
@@ -122,13 +127,19 @@ func (h *UserHandler) ReadAll(w http.ResponseWriter, r *http.Request) {
 	utils.WriteJSON(w, r, http.StatusOK, response, h.logger)
 }
 
-// Update handles PUT /users/:id requests
-func (h *UserHandler) Update(w http.ResponseWriter, r *http.Request, ID string) {
-	// Validate the ID
-	if err := utils.ValidateID(ID, "User"); err != nil {
+// Update handles PUT /users requests [CUSTOMER]
+func (h *UserHandler) Update(w http.ResponseWriter, r *http.Request) {
+	// Initialize context
+	ctx := r.Context()
+
+	// Get claims from context
+	claims, err := utils.IsAuthorized(ctx)
+	if err != nil {
 		errors.HandleError(w, r, err, h.errorLogger)
 		return
 	}
+
+	// Initialize request body
 	var req models.UpdateUser
 
 	// Parse request body
@@ -138,7 +149,7 @@ func (h *UserHandler) Update(w http.ResponseWriter, r *http.Request, ID string) 
 	}
 
 	// Call service to update user
-	user, err := h.userService.UpdateUserByID(r.Context(), ID, &req)
+	user, err := h.userService.UpdateUserByID(ctx, claims.UserID, &req)
 	if err != nil {
 		errors.HandleError(w, r, err, h.errorLogger)
 		return
@@ -148,22 +159,26 @@ func (h *UserHandler) Update(w http.ResponseWriter, r *http.Request, ID string) 
 	utils.WriteJSON(w, r, http.StatusOK, user, h.logger)
 }
 
-// Delete handles DELETE /users/:id requests
-func (h *UserHandler) Delete(w http.ResponseWriter, r *http.Request, ID string) {
-	// Validate the ID
-	if err := utils.ValidateID(ID, "User"); err != nil {
+// Delete handles DELETE /users [CUSTOMER]
+func (h *UserHandler) Delete(w http.ResponseWriter, r *http.Request) {
+	// Initialize context
+	ctx := r.Context()
+
+	// Get claims from context
+	claims, err := utils.IsAuthorized(ctx)
+	if err != nil {
 		errors.HandleError(w, r, err, h.errorLogger)
 		return
 	}
 
 	// Call service to soft-delete user
-	err := h.userService.DeleteUserByID(r.Context(), ID)
+	err = h.userService.DeleteUserByID(ctx, claims.UserID)
 	if err != nil {
 		errors.HandleError(w, r, err, h.errorLogger)
 		return
 	}
 
 	// Respond with confirmation of deletion
-	response := map[string]string{"message": fmt.Sprintf("User with ID: %s was successfully deleted", ID)}
+	response := map[string]string{"message": fmt.Sprintf("User with ID: %s was successfully deleted", claims.UserID)}
 	utils.WriteJSON(w, r, http.StatusOK, response, h.logger)
 }
