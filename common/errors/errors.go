@@ -90,26 +90,40 @@ func NewValidationError(field, err string) error {
 	}
 }
 
-// UnauthorizedError represents an error for unauthorized access
-type UnauthorizedError struct{}
-
-func (e *UnauthorizedError) Error() string {
-	return "Invalid authentication credentials"
+// AuthorizationError represents an error for unauthorized access
+type AuthorizationError struct {
+	Err string
 }
 
-// NewUnauthorizedError creates a new instance of UnauthorizedError
-func NewUnauthorizedError() error {
-	return &UnauthorizedError{}
+func (e *AuthorizationError) Error() string {
+	if e.Err != "" {
+		return "Unauthorized"
+	}
+	return fmt.Sprintf("Unauthorized: %s", e.Err)
+}
+
+// NewAuthorizationError creates a new instance of AuthorizationError
+func NewAuthorizationError(err string) error {
+	return &AuthorizationError{
+		Err: err,
+	}
 }
 
 // ForbiddenError represents an error for forbidden access
-type ForbiddenError struct{}
+type ForbiddenError struct {
+	Err string
+}
 
 func (e *ForbiddenError) Error() string {
-	return "Forbidden"
+	if e.Err != "" {
+		return "Forbidden"
+	}
+	return fmt.Sprintf("Forbidden: %s", e.Err)
 }
 
 // NewForbiddenError creates a new instance of ForbiddenError
-func NewForbiddenError() error {
-	return &ForbiddenError{}
+func NewForbiddenError(err string) error {
+	return &ForbiddenError{
+		Err: err,
+	}
 }

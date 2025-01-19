@@ -24,8 +24,10 @@ func HandleError(w http.ResponseWriter, r *http.Request, err error, errorLogger 
 		WriteErrorResponse(w, r, http.StatusConflict, err.Error(), errorLogger)
 	case *NotFoundError:
 		WriteErrorResponse(w, r, http.StatusNotFound, err.Error(), errorLogger)
-	case *UnauthorizedError:
+	case *AuthorizationError:
 		WriteErrorResponse(w, r, http.StatusUnauthorized, err.Error(), errorLogger)
+	case *ForbiddenError:
+		WriteErrorResponse(w, r, http.StatusForbidden, err.Error(), errorLogger)
 	case *InternalServerError:
 		WriteErrorResponse(w, r, http.StatusInternalServerError, "Internal server error", errorLogger) // Mask internal details
 	default:
