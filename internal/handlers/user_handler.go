@@ -66,16 +66,20 @@ func (h *UserHandler) Read(w http.ResponseWriter, r *http.Request) {
 
 	// Check if user is trying to read another user, and if so, check if user is an admin
 	var userIDToRead string
-	if id != claims.UserID {
-		if claims.Role != "admin" {
-			errors.HandleError(w, r, errors.NewForbiddenError("You are not authorized to update this user"), h.errorLogger)
-			return
-		} else if id != "" && claims.Role == "admin" {
-			userIDToRead = id // Admin can read any user
-		} else {
-			userIDToRead = claims.UserID // Customer can only read self
-		}
+	if id == "" || id == claims.UserID {
+		userIDToRead = claims.UserID // Read id from claims if id query is empty
+	} else if id != "" && claims.Role == "admin" {
+		userIDToRead = id // Admin can read any user
+	} else {
+		errors.HandleError(w, r, errors.NewForbiddenError("You are not authorized to read this user"), h.errorLogger) // Only admin can read any user
+		return
 	}
+
+	// DEBUG
+	fmt.Println("DEBUG!!!")
+	fmt.Println(id)
+	fmt.Println("READING")
+	fmt.Println(userIDToRead)
 
 	// Call service to read user by ID
 	user, err := h.userService.RetrieveUserByID(ctx, userIDToRead)
@@ -183,15 +187,13 @@ func (h *UserHandler) Update(w http.ResponseWriter, r *http.Request) {
 
 	// Check if user is trying to update another user, and if so, check if user is an admin
 	var userIDToUpdate string
-	if id != claims.UserID {
-		if claims.Role != "admin" {
-			errors.HandleError(w, r, errors.NewForbiddenError("You are not authorized to update this user"), h.errorLogger)
-			return
-		} else if id != "" && claims.Role == "admin" {
-			userIDToUpdate = id // Admin can update any user
-		} else {
-			userIDToUpdate = claims.UserID // Customer can only update self
-		}
+	if id == "" || id == claims.UserID {
+		userIDToUpdate = claims.UserID // Read id from claims if id query is empty
+	} else if id != "" && claims.Role == "admin" {
+		userIDToUpdate = id // Admin can update any user
+	} else {
+		errors.HandleError(w, r, errors.NewForbiddenError("You are not authorized to update this user"), h.errorLogger) // Only admin can update any user
+		return
 	}
 
 	// Call service to update user
@@ -223,15 +225,13 @@ func (h *UserHandler) Delete(w http.ResponseWriter, r *http.Request) {
 
 	// Check if user is trying to delete another user, and if so, check if user is an admin
 	var userIDToDelete string
-	if id != claims.UserID {
-		if claims.Role != "admin" {
-			errors.HandleError(w, r, errors.NewForbiddenError("You are not authorized to delete this user"), h.errorLogger)
-			return
-		} else if id != "" && claims.Role == "admin" {
-			userIDToDelete = id // Admin can delete any user
-		} else {
-			userIDToDelete = claims.UserID // Customer can only delete self
-		}
+	if id == "" || id == claims.UserID {
+		userIDToDelete = claims.UserID // Read id from claims if id query is empty
+	} else if id != "" && claims.Role == "admin" {
+		userIDToDelete = id // Admin can delete any user
+	} else {
+		errors.HandleError(w, r, errors.NewForbiddenError("You are not authorized to delete this user"), h.errorLogger) // Only admin can delete any user
+		return
 	}
 
 	// Call service to soft-delete user
