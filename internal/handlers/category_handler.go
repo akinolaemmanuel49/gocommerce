@@ -115,7 +115,7 @@ func (h *CategoryHandler) Read(w http.ResponseWriter, r *http.Request) {
 // @Tags Categories
 // @Accept json
 // @Produce json
-// @Param name query string false "Filter products by name"
+// @Param name query string false "Filter categories by name"
 // @Param lastID query string false "Last category id in a page"
 // @Param limit query int false "Number of items per page"
 // @Success 200 {object} models.MultipleEntityClientResponse "Returned products and next cursor"
@@ -222,7 +222,7 @@ func (h *CategoryHandler) Update(w http.ResponseWriter, r *http.Request) {
 // @Tags Categories
 // @Accept json
 // @Produce json
-// @Param id path string false "Category ID"
+// @Param id path string true "Category ID"
 // @Success 200 {object} models.ClientResponse "Response Message"
 // @Failure 401 "Unauthorized"
 // @Failure 403 "Forbidden"

@@ -24,6 +24,11 @@ type CartItem struct {
 	Quantity int     `json:"quantity" bson:"quantity"`
 }
 
+type CartItemCreate struct {
+	ProductID string `json:"id"`
+	Quantity  int    `json:"quantity"`
+}
+
 type CartItemUpdate struct {
 	ProductID string `json:"id" validate:"required"`
 	Quantity  int    `json:"quantity" validate:"required"`

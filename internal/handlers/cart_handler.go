@@ -11,6 +11,7 @@ import (
 	"github.com/akinolaemmanuel49/gocommerce/internal/models"
 	"github.com/akinolaemmanuel49/gocommerce/internal/services"
 	"github.com/akinolaemmanuel49/gocommerce/utils"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -20,7 +21,20 @@ func NewCartHandler(cartService *services.CartService, logger, errorLogger *log.
 
 var _ ICartHandler = (*CartHandler)(nil)
 
-// Create handles POST /carts requests and accepts CreateCart as input
+// Create handles POST /carts requests and accepts CreateCart as input [CUSTOMER]
+// @Security BearerAuth
+// @Summary Create a new cart.
+// @Description This endpoint creates a new cart.
+// @Tags Carts
+// @Accept json
+// @Produce json
+// @Param cart body models.CreateCart true "Cart Details"
+// @Success 201 {object} models.Category "Created cart"
+// @Failure 400 "Invalid Request Body"
+// @Failure 401 "Not Found"
+// @Failure 409 "Conflict"
+// @Failure 500 "Internal Server Error"
+// @Router /carts [post]
 func (h *CartHandler) Create(w http.ResponseWriter, r *http.Request) {
 	var input models.CreateCart
 	ctx := r.Context()
@@ -42,7 +56,19 @@ func (h *CartHandler) Create(w http.ResponseWriter, r *http.Request) {
 	utils.WriteJSON(w, r, http.StatusCreated, cart, h.logger)
 }
 
-// Read handles GET /carts/:id requests
+// Read handles GET /carts/:id requests [CUSTOMER]
+// @Security BearerAuth
+// @Summary Read a cart
+// @Description This endpoint fetches a single cart.
+// @Tags Carts
+// @Accept json
+// @Produce json
+// @Param id path string true "Cart ID"
+// @Success 200 {object} models.Cart "Returned cart"
+// @Failure 400 "Invalid Cart ID"
+// @Failure 404 "Not Found"
+// @Failure 500 "Internal Server Error"
+// @Router /carts [get]
 func (h *CartHandler) Read(w http.ResponseWriter, r *http.Request, id string) {
 	ctx := r.Context()
 	// Validate ID
@@ -68,11 +94,19 @@ func (h *CartHandler) Read(w http.ResponseWriter, r *http.Request, id string) {
 	utils.WriteJSON(w, r, http.StatusOK, cart, h.logger)
 }
 
-// ReadAll handles GET /carts requests with optional filters
+// ReadAll handles GET /carts requests with optional filters [CUSTOMER]
+// @Summary Read all carts
+// @Description This endpoint fetches a list of carts with cursor based pagination, optionally filtered by name.
+// @Tags Cart
+// @Accept json
+// @Produce json
+// @Param name query string false "Filter carts by name"
+// @Param lastID query string false "Last cart id in a page"
+// @Param limit query int false "Number of items per page"
+// @Success 200 {object} models.MultipleEntityClientResponse "Returned products and next cursor"
+// @Failure 500 "Internal Server Error"
+// @Router /carts/all [get]
 func (h *CartHandler) ReadAll(w http.ResponseWriter, r *http.Request) {
-	// Log to stdout
-	h.logger.Printf("%v %v", r.Method, r.URL.Path)
-
 	ctx := r.Context()
 
 	// Parse query parameters for filters and pagination
@@ -88,6 +122,9 @@ func (h *CartHandler) ReadAll(w http.ResponseWriter, r *http.Request) {
 	}
 
 	filter := map[string]interface{}{}
+	if name := query.Get("name"); name != "" {
+		filter["name"] = bson.M{"$regex": name, "$options": "i"}
+	}
 
 	carts, nextCursor, err := h.cartService.RetrieveAllCarts(ctx, filter, lastID, limit)
 	if err != nil {
@@ -102,7 +139,20 @@ func (h *CartHandler) ReadAll(w http.ResponseWriter, r *http.Request) {
 	utils.WriteJSON(w, r, http.StatusOK, response, h.logger)
 }
 
-// AddProductToCart handles PUT /carts/:id/items/add requests
+// AddProductToCart handles PUT /carts/:id/items/add requests [CUSTOMER]
+// @Security BearerAuth
+// @Summary Add product to cart
+// @Description This endpoint adds a product to a cart.
+// @Tags Cart
+// @Accept json
+// @Produce json
+// @Param id path string true "Cart ID"
+// @Param cartItem body models.CartItemCreate true "Cart Item"
+// @Success 200 {object} models.ClientResponse "Response Message"
+// @Failure 401 "Unauthorized"
+// @Failure 403 "Forbidden"
+// @Failure 500 "Internal Server Error"
+// @Router /carts/{id}/items/add [put]
 func (h *CartHandler) AddProductToCart(w http.ResponseWriter, r *http.Request, id string) {
 	ctx := r.Context()
 	// Validate ID
@@ -111,7 +161,7 @@ func (h *CartHandler) AddProductToCart(w http.ResponseWriter, r *http.Request, i
 		return
 	}
 
-	var input models.CartItem
+	var input models.CartItemCreate
 
 	// Parse request body
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
@@ -120,18 +170,33 @@ func (h *CartHandler) AddProductToCart(w http.ResponseWriter, r *http.Request, i
 	}
 
 	// Call service to add new item to cart
-	_, err := h.cartService.AddProductToCart(ctx, input.CartID, input.Product.ID, input.Quantity)
+	_, err := h.cartService.AddProductToCart(ctx, id, input.ProductID, input.Quantity)
 	if err != nil {
 		errors.HandleError(w, r, err, h.errorLogger)
 		return
 	}
 
 	// Respond with success message
-	response := map[string]string{"message": "Add cart item was successful"}
+	response := models.ClientResponse{
+		Message: "Add cart item was successful",
+	}
 	utils.WriteJSON(w, r, http.StatusOK, response, h.logger)
 }
 
-// RemoveProductFromCart handles PUT /carts/:id/items/remove requests
+// RemoveProductFromCart handles PUT /carts/:id/items/remove requests [CUSTOMER]
+// @Security BearerAuth
+// @Summary Removes product from cart
+// @Description This endpoint removes a product from a cart.
+// @Tags Cart
+// @Accept json
+// @Produce json
+// @Param id path string true "Cart ID"
+// @Param cartItemDelete body models.CartItemUpdate true "Cart Item Delete"
+// @Success 200 {object} models.ClientResponse "Response Message"
+// @Failure 401 "Unauthorized"
+// @Failure 403 "Forbidden"
+// @Failure 500 "Internal Server Error"
+// @Router /carts/{id}/items/remove [put]
 func (h *CartHandler) RemoveProductFromCart(w http.ResponseWriter, r *http.Request, id string, productID string) {
 	ctx := r.Context()
 	// Validate IDs
@@ -156,11 +221,25 @@ func (h *CartHandler) RemoveProductFromCart(w http.ResponseWriter, r *http.Reque
 	}
 
 	// Respond with success message
-	response := map[string]string{"message": "Remove cart item was successful"}
+	response := models.ClientResponse{
+		Message: "Remove cart item was successful",
+	}
 	utils.WriteJSON(w, r, http.StatusOK, response, h.logger)
 }
 
-// Delete handles DELETE /carts/:id requests
+// Delete handles DELETE /carts/:id requests [CUSTOMER]
+// @Security BearerAuth
+// @Summary Delete cart
+// @Description This endpoint deletes a single cart.
+// @Tags Cart
+// @Accept json
+// @Produce json
+// @Param id path string true "Cart ID"
+// @Success 200 {object} models.ClientResponse "Response Message"
+// @Failure 401 "Unauthorized"
+// @Failure 403 "Forbidden"
+// @Failure 500 "Internal Server Error"
+// @Router /carts [delete]
 func (h *CartHandler) Delete(w http.ResponseWriter, r *http.Request, id string) {
 	ctx := r.Context()
 	// Validate ID

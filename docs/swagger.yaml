@@ -18,6 +18,55 @@ definitions:
     - street
     - zip
     type: object
+  models.Cart:
+    properties:
+      createdAt:
+        type: string
+      id:
+        type: string
+      isDeleted:
+        type: boolean
+      items:
+        items:
+          $ref: '#/definitions/models.CartItem'
+        type: array
+      name:
+        type: string
+      totalPrice:
+        type: number
+      updatedAt:
+        type: string
+      userId:
+        type: string
+    type: object
+  models.CartItem:
+    properties:
+      cartId:
+        type: string
+      id:
+        type: string
+      product:
+        $ref: '#/definitions/models.Product'
+      quantity:
+        type: integer
+    type: object
+  models.CartItemCreate:
+    properties:
+      id:
+        type: string
+      quantity:
+        type: integer
+    type: object
+  models.CartItemUpdate:
+    properties:
+      id:
+        type: string
+      quantity:
+        type: integer
+    required:
+    - id
+    - quantity
+    type: object
   models.Category:
     properties:
       createdAt:
@@ -46,6 +95,18 @@ definitions:
     properties:
       message:
         type: string
+    type: object
+  models.CreateCart:
+    properties:
+      name:
+        type: string
+      totalPrice:
+        type: number
+      userId:
+        type: string
+    required:
+    - totalPrice
+    - userId
     type: object
   models.CreateCategory:
     properties:
@@ -223,6 +284,195 @@ paths:
       summary: Login
       tags:
       - Auth
+  /carts:
+    delete:
+      consumes:
+      - application/json
+      description: This endpoint deletes a single cart.
+      parameters:
+      - description: Cart ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Response Message
+          schema:
+            $ref: '#/definitions/models.ClientResponse'
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "500":
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+      summary: Delete cart
+      tags:
+      - Cart
+    get:
+      consumes:
+      - application/json
+      description: This endpoint fetches a single cart.
+      parameters:
+      - description: Cart ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Returned cart
+          schema:
+            $ref: '#/definitions/models.Cart'
+        "400":
+          description: Invalid Cart ID
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+      summary: Read a cart
+      tags:
+      - Carts
+    post:
+      consumes:
+      - application/json
+      description: This endpoint creates a new cart.
+      parameters:
+      - description: Cart Details
+        in: body
+        name: cart
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreateCart'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created cart
+          schema:
+            $ref: '#/definitions/models.Category'
+        "400":
+          description: Invalid Request Body
+        "401":
+          description: Not Found
+        "409":
+          description: Conflict
+        "500":
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+      summary: Create a new cart.
+      tags:
+      - Carts
+  /carts/{id}/items/add:
+    put:
+      consumes:
+      - application/json
+      description: This endpoint adds a product to a cart.
+      parameters:
+      - description: Cart ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Cart Item
+        in: body
+        name: cartItem
+        required: true
+        schema:
+          $ref: '#/definitions/models.CartItemCreate'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Response Message
+          schema:
+            $ref: '#/definitions/models.ClientResponse'
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "500":
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+      summary: Add product to cart
+      tags:
+      - Cart
+  /carts/{id}/items/remove:
+    put:
+      consumes:
+      - application/json
+      description: This endpoint removes a product from a cart.
+      parameters:
+      - description: Cart ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Cart Item Delete
+        in: body
+        name: cartItemDelete
+        required: true
+        schema:
+          $ref: '#/definitions/models.CartItemUpdate'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Response Message
+          schema:
+            $ref: '#/definitions/models.ClientResponse'
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "500":
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+      summary: Removes product from cart
+      tags:
+      - Cart
+  /carts/all:
+    get:
+      consumes:
+      - application/json
+      description: This endpoint fetches a list of carts with cursor based pagination,
+        optionally filtered by name.
+      parameters:
+      - description: Filter carts by name
+        in: query
+        name: name
+        type: string
+      - description: Last cart id in a page
+        in: query
+        name: lastID
+        type: string
+      - description: Number of items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Returned products and next cursor
+          schema:
+            $ref: '#/definitions/models.MultipleEntityClientResponse'
+        "500":
+          description: Internal Server Error
+      summary: Read all carts
+      tags:
+      - Cart
   /categories:
     delete:
       consumes:
@@ -233,6 +483,7 @@ paths:
       - description: Category ID
         in: path
         name: id
+        required: true
         type: string
       produces:
       - application/json
@@ -348,7 +599,7 @@ paths:
       description: This endpoint fetches a list of categories with cursor based pagination,
         optionally filtered by name.
       parameters:
-      - description: Filter products by name
+      - description: Filter categories by name
         in: query
         name: name
         type: string
