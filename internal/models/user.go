@@ -10,7 +10,7 @@ import (
 type User struct {
 	ID           string  `bson:"_id,omitempty" json:"id,omitempty"`
 	Email        string  `bson:"email,omitempty" json:"email,omitempty"`
-	PasswordHash string  `bson:"passwordHash,omitempty" json:"passwordHash,omitempty"`
+	PasswordHash string  `bson:"passwordHash,omitempty" json:"passwordHash,omitempty" swaggerignore:"true"`
 	FirstName    string  `bson:"firstName,omitempty" json:"firstName,omitempty"`
 	LastName     string  `bson:"lastName,omitempty" json:"lastName,omitempty"`
 	Address      Address `bson:"address,omitempty" json:"address,omitempty"`

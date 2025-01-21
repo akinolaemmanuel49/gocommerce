@@ -25,3 +25,12 @@ type UpdateAddress struct {
 	Zip     *string `json:"zip" validate:"required"`
 	Country *string `json:"country" validate:"required"`
 }
+
+type MultipleEntityClientResponse struct {
+	Data       interface{} `json:"data"`
+	NextCursor string      `json:"nextCursor"`
+}
+
+type ClientResponse struct {
+	Message string `json:"message"`
+}

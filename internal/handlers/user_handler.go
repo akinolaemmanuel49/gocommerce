@@ -24,6 +24,17 @@ func NewUserHandler(userService *services.UserService, logger, errorLogger *log.
 var _ IUserHandler = (*UserHandler)(nil)
 
 // Create handles POST /user requests [PUBLIC]
+// @Summary Create a new user
+// @Description This endpoint creates a new user
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Param user body models.CreateUser true "User Details"
+// @Success 201 {object} models.User "Created user"
+// @Failure 400 "Invalid Request Body"
+// @Failure 409 "Conflict"
+// @Failure 500 "Internal Server Error"
+// @Router /users [post]
 func (h *UserHandler) Create(w http.ResponseWriter, r *http.Request) {
 	// Initialize context
 	ctx := r.Context()
@@ -49,6 +60,19 @@ func (h *UserHandler) Create(w http.ResponseWriter, r *http.Request) {
 }
 
 // Read handles GET /user requests [CUSTOMER]
+// @Security BearerAuth
+// @Summary Read a user
+// @Description This endpoint fetches a single user, optionally fetch a user by id if the user is an admin.
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Param id query string false "User ID"
+// @Success 200 {object} models.User "Returned user"
+// @Failure 401 "Unauthorized"
+// @Failure 403 "Forbidden"
+// @Failure 404 "Not Found"
+// @Failure 500 "Internal Server Error"
+// @Router /users [get]
 func (h *UserHandler) Read(w http.ResponseWriter, r *http.Request) {
 	// Initialize context
 	ctx := r.Context()
@@ -95,6 +119,25 @@ func (h *UserHandler) Read(w http.ResponseWriter, r *http.Request) {
 }
 
 // ReadAll handles GET /users requests [ADMIN]
+// @Security BearerAuth
+// @Summary Read all users
+// @Description This endpoint fetches a list of users with cursor based pagination, optionally filtered by firstName, lastName, email, country, state, role
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Param firstName query string false "Filter users by first name"
+// @Param lastName query string false "Filter users by last name"
+// @Param email query string false "Filter users by email"
+// @Param country query string false "Filter users by country"
+// @Param state query string false "Filter users by state"
+// @Param role query string false "Filter users by role"
+// @Param lastID query string false "Last user id in a page"
+// @Param limit query int false "Number of items per page"
+// @Success 200 {object} models.MultipleEntityClientResponse "Returned users and next cursor"
+// @Failure 401 "Unauthorized"
+// @Failure 403 "Forbidden"
+// @Failure 500 "Internal Server Error"
+// @Router /users/all [get]
 func (h *UserHandler) ReadAll(w http.ResponseWriter, r *http.Request) {
 	// Initialize context
 	ctx := r.Context()
@@ -147,9 +190,9 @@ func (h *UserHandler) ReadAll(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Build response map
-	response := map[string]interface{}{
-		"data":      users,
-		"nextCusor": nextCursor,
+	response := models.MultipleEntityClientResponse{
+		Data:       users,
+		NextCursor: nextCursor,
 	}
 
 	// Write response to client
@@ -157,6 +200,20 @@ func (h *UserHandler) ReadAll(w http.ResponseWriter, r *http.Request) {
 }
 
 // Update handles PUT /users requests [CUSTOMER]
+// @Security BearerAuth
+// @Summary Update user
+// @Description This endpoint updates a single user, optionally update a user by id if the user is an admin.
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Param id query string false "User ID"
+// @Success 200 {object} models.User "Updated user"
+// @Failure 400 "Invalid Request Body"
+// @Failure 401 "Unauthorized"
+// @Failure 403 "Forbidden"
+// @Failure 404 "Not Found"
+// @Failure 500 "Internal Server Error"
+// @Router /users [put]
 func (h *UserHandler) Update(w http.ResponseWriter, r *http.Request) {
 	// Initialize context
 	ctx := r.Context()
@@ -206,6 +263,18 @@ func (h *UserHandler) Update(w http.ResponseWriter, r *http.Request) {
 }
 
 // Delete handles DELETE /users [CUSTOMER]
+// @Security BearerAuth
+// @Summary Delete user
+// @Description This endpoint deletes a single user, optionally delete a user by id if the user is an admin.
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Param id query string false "User ID"
+// @Success 200 {object} models.ClientResponse "Response Message"
+// @Failure 401 "Unauthorized"
+// @Failure 403 "Forbidden"
+// @Failure 500 "Internal Server Error"
+// @Router /users [delete]
 func (h *UserHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	// Initialize context
 	ctx := r.Context()
@@ -242,8 +311,8 @@ func (h *UserHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Build response map
-	response := map[string]interface{}{
-		"message": fmt.Sprintf("User with ID: %s was successfully deleted", userIDToDelete),
+	response := models.ClientResponse{
+		Message: fmt.Sprintf("User with ID: %s was successfully deleted", userIDToDelete),
 	}
 
 	// Write response to client

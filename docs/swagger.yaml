@@ -1,8 +1,84 @@
 definitions:
+  models.Address:
+    properties:
+      city:
+        type: string
+      country:
+        type: string
+      state:
+        type: string
+      street:
+        type: string
+      zip:
+        type: string
+    required:
+    - city
+    - country
+    - state
+    - street
+    - zip
+    type: object
+  models.ClientResponse:
+    properties:
+      message:
+        type: string
+    type: object
+  models.CreateUser:
+    properties:
+      email:
+        type: string
+      firstName:
+        type: string
+      lastName:
+        type: string
+      password:
+        minLength: 8
+        type: string
+      role:
+        enum:
+        - customer
+        - admin
+        type: string
+    required:
+    - email
+    - firstName
+    - lastName
+    - password
+    - role
+    type: object
+  models.MultipleEntityClientResponse:
+    properties:
+      data: {}
+      nextCursor:
+        type: string
+    type: object
   models.Token:
     properties:
       token:
         example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NzhkMTQzNDU2ZDAyYzFjYzI0ODMwODkiLCJyb2xlIjoiYWRtaW4iLCJleHAiOjE3Mzc1NDQ0MTMsImlhdCI6MTczNzQ1ODAxM30.-g29ffyyjSkV5oB8RXzq-aydW78LBETLGdCPQoOjjH4
+        type: string
+    type: object
+  models.User:
+    properties:
+      address:
+        $ref: '#/definitions/models.Address'
+      createdAt:
+        type: string
+      email:
+        type: string
+      firstName:
+        type: string
+      id:
+        type: string
+      isDeleted:
+        type: boolean
+      lastName:
+        type: string
+      phone:
+        type: string
+      role:
+        type: string
+      updatedAt:
         type: string
     type: object
   models.UserCredentials:
@@ -75,4 +151,184 @@ paths:
       summary: Health check
       tags:
       - Health
+  /users:
+    delete:
+      consumes:
+      - application/json
+      description: This endpoint deletes a single user, optionally delete a user by
+        id if the user is an admin.
+      parameters:
+      - description: User ID
+        in: query
+        name: id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Response Message
+          schema:
+            $ref: '#/definitions/models.ClientResponse'
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "500":
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+      summary: Delete user
+      tags:
+      - Users
+    get:
+      consumes:
+      - application/json
+      description: This endpoint fetches a single user, optionally fetch a user by
+        id if the user is an admin.
+      parameters:
+      - description: User ID
+        in: query
+        name: id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Returned user
+          schema:
+            $ref: '#/definitions/models.User'
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+      summary: Read a user
+      tags:
+      - Users
+    post:
+      consumes:
+      - application/json
+      description: This endpoint creates a new user
+      parameters:
+      - description: User Details
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreateUser'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created user
+          schema:
+            $ref: '#/definitions/models.User'
+        "400":
+          description: Invalid Request Body
+        "409":
+          description: Conflict
+        "500":
+          description: Internal Server Error
+      summary: Create a new user
+      tags:
+      - Users
+    put:
+      consumes:
+      - application/json
+      description: This endpoint updates a single user, optionally update a user by
+        id if the user is an admin.
+      parameters:
+      - description: User ID
+        in: query
+        name: id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Updated user
+          schema:
+            $ref: '#/definitions/models.User'
+        "400":
+          description: Invalid Request Body
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+      summary: Update user
+      tags:
+      - Users
+  /users/all:
+    get:
+      consumes:
+      - application/json
+      description: This endpoint fetches a list of users with cursor based pagination,
+        optionally filtered by firstName, lastName, email, country, state, role
+      parameters:
+      - description: Filter users by first name
+        in: query
+        name: firstName
+        type: string
+      - description: Filter users by last name
+        in: query
+        name: lastName
+        type: string
+      - description: Filter users by email
+        in: query
+        name: email
+        type: string
+      - description: Filter users by country
+        in: query
+        name: country
+        type: string
+      - description: Filter users by state
+        in: query
+        name: state
+        type: string
+      - description: Filter users by role
+        in: query
+        name: role
+        type: string
+      - description: Last user id in a page
+        in: query
+        name: lastID
+        type: string
+      - description: Number of items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Returned users and next cursor
+          schema:
+            $ref: '#/definitions/models.MultipleEntityClientResponse'
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "500":
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+      summary: Read all users
+      tags:
+      - Users
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"
