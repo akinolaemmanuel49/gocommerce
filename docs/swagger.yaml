@@ -23,6 +23,27 @@ definitions:
       message:
         type: string
     type: object
+  models.CreateProduct:
+    properties:
+      brand:
+        type: string
+      categoryId:
+        type: string
+      description:
+        type: string
+      images:
+        items:
+          type: string
+        type: array
+      name:
+        type: string
+      price:
+        type: number
+    required:
+    - categoryId
+    - name
+    - price
+    type: object
   models.CreateUser:
     properties:
       email:
@@ -50,6 +71,31 @@ definitions:
     properties:
       data: {}
       nextCursor:
+        type: string
+    type: object
+  models.Product:
+    properties:
+      brand:
+        type: string
+      categoryID:
+        type: string
+      createdAt:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      images:
+        items:
+          type: string
+        type: array
+      isDeleted:
+        type: boolean
+      name:
+        type: string
+      price:
+        type: number
+      updatedAt:
         type: string
     type: object
   models.Token:
@@ -151,6 +197,165 @@ paths:
       summary: Health check
       tags:
       - Health
+  /products:
+    delete:
+      consumes:
+      - application/json
+      description: This endpoint deletes a single product, this is an admin only endpoint.
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Response Message
+          schema:
+            $ref: '#/definitions/models.ClientResponse'
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "500":
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+      summary: Delete product
+      tags:
+      - Products
+    get:
+      consumes:
+      - application/json
+      description: This endpoint fetches a single product.
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Returned product
+          schema:
+            $ref: '#/definitions/models.Product'
+        "400":
+          description: Invalid Product ID
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
+      summary: Read a product
+      tags:
+      - Products
+    post:
+      consumes:
+      - application/json
+      description: This endpoint creates a new product, this is an admin only endpoint.
+      parameters:
+      - description: Product Details
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreateProduct'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created product
+          schema:
+            $ref: '#/definitions/models.Product'
+        "400":
+          description: Invalid Request Body
+        "401":
+          description: Not Found
+        "409":
+          description: Conflict
+        "500":
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+      summary: Create a new product.
+      tags:
+      - Products
+    put:
+      consumes:
+      - application/json
+      description: This endpoint updates a single product, this is an admin only endpoint.
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Updated product
+          schema:
+            $ref: '#/definitions/models.Product'
+        "400":
+          description: Invalid Request Body
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+      summary: Update product
+      tags:
+      - Products
+  /products/all:
+    get:
+      consumes:
+      - application/json
+      description: This endpoint fetches a list of products with cursor based pagination,
+        optionally filtered by name, category, priceMin, priceMax
+      parameters:
+      - description: Filter products by name
+        in: query
+        name: name
+        type: string
+      - description: Filter products by category
+        in: query
+        name: category
+        type: string
+      - description: Filter products by a set minimum price
+        in: query
+        name: priceMin
+        type: number
+      - description: Filter products by a set maximum price
+        in: query
+        name: priceMax
+        type: number
+      - description: Last product id in a page
+        in: query
+        name: lastID
+        type: string
+      - description: Number of items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Returned products and next cursor
+          schema:
+            $ref: '#/definitions/models.MultipleEntityClientResponse'
+        "500":
+          description: Internal Server Error
+      summary: Read all products
+      tags:
+      - Products
   /users:
     delete:
       consumes:

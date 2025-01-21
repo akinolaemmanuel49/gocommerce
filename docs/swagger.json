@@ -85,6 +85,252 @@
                 }
             }
         },
+        "/products": {
+            "get": {
+                "description": "This endpoint fetches a single product.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Products"
+                ],
+                "summary": "Read a product",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Product ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Returned product",
+                        "schema": {
+                            "$ref": "#/definitions/models.Product"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid Product ID"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "This endpoint updates a single product, this is an admin only endpoint.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Products"
+                ],
+                "summary": "Update product",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Product ID",
+                        "name": "id",
+                        "in": "path"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Updated product",
+                        "schema": {
+                            "$ref": "#/definitions/models.Product"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid Request Body"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "This endpoint creates a new product, this is an admin only endpoint.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Products"
+                ],
+                "summary": "Create a new product.",
+                "parameters": [
+                    {
+                        "description": "Product Details",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.CreateProduct"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created product",
+                        "schema": {
+                            "$ref": "#/definitions/models.Product"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid Request Body"
+                    },
+                    "401": {
+                        "description": "Not Found"
+                    },
+                    "409": {
+                        "description": "Conflict"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "This endpoint deletes a single product, this is an admin only endpoint.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Products"
+                ],
+                "summary": "Delete product",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Product ID",
+                        "name": "id",
+                        "in": "path"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Response Message",
+                        "schema": {
+                            "$ref": "#/definitions/models.ClientResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            }
+        },
+        "/products/all": {
+            "get": {
+                "description": "This endpoint fetches a list of products with cursor based pagination, optionally filtered by name, category, priceMin, priceMax",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Products"
+                ],
+                "summary": "Read all products",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter products by name",
+                        "name": "name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter products by category",
+                        "name": "category",
+                        "in": "query"
+                    },
+                    {
+                        "type": "number",
+                        "description": "Filter products by a set minimum price",
+                        "name": "priceMin",
+                        "in": "query"
+                    },
+                    {
+                        "type": "number",
+                        "description": "Filter products by a set maximum price",
+                        "name": "priceMax",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Last product id in a page",
+                        "name": "lastID",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Number of items per page",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Returned products and next cursor",
+                        "schema": {
+                            "$ref": "#/definitions/models.MultipleEntityClientResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            }
+        },
         "/users": {
             "get": {
                 "security": [
@@ -390,6 +636,37 @@
                 }
             }
         },
+        "models.CreateProduct": {
+            "type": "object",
+            "required": [
+                "categoryId",
+                "name",
+                "price"
+            ],
+            "properties": {
+                "brand": {
+                    "type": "string"
+                },
+                "categoryId": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "images": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "number"
+                }
+            }
+        },
         "models.CreateUser": {
             "type": "object",
             "required": [
@@ -427,6 +704,44 @@
             "properties": {
                 "data": {},
                 "nextCursor": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.Product": {
+            "type": "object",
+            "properties": {
+                "brand": {
+                    "type": "string"
+                },
+                "categoryID": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "images": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "isDeleted": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "number"
+                },
+                "updatedAt": {
                     "type": "string"
                 }
             }

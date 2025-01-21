@@ -99,12 +99,6 @@ func (h *UserHandler) Read(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// DEBUG
-	fmt.Println("DEBUG!!!")
-	fmt.Println(id)
-	fmt.Println("READING")
-	fmt.Println(userIDToRead)
-
 	// Call service to read user by ID
 	user, err := h.userService.RetrieveUserByID(ctx, userIDToRead)
 	switch err {
@@ -264,7 +258,7 @@ func (h *UserHandler) Update(w http.ResponseWriter, r *http.Request) {
 	utils.WriteJSON(w, r, http.StatusOK, user, h.logger)
 }
 
-// Delete handles DELETE /users [CUSTOMER]
+// Delete handles DELETE /users requests [CUSTOMER]
 // @Security BearerAuth
 // @Summary Delete user
 // @Description This endpoint deletes a single user, optionally delete a user by id if the user is an admin.

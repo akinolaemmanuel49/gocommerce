@@ -22,7 +22,20 @@ func NewProductHandler(productService *services.ProductService, logger, errorLog
 // Compile-time check that ProductHandler implements HandlerInterface
 var _ IProductHandler = (*ProductHandler)(nil)
 
-// Create handles POST /products requests and accepts CreateProduct as input
+// Create handles POST /products requests and accepts CreateProduct as input [ADMIN]
+// @Security BearerAuth
+// @Summary Create a new product.
+// @Description This endpoint creates a new product, this is an admin only endpoint.
+// @Tags Products
+// @Accept json
+// @Produce json
+// @Param user body models.CreateProduct true "Product Details"
+// @Success 201 {object} models.Product "Created product"
+// @Failure 400 "Invalid Request Body"
+// @Failure 401 "Not Found"
+// @Failure 409 "Conflict"
+// @Failure 500 "Internal Server Error"
+// @Router /products [post]
 func (h *ProductHandler) Create(w http.ResponseWriter, r *http.Request) {
 	// Initialize context
 	ctx := r.Context()
@@ -54,7 +67,18 @@ func (h *ProductHandler) Create(w http.ResponseWriter, r *http.Request) {
 	utils.WriteJSON(w, r, http.StatusCreated, product, h.logger)
 }
 
-// Read handles GET /products/:id requests
+// Read handles GET /products/:id requests [PUBLIC]
+// @Summary Read a product
+// @Description This endpoint fetches a single product.
+// @Tags Products
+// @Accept json
+// @Produce json
+// @Param id path string true "Product ID"
+// @Success 200 {object} models.Product "Returned product"
+// @Failure 400 "Invalid Product ID"
+// @Failure 404 "Not Found"
+// @Failure 500 "Internal Server Error"
+// @Router /products [get]
 func (h *ProductHandler) Read(w http.ResponseWriter, r *http.Request) {
 	// Initialize context
 	ctx := r.Context()
@@ -85,7 +109,21 @@ func (h *ProductHandler) Read(w http.ResponseWriter, r *http.Request) {
 	utils.WriteJSON(w, r, http.StatusOK, product, h.logger)
 }
 
-// ReadAll handles GET /products requests with optional filters
+// ReadAll handles GET /products requests with optional filters [PUBLIC]
+// @Summary Read all products
+// @Description This endpoint fetches a list of products with cursor based pagination, optionally filtered by name, category, priceMin, priceMax
+// @Tags Products
+// @Accept json
+// @Produce json
+// @Param name query string false "Filter products by name"
+// @Param category query string false "Filter products by category"
+// @Param priceMin query float64 false "Filter products by a set minimum price"
+// @Param priceMax query float64 false "Filter products by a set maximum price"
+// @Param lastID query string false "Last product id in a page"
+// @Param limit query int false "Number of items per page"
+// @Success 200 {object} models.MultipleEntityClientResponse "Returned products and next cursor"
+// @Failure 500 "Internal Server Error"
+// @Router /products/all [get]
 func (h *ProductHandler) ReadAll(w http.ResponseWriter, r *http.Request) {
 	// Initialize context
 	ctx := r.Context()
@@ -142,7 +180,21 @@ func (h *ProductHandler) ReadAll(w http.ResponseWriter, r *http.Request) {
 	utils.WriteJSON(w, r, http.StatusOK, response, h.logger)
 }
 
-// Update handles PUT /products/:id requests
+// Update handles PUT /products/:id requests [ADMIN]
+// @Security BearerAuth
+// @Summary Update product
+// @Description This endpoint updates a single product, this is an admin only endpoint.
+// @Tags Products
+// @Accept json
+// @Produce json
+// @Param id path string false "Product ID"
+// @Success 200 {object} models.Product "Updated product"
+// @Failure 400 "Invalid Request Body"
+// @Failure 401 "Unauthorized"
+// @Failure 403 "Forbidden"
+// @Failure 404 "Not Found"
+// @Failure 500 "Internal Server Error"
+// @Router /products [put]
 func (h *ProductHandler) Update(w http.ResponseWriter, r *http.Request) {
 	// Initialize context
 	ctx := r.Context()
@@ -183,7 +235,19 @@ func (h *ProductHandler) Update(w http.ResponseWriter, r *http.Request) {
 	utils.WriteJSON(w, r, http.StatusOK, product, h.logger)
 }
 
-// Delete handles DELETE /products/:id requests
+// Delete handles DELETE /products/:id requests [ADMIN]
+// @Security BearerAuth
+// @Summary Delete product
+// @Description This endpoint deletes a single product, this is an admin only endpoint.
+// @Tags Products
+// @Accept json
+// @Produce json
+// @Param id path string false "Product ID"
+// @Success 200 {object} models.ClientResponse "Response Message"
+// @Failure 401 "Unauthorized"
+// @Failure 403 "Forbidden"
+// @Failure 500 "Internal Server Error"
+// @Router /products [delete]
 func (h *ProductHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	// Initialize context
 	ctx := r.Context()
