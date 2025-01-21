@@ -84,7 +84,7 @@ func (h *CategoryHandler) Read(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	// Get ID from URL
-	ID := utils.GetIDFromURL(r)
+	ID := utils.GetIDFromURL(r, "id")
 
 	// Validate the ID
 	if err := utils.ValidateID(ID, "Category"); err != nil {
@@ -187,7 +187,7 @@ func (h *CategoryHandler) Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get ID from URL
-	ID := utils.GetIDFromURL(r)
+	ID := utils.GetIDFromURL(r, "id")
 
 	// Validate the ID
 	if err := utils.ValidateID(ID, "Category"); err != nil {
@@ -240,7 +240,7 @@ func (h *CategoryHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get ID from URL
-	ID := utils.GetIDFromURL(r)
+	ID := utils.GetIDFromURL(r, "id")
 
 	// Validate the ID
 	if err := utils.ValidateID(ID, "Category"); err != nil {

@@ -84,11 +84,11 @@ func (h *ProductHandler) Read(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	// Get ID from URL
-	ID := utils.GetIDFromURL(r)
+	ID := utils.GetIDFromURL(r, "id")
 
 	// Validate the ID
 	if err := utils.ValidateID(ID, "Product"); err != nil {
-		errors.HandleError(w, r, errors.NewValidationError("id", "Invalid product ID"), h.errorLogger)
+		errors.HandleError(w, r, errors.NewValidationError("ID", "Invalid product ID"), h.errorLogger)
 		return
 	}
 
@@ -207,7 +207,7 @@ func (h *ProductHandler) Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get ID from URL
-	ID := utils.GetIDFromURL(r)
+	ID := utils.GetIDFromURL(r, "id")
 
 	// Validate the ID
 	if err := utils.ValidateID(ID, "Product"); err != nil {
@@ -260,7 +260,7 @@ func (h *ProductHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get ID from URL
-	ID := utils.GetIDFromURL(r)
+	ID := utils.GetIDFromURL(r, "id")
 
 	// Validate the ID
 	if err := utils.ValidateID(ID, "Product"); err != nil {

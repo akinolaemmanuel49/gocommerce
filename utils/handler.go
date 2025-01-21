@@ -35,9 +35,9 @@ func WriteJSON(w http.ResponseWriter, r *http.Request, statusCode int, data inte
 }
 
 // GetIDFromURL gets the ID from the URL
-func GetIDFromURL(r *http.Request) string {
+func GetIDFromURL(r *http.Request, identifier string) string {
 	vars := mux.Vars(r)
-	id := vars["id"]
+	id := vars[identifier]
 	return id
 }
 

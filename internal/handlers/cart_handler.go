@@ -74,7 +74,7 @@ func (h *CartHandler) Read(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	// Get ID from URL
-	ID := utils.GetIDFromURL(r)
+	ID := utils.GetIDFromURL(r, "id")
 
 	// Validate the ID
 	if err := utils.ValidateID(ID, "Cart"); err != nil {
@@ -164,7 +164,7 @@ func (h *CartHandler) AddProductToCart(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	// Get ID from URL
-	ID := utils.GetIDFromURL(r)
+	ID := utils.GetIDFromURL(r, "id")
 
 	// Validate the ID
 	if err := utils.ValidateID(ID, "Cart"); err != nil {
@@ -215,7 +215,7 @@ func (h *CartHandler) RemoveProductFromCart(w http.ResponseWriter, r *http.Reque
 	ctx := r.Context()
 
 	// Get ID from URL
-	ID := utils.GetIDFromURL(r)
+	ID := utils.GetIDFromURL(r, "id")
 
 	// Validate the ID
 	if err := utils.ValidateID(ID, "Cart"); err != nil {
@@ -265,7 +265,7 @@ func (h *CartHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	// Get ID from URL
-	ID := utils.GetIDFromURL(r)
+	ID := utils.GetIDFromURL(r, "id")
 
 	// Validate the ID
 	if err := utils.ValidateID(ID, "Cart"); err != nil {
