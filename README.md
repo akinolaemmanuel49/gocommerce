@@ -12,6 +12,7 @@
     - [x] Categories
     - [x] Carts
     - [x] Auth
+    - [x] Health
 - [x] Implement carts repository.
 - [x] Implement carts service.
 - [x] Implement carts handler.
@@ -25,8 +26,21 @@
     - [ ] Products
     - [ ] Categories
     - [ ] Carts
+- [x] Document implemented and planned API routes using SWAGGER
+    - [ ] Orders
+    - [x] Users
+    - [ ] Products
+    - [ ] Categories
+    - [ ] Carts
+    - [x] Auth
+    - [x] Health
 - [ ] Implement email messaging for order creation, status changes and cancellation.
 - [ ] Write tests
+    - [ ] Users
+    - [ ] Products
+    - [ ] Categories
+    - [ ] Carts
+    - [ ] Auth
 
 ---
 
