@@ -30,15 +30,9 @@ func RegisterAuthRoutes(config *configs.Config, router *mux.Router, db *mongo.Da
 	// Initialize the handler
 	authHandler := handlers.NewAuthHandler(authService, logger, errorLogger)
 
-	router.HandleFunc(RouteAuth+"/login", func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case "POST":
-			authHandler.Login(w, r)
-		default:
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		}
-	})
+	router.Handle(RouteAuth+"/login", http.HandlerFunc(authHandler.Login)).Methods("POST")
 
+	// DEBUG ROUTES
 	// Public routes
 	router.HandleFunc("/public", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)

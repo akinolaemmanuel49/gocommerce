@@ -20,6 +20,8 @@ func HandleError(w http.ResponseWriter, r *http.Request, err error, errorLogger 
 	switch err.(type) {
 	case *ValidationError:
 		WriteErrorResponse(w, r, http.StatusBadRequest, err.Error(), errorLogger)
+	case *BadRequestError:
+		WriteErrorResponse(w, r, http.StatusBadRequest, err.Error(), errorLogger)
 	case *ConflictError:
 		WriteErrorResponse(w, r, http.StatusConflict, err.Error(), errorLogger)
 	case *NotFoundError:

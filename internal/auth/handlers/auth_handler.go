@@ -18,13 +18,26 @@ func NewAuthHandler(authService *services.AuthService, logger *log.Logger, error
 
 var _ IAuthHandler = (*AuthHandler)(nil)
 
+// Login handles POST /auth/login requests and accepts UserCredentials as input
+// @Summary Login
+// @Description Returns a JWT token for a verified user
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param credentials body models.UserCredentials true "Login credentials"
+// @Success 200 {object} models.Token "JWT token"
+// @Failure 400 "Invalid Request Body"
+// @Failure 401 "Unauthorized"
+// @Failure 404 "Not Found"
+// @Failure 500 "Internal Server Error"
+// @Router /auth/login [post]
 func (h AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	var req models.UserCredentials
 
 	// Parse request body
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		errors.HandleError(w, r, errors.NewValidationError("", "Invalid request body"), h.errorLogger)
+		errors.HandleError(w, r, errors.NewBadRequestError("Check credentials and try again"), h.errorLogger)
 		return
 	}
 

@@ -90,6 +90,21 @@ func NewValidationError(field, err string) error {
 	}
 }
 
+type BadRequestError struct {
+	Err string
+}
+
+func (e *BadRequestError) Error() string {
+	return fmt.Sprintf("Bad Request: %s", e.Err)
+}
+
+// NewBadRequestError creates a new instance of BadRequestError
+func NewBadRequestError(err string) error {
+	return &BadRequestError{
+		Err: err,
+	}
+}
+
 // AuthorizationError represents an error for unauthorized access
 type AuthorizationError struct {
 	Err string
