@@ -1,6 +1,8 @@
 package models
 
-import "time"
+import (
+	"time"
+)
 
 type Cart struct {
 	ID           string     `json:"id" bson:"_id"`
@@ -12,9 +14,7 @@ type Cart struct {
 }
 
 type CreateCart struct {
-	UserID     string  `json:"userId" validate:"required"`
-	TotalPrice float64 `json:"totalPrice" validate:"required,gt=0"`
-	Name       string  `json:"name,omitempty"`
+	Name string `json:"name,omitempty"`
 }
 
 type CartItem struct {
@@ -34,9 +34,9 @@ type CartItemUpdate struct {
 	Quantity  int    `json:"quantity" validate:"required"`
 }
 
-func NewCart(newCart *CreateCart) *Cart {
+func NewCart(newCart *CreateCart, userID string) *Cart {
 	return &Cart{
-		UserID:     newCart.UserID,
+		UserID:     userID,
 		TotalPrice: 0,
 		Name:       newCart.Name,
 		CommonFields: CommonFields{

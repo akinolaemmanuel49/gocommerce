@@ -21,7 +21,7 @@ func NewCartHandler(cartService *services.CartService, logger, errorLogger *log.
 
 var _ ICartHandler = (*CartHandler)(nil)
 
-// Create handles POST /carts requests and accepts CreateCart as input [CUSTOMER]
+// Create handles POST /carts requests and accepts CreateCart as req [CUSTOMER]
 // @Security BearerAuth
 // @Summary Create a new cart.
 // @Description This endpoint creates a new cart.
@@ -36,17 +36,27 @@ var _ ICartHandler = (*CartHandler)(nil)
 // @Failure 500 "Internal Server Error"
 // @Router /carts [post]
 func (h *CartHandler) Create(w http.ResponseWriter, r *http.Request) {
-	var input models.CreateCart
+	// Initialize context
 	ctx := r.Context()
 
+	// Get claims from context
+	claims, err := utils.IsAuthorized(ctx)
+	if err != nil {
+		errors.HandleError(w, r, err, h.errorLogger)
+		return
+	}
+
+	// Initialize request body
+	var req models.CreateCart
+
 	// Parse request body
-	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		errors.HandleError(w, r, errors.NewValidationError("", "Invalid request body"), h.errorLogger)
 		return
 	}
 
 	// Call service to create cart
-	cart, err := h.cartService.CreateCart(ctx, &input)
+	cart, err := h.cartService.CreateCart(ctx, &req, claims.UserID)
 	if err != nil {
 		errors.HandleError(w, r, err, h.errorLogger)
 		return
@@ -68,10 +78,17 @@ func (h *CartHandler) Create(w http.ResponseWriter, r *http.Request) {
 // @Failure 400 "Invalid Cart ID"
 // @Failure 404 "Not Found"
 // @Failure 500 "Internal Server Error"
-// @Router /carts [get]
+// @Router /carts/{id} [get]
 func (h *CartHandler) Read(w http.ResponseWriter, r *http.Request) {
 	// Initialize context
 	ctx := r.Context()
+
+	// Get claims from context
+	_, err := utils.IsAuthorized(ctx)
+	if err != nil {
+		errors.HandleError(w, r, err, h.errorLogger)
+		return
+	}
 
 	// Get ID from URL
 	ID := utils.GetIDFromURL(r, "id")
@@ -115,6 +132,13 @@ func (h *CartHandler) ReadAll(w http.ResponseWriter, r *http.Request) {
 	// Initialize context
 	ctx := r.Context()
 
+	// Get claims from context
+	claims, err := utils.IsAuthorized(ctx)
+	if err != nil {
+		errors.HandleError(w, r, err, h.errorLogger)
+		return
+	}
+
 	// Parse query parameters for filters and pagination
 	query := r.URL.Query()
 	lastID := query.Get("lastID")
@@ -128,20 +152,31 @@ func (h *CartHandler) ReadAll(w http.ResponseWriter, r *http.Request) {
 	}
 
 	filter := map[string]interface{}{}
+	// Convert string to object id
+	objectID, err := utils.StringToObjectID(claims.UserID)
+	if err != nil {
+		errors.HandleError(w, r, err, h.errorLogger)
+		return
+	}
+	filter["_id"] = objectID
 	if name := query.Get("name"); name != "" {
 		filter["name"] = bson.M{"$regex": name, "$options": "i"}
 	}
 
+	// Call service to fetch all carts
 	carts, nextCursor, err := h.cartService.RetrieveAllCarts(ctx, filter, lastID, limit)
 	if err != nil {
 		errors.HandleError(w, r, err, h.errorLogger)
 		return
 	}
 
-	response := map[string]interface{}{
-		"data":       carts,
-		"nextCursor": nextCursor,
+	// Build response map
+	response := models.MultipleEntityClientResponse{
+		Data:       carts,
+		NextCursor: nextCursor,
 	}
+
+	// Write response to client
 	utils.WriteJSON(w, r, http.StatusOK, response, h.logger)
 }
 
@@ -163,6 +198,13 @@ func (h *CartHandler) AddProductToCart(w http.ResponseWriter, r *http.Request) {
 	// Initialize context
 	ctx := r.Context()
 
+	// Get claims from context
+	claims, err := utils.IsAuthorized(ctx)
+	if err != nil {
+		errors.HandleError(w, r, err, h.errorLogger)
+		return
+	}
+
 	// Get ID from URL
 	ID := utils.GetIDFromURL(r, "id")
 
@@ -172,16 +214,17 @@ func (h *CartHandler) AddProductToCart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var input models.CartItemCreate
+	// Initialize request body
+	var req models.CartItemCreate
 
 	// Parse request body
-	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		errors.HandleError(w, r, errors.NewValidationError("", "Invalid request body"), h.errorLogger)
 		return
 	}
 
 	// Call service to add new item to cart
-	_, err := h.cartService.AddProductToCart(ctx, ID, input.ProductID, input.Quantity)
+	_, err = h.cartService.AddProductToCart(ctx, ID, claims.UserID, req.ProductID, req.Quantity)
 	if err != nil {
 		errors.HandleError(w, r, err, h.errorLogger)
 		return
@@ -214,6 +257,13 @@ func (h *CartHandler) RemoveProductFromCart(w http.ResponseWriter, r *http.Reque
 	// Initialize context
 	ctx := r.Context()
 
+	// Get claims from context
+	claims, err := utils.IsAuthorized(ctx)
+	if err != nil {
+		errors.HandleError(w, r, err, h.errorLogger)
+		return
+	}
+
 	// Get ID from URL
 	ID := utils.GetIDFromURL(r, "id")
 
@@ -223,16 +273,17 @@ func (h *CartHandler) RemoveProductFromCart(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	var input models.CartItemUpdate
+	// Initialize request body
+	var req models.CartItemUpdate
 
 	// Parse request body
-	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		errors.HandleError(w, r, errors.NewValidationError("", "Invalid request body"), h.errorLogger)
 		return
 	}
 
 	// Call service to add new item to cart
-	_, err := h.cartService.RemoveProductFromCart(ctx, ID, input.ProductID, input.Quantity)
+	_, err = h.cartService.RemoveProductFromCart(ctx, ID, claims.UserID, req.ProductID, req.Quantity)
 	if err != nil {
 		errors.HandleError(w, r, err, h.errorLogger)
 		return
@@ -264,6 +315,13 @@ func (h *CartHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	// Initialize context
 	ctx := r.Context()
 
+	// Get claims from context
+	claims, err := utils.IsAuthorized(ctx)
+	if err != nil {
+		errors.HandleError(w, r, err, h.errorLogger)
+		return
+	}
+
 	// Get ID from URL
 	ID := utils.GetIDFromURL(r, "id")
 
@@ -274,7 +332,7 @@ func (h *CartHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Call service to delete cart
-	if err := h.cartService.DeleteCartByID(ctx, ID); err != nil {
+	if err := h.cartService.DeleteCartByID(ctx, claims.UserID, ID); err != nil {
 		errors.HandleError(w, r, err, h.errorLogger)
 		return
 	}

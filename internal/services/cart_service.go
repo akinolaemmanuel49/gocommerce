@@ -20,15 +20,15 @@ func NewCartService(cartRepository *repositories.CartRepository, userService Use
 }
 
 // CreateCart creates a new instance of a cart in the database
-func (s *CartService) CreateCart(ctx context.Context, newCart *models.CreateCart) (*models.Cart, error) {
+func (s *CartService) CreateCart(ctx context.Context, newCart *models.CreateCart, userID string) (*models.Cart, error) {
 	// Check for valid user
-	_, err := s.userRepository.FindByID(ctx, newCart.UserID)
+	_, err := s.userRepository.FindByID(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
 
 	// Create new cart
-	cart := models.NewCart(newCart)
+	cart := models.NewCart(newCart, userID)
 
 	// Save cart to database
 	result, err := s.cartRepository.Insert(ctx, cart)
@@ -47,7 +47,7 @@ func (s *CartService) CreateCart(ctx context.Context, newCart *models.CreateCart
 }
 
 // AddProductToCart adds a product to a cart
-func (s *CartService) AddProductToCart(ctx context.Context, cartID string, productID string, quantity int) (*models.Cart, error) {
+func (s *CartService) AddProductToCart(ctx context.Context, userID string, cartID string, productID string, quantity int) (*models.Cart, error) {
 	if quantity <= 0 {
 		return nil, errors.NewValidationError("Quantity", "quantity must be greater than zero")
 	}
@@ -56,6 +56,10 @@ func (s *CartService) AddProductToCart(ctx context.Context, cartID string, produ
 	cart, err := s.cartRepository.FindByID(ctx, cartID)
 	if err != nil {
 		return nil, err
+	}
+
+	if userID != cart.UserID {
+		return nil, errors.NewForbiddenError("You do not have permission to modify this resource")
 	}
 
 	// Retrieve product by ID
@@ -100,7 +104,7 @@ func (s *CartService) AddProductToCart(ctx context.Context, cartID string, produ
 }
 
 // RemoveProductFromCart removes a product or reduces its quantity in the cart
-func (s *CartService) RemoveProductFromCart(ctx context.Context, cartID string, productID string, quantity int) (*models.Cart, error) {
+func (s *CartService) RemoveProductFromCart(ctx context.Context, userID string, cartID string, productID string, quantity int) (*models.Cart, error) {
 	if quantity <= 0 {
 		return nil, errors.NewValidationError("Quantity", "Quantity must be greater than zero")
 	}
@@ -111,6 +115,9 @@ func (s *CartService) RemoveProductFromCart(ctx context.Context, cartID string, 
 		return nil, err
 	}
 
+	if userID != cart.UserID {
+		return nil, errors.NewForbiddenError("You do not have permission to modify this resource")
+	}
 	// Check if the product exists in the cart
 	productFound := false
 	for i, item := range cart.Items {
@@ -173,9 +180,13 @@ func (s *CartService) RetrieveAllCarts(ctx context.Context, filter map[string]in
 }
 
 // DeleteCart deletes a cart
-func (s *CartService) DeleteCartByID(ctx context.Context, ID string) error {
+func (s *CartService) DeleteCartByID(ctx context.Context, userID string, ID string) error {
 	// Check for existing cart
 	existingCart, err := s.cartRepository.FindByID(ctx, ID)
+	if userID != existingCart.UserID {
+		return errors.NewForbiddenError("You do not have permission to modify this resource")
+	}
+
 	if err != nil && err != mongo.ErrNoDocuments {
 		return err
 	}
