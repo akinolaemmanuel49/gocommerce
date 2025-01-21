@@ -312,7 +312,7 @@ paths:
       - BearerAuth: []
       summary: Delete cart
       tags:
-      - Cart
+      - Carts
     get:
       consumes:
       - application/json
@@ -406,7 +406,7 @@ paths:
       - BearerAuth: []
       summary: Add product to cart
       tags:
-      - Cart
+      - Carts
   /carts/{id}/items/remove:
     put:
       consumes:
@@ -441,7 +441,7 @@ paths:
       - BearerAuth: []
       summary: Removes product from cart
       tags:
-      - Cart
+      - Carts
   /carts/all:
     get:
       consumes:
@@ -472,7 +472,7 @@ paths:
           description: Internal Server Error
       summary: Read all carts
       tags:
-      - Cart
+      - Carts
   /categories:
     delete:
       consumes:

@@ -170,7 +170,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "Cart"
+                    "Carts"
                 ],
                 "summary": "Delete cart",
                 "parameters": [
@@ -211,7 +211,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "Cart"
+                    "Carts"
                 ],
                 "summary": "Read all carts",
                 "parameters": [
@@ -262,7 +262,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "Cart"
+                    "Carts"
                 ],
                 "summary": "Add product to cart",
                 "parameters": [
@@ -317,7 +317,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "Cart"
+                    "Carts"
                 ],
                 "summary": "Removes product from cart",
                 "parameters": [

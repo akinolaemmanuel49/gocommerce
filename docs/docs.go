@@ -177,7 +177,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Cart"
+                    "Carts"
                 ],
                 "summary": "Delete cart",
                 "parameters": [
@@ -218,7 +218,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Cart"
+                    "Carts"
                 ],
                 "summary": "Read all carts",
                 "parameters": [
@@ -269,7 +269,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Cart"
+                    "Carts"
                 ],
                 "summary": "Add product to cart",
                 "parameters": [
@@ -324,7 +324,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Cart"
+                    "Carts"
                 ],
                 "summary": "Removes product from cart",
                 "parameters": [

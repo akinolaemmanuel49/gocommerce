@@ -97,7 +97,7 @@ func (h *CartHandler) Read(w http.ResponseWriter, r *http.Request, id string) {
 // ReadAll handles GET /carts requests with optional filters [CUSTOMER]
 // @Summary Read all carts
 // @Description This endpoint fetches a list of carts with cursor based pagination, optionally filtered by name.
-// @Tags Cart
+// @Tags Carts
 // @Accept json
 // @Produce json
 // @Param name query string false "Filter carts by name"
@@ -143,7 +143,7 @@ func (h *CartHandler) ReadAll(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Summary Add product to cart
 // @Description This endpoint adds a product to a cart.
-// @Tags Cart
+// @Tags Carts
 // @Accept json
 // @Produce json
 // @Param id path string true "Cart ID"
@@ -187,7 +187,7 @@ func (h *CartHandler) AddProductToCart(w http.ResponseWriter, r *http.Request, i
 // @Security BearerAuth
 // @Summary Removes product from cart
 // @Description This endpoint removes a product from a cart.
-// @Tags Cart
+// @Tags Carts
 // @Accept json
 // @Produce json
 // @Param id path string true "Cart ID"
@@ -231,7 +231,7 @@ func (h *CartHandler) RemoveProductFromCart(w http.ResponseWriter, r *http.Reque
 // @Security BearerAuth
 // @Summary Delete cart
 // @Description This endpoint deletes a single cart.
-// @Tags Cart
+// @Tags Carts
 // @Accept json
 // @Produce json
 // @Param id path string true "Cart ID"
