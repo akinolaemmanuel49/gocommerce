@@ -29,7 +29,7 @@ var _ IProductHandler = (*ProductHandler)(nil)
 // @Tags Products
 // @Accept json
 // @Produce json
-// @Param user body models.CreateProduct true "Product Details"
+// @Param product body models.CreateProduct true "Product Details"
 // @Success 201 {object} models.Product "Created product"
 // @Failure 400 "Invalid Request Body"
 // @Failure 401 "Not Found"

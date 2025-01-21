@@ -18,10 +18,51 @@ definitions:
     - street
     - zip
     type: object
+  models.Category:
+    properties:
+      createdAt:
+        type: string
+      description:
+        description: Description of the category
+        type: string
+      id:
+        description: Unique identifier for the category
+        type: string
+      image:
+        description: URL or path to an image representing the category
+        type: string
+      isDeleted:
+        type: boolean
+      name:
+        description: Name of the category
+        type: string
+      parentID:
+        description: Optional parent category ID for hierarchical categorization
+        type: string
+      updatedAt:
+        type: string
+    type: object
   models.ClientResponse:
     properties:
       message:
         type: string
+    type: object
+  models.CreateCategory:
+    properties:
+      description:
+        description: Optional description
+        type: string
+      image:
+        description: Optional category image
+        type: string
+      name:
+        description: Name is required
+        type: string
+      parentId:
+        description: Optional parent category
+        type: string
+    required:
+    - name
     type: object
   models.CreateProduct:
     properties:
@@ -182,6 +223,155 @@ paths:
       summary: Login
       tags:
       - Auth
+  /categories:
+    delete:
+      consumes:
+      - application/json
+      description: This endpoint deletes a single category, this is an admin only
+        endpoint.
+      parameters:
+      - description: Category ID
+        in: path
+        name: id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Response Message
+          schema:
+            $ref: '#/definitions/models.ClientResponse'
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "500":
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+      summary: Delete category
+      tags:
+      - Categories
+    get:
+      consumes:
+      - application/json
+      description: This endpoint fetches a single category.
+      parameters:
+      - description: Category ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Returned category
+          schema:
+            $ref: '#/definitions/models.Category'
+        "400":
+          description: Invalid Category ID
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
+      summary: Read a category
+      tags:
+      - Categories
+    post:
+      consumes:
+      - application/json
+      description: This endpoint creates a new category, this is an admin only endpoint.
+      parameters:
+      - description: Category Details
+        in: body
+        name: category
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreateCategory'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created category
+          schema:
+            $ref: '#/definitions/models.Category'
+        "400":
+          description: Invalid Request Body
+        "401":
+          description: Not Found
+        "409":
+          description: Conflict
+        "500":
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+      summary: Create a new category.
+      tags:
+      - Categories
+    put:
+      consumes:
+      - application/json
+      description: This endpoint updates a single category, this is an admin only
+        endpoint.
+      parameters:
+      - description: Category ID
+        in: path
+        name: id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Updated category
+          schema:
+            $ref: '#/definitions/models.Category'
+        "400":
+          description: Invalid Request Body
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+      summary: Update category
+      tags:
+      - Categories
+  /categories/all:
+    get:
+      consumes:
+      - application/json
+      description: This endpoint fetches a list of categories with cursor based pagination,
+        optionally filtered by name.
+      parameters:
+      - description: Filter products by name
+        in: query
+        name: name
+        type: string
+      - description: Last category id in a page
+        in: query
+        name: lastID
+        type: string
+      - description: Number of items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Returned products and next cursor
+          schema:
+            $ref: '#/definitions/models.MultipleEntityClientResponse'
+        "500":
+          description: Internal Server Error
+      summary: Read all categories
+      tags:
+      - Categories
   /health:
     get:
       consumes:
@@ -258,7 +448,7 @@ paths:
       parameters:
       - description: Product Details
         in: body
-        name: user
+        name: product
         required: true
         schema:
           $ref: '#/definitions/models.CreateProduct'
