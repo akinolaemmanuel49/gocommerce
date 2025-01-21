@@ -15,6 +15,13 @@ type IUserHandler interface {
 	Delete(w http.ResponseWriter, r *http.Request)
 }
 
+type ICategoryHandler interface {
+	Create(w http.ResponseWriter, r *http.Request)
+	Read(w http.ResponseWriter, r *http.Request)
+	ReadAll(w http.ResponseWriter, r *http.Request)
+	Update(w http.ResponseWriter, r *http.Request)
+	Delete(w http.ResponseWriter, r *http.Request)
+}
 type IProductHandler interface {
 	Create(w http.ResponseWriter, r *http.Request)
 	Read(w http.ResponseWriter, r *http.Request)
@@ -23,14 +30,14 @@ type IProductHandler interface {
 	Delete(w http.ResponseWriter, r *http.Request)
 }
 
-type ICategoryHandler interface {
+type ICartHandler interface {
 	Create(w http.ResponseWriter, r *http.Request)
 	Read(w http.ResponseWriter, r *http.Request)
 	ReadAll(w http.ResponseWriter, r *http.Request)
-	Update(w http.ResponseWriter, r *http.Request)
+	AddProductToCart(w http.ResponseWriter, r *http.Request)
+	RemoveProductFromCart(w http.ResponseWriter, r *http.Request)
 	Delete(w http.ResponseWriter, r *http.Request)
 }
-
 type IOrderHandler interface {
 	Create(w http.ResponseWriter, r *http.Request)
 	Read(w http.ResponseWriter, r *http.Request, id string)
@@ -44,14 +51,6 @@ type IOrderHandler interface {
 	Delete(w http.ResponseWriter, r *http.Request, id string)
 }
 
-type ICartHandler interface {
-	Create(w http.ResponseWriter, r *http.Request)
-	Read(w http.ResponseWriter, r *http.Request, id string)
-	ReadAll(w http.ResponseWriter, r *http.Request)
-	AddProductToCart(w http.ResponseWriter, r *http.Request, id string)
-	RemoveProductFromCart(w http.ResponseWriter, r *http.Request, id string, productID string)
-	Delete(w http.ResponseWriter, r *http.Request, id string)
-}
 type UserHandler struct {
 	userService *services.UserService
 	logger      *log.Logger
