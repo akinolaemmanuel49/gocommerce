@@ -22,11 +22,11 @@ func NewOrderService(orderRepository *repositories.OrderRepository, publisher *q
 }
 
 // CreateOrder creates a new instance of an order and commits it to the database
-func (s *OrderService) CreateOrder(ctx context.Context, newOrder *models.CreateOrder) (*models.Order, error) {
+func (s *OrderService) CreateOrder(ctx context.Context, userID string, newOrder *models.CreateOrder) (*models.Order, error) {
 	// Check for valid user
-	user, err := s.userRepository.FindByID(ctx, newOrder.UserID)
+	user, err := s.userRepository.FindByID(ctx, userID)
 	if err == mongo.ErrNoDocuments {
-		return nil, errors.NewNotFoundError("User", "ID", newOrder.UserID)
+		return nil, errors.NewNotFoundError("User", "ID", userID)
 	}
 	if err != nil {
 		return nil, err
@@ -66,10 +66,14 @@ func (s *OrderService) CreateOrder(ctx context.Context, newOrder *models.CreateO
 }
 
 // RetrieveOrderByID retrieves an order by its ID
-func (s *OrderService) RetrieveOrderByID(ctx context.Context, ID string) (*models.Order, error) {
+func (s *OrderService) RetrieveOrderByID(ctx context.Context, userID string, ID string) (*models.Order, error) {
 	order, err := s.orderRepository.FindByID(ctx, ID)
 	if err != nil {
 		return nil, err
+	}
+
+	if userID != order.UserID {
+		return nil, errors.NewForbiddenError("You do not have permission to modify this resource")
 	}
 
 	return order, nil
@@ -125,12 +129,17 @@ func (s *OrderService) ChangeOrderStatusByID(ctx context.Context, ID string, sta
 }
 
 // ChangeOrderShippingAddressByID changes the shipping address for an order, it checks if the resource is locked first
-func (s *OrderService) ChangeOrderShippingAddressByID(ctx context.Context, ID string, newAddress *models.UpdateAddress) error {
+func (s *OrderService) ChangeOrderShippingAddressByID(ctx context.Context, ID string, userID string, newAddress *models.UpdateAddress) error {
 	// Check whether the resource is available for modification
 	existingOrder, err := s.orderRepository.FindByID(ctx, ID)
 	if err != nil {
 		return err
 	}
+
+	if userID != existingOrder.UserID {
+		return errors.NewForbiddenError("You do not have permission to modify this resource")
+	}
+
 	if existingOrder.IsLocked {
 		return errors.NewValidationError("ShippingAddress", "Unable to alter this resource, because is locked")
 	}
@@ -158,11 +167,15 @@ func (s *OrderService) ChangeOrderShippingAddressByID(ctx context.Context, ID st
 }
 
 // AddCartToOrderByID adds a cart to an order, it checks if the resource is locked first
-func (s *OrderService) AddCartToOrderByID(ctx context.Context, ID string, cartID string) error {
+func (s *OrderService) AddCartToOrderByID(ctx context.Context, ID string, userID string, cartID string) error {
 	// Retrieve the order by ID
 	order, err := s.orderRepository.FindByID(ctx, ID)
 	if err != nil {
 		return err
+	}
+
+	if userID != order.UserID {
+		return errors.NewForbiddenError("You do not have permission to modify this resource")
 	}
 
 	// Check if the order can be modified
@@ -206,12 +219,17 @@ func (s *OrderService) AddCartToOrderByID(ctx context.Context, ID string, cartID
 }
 
 // RemoveCartFromOrderByID removes a cart from an order, it checks if the resource is locked first
-func (s *OrderService) RemoveCartFromOrderByID(ctx context.Context, ID string, cartID string) error {
+func (s *OrderService) RemoveCartFromOrderByID(ctx context.Context, ID string, userID string, cartID string) error {
 	// Check whether the resource is available for modification
 	order, err := s.orderRepository.FindByID(ctx, ID)
 	if err != nil {
 		return err
 	}
+
+	if userID != order.UserID {
+		return errors.NewForbiddenError("You do not have permission to modify this resource")
+	}
+
 	if order.IsLocked {
 		return errors.NewValidationError("Carts", "Unable to alter this resource because it is locked")
 	}
@@ -257,12 +275,17 @@ func (s *OrderService) RemoveCartFromOrderByID(ctx context.Context, ID string, c
 }
 
 // ConfirmOrderByID sets the IsLocked flag for an order instance to true
-func (s *OrderService) ConfirmOrderByID(ctx context.Context, ID string) (bool, error) {
+func (s *OrderService) ConfirmOrderByID(ctx context.Context, ID string, userID string) (bool, error) {
 	// Check for existing order
 	existingOrder, err := s.orderRepository.FindByID(ctx, ID)
 	if err != nil {
 		return false, err
 	}
+
+	if userID != existingOrder.UserID {
+		return false, errors.NewForbiddenError("You do not have permission to modify this resource")
+	}
+
 	// Check if the order is already locked
 	if existingOrder.IsLocked {
 		return true, nil
@@ -279,11 +302,15 @@ func (s *OrderService) ConfirmOrderByID(ctx context.Context, ID string) (bool, e
 }
 
 // CancelOrderByID sets the IsCancelled flag for an order instance to true
-func (s *OrderService) CancelOrderByID(ctx context.Context, ID string) (bool, error) {
+func (s *OrderService) CancelOrderByID(ctx context.Context, ID string, userID string) (bool, error) {
 	// Check for existing order
 	existingOrder, err := s.orderRepository.FindByID(ctx, ID)
 	if err != nil {
 		return false, err
+	}
+
+	if userID != existingOrder.UserID {
+		return false, errors.NewForbiddenError("You do not have permission to modify this resource")
 	}
 	// Check if the order is already cancelled
 	if existingOrder.IsCancelled {
@@ -301,14 +328,19 @@ func (s *OrderService) CancelOrderByID(ctx context.Context, ID string) (bool, er
 }
 
 // DeleteOrderByID sets the IsDeleted flag for an order instance to true (performs a soft-delete)
-func (s *OrderService) DeleteOrderByID(ctx context.Context, ID string) error {
+func (s *OrderService) DeleteOrderByID(ctx context.Context, ID string, userID string) error {
 	// Check for existing order
 	existingOrder, err := s.orderRepository.FindByID(ctx, ID)
 	if err != nil && err != mongo.ErrNoDocuments {
 		return err
 	}
+
 	if err == mongo.ErrNoDocuments {
 		return nil
+	}
+
+	if userID != existingOrder.UserID {
+		return errors.NewForbiddenError("You do not have permission to modify this resource")
 	}
 
 	if existingOrder != nil {

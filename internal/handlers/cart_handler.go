@@ -158,7 +158,7 @@ func (h *CartHandler) ReadAll(w http.ResponseWriter, r *http.Request) {
 		errors.HandleError(w, r, err, h.errorLogger)
 		return
 	}
-	filter["_id"] = objectID
+	filter["userId"] = objectID
 	if name := query.Get("name"); name != "" {
 		filter["name"] = bson.M{"$regex": name, "$options": "i"}
 	}

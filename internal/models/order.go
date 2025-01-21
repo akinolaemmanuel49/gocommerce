@@ -23,7 +23,6 @@ type Order struct {
 }
 
 type CreateOrder struct {
-	UserID          string  `json:"userId" validate:"required"`
 	Carts           []Cart  `json:"carts" validate:"required,dive"`
 	TotalPrice      float64 `json:"totalPrice" validate:"required,gt=0"`
 	Status          string  `json:"status" validate:"required,oneof=pending shipped delivered"`
@@ -37,7 +36,7 @@ type UpdateOrder struct {
 
 func NewOrder(newOrder *CreateOrder, user *User) *Order {
 	return &Order{
-		UserID:          newOrder.UserID,
+		UserID:          user.ID,
 		Carts:           newOrder.Carts,
 		TotalPrice:      newOrder.TotalPrice,
 		Status:          "pending",
