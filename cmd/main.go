@@ -17,12 +17,26 @@ import (
 	"github.com/akinolaemmanuel49/gocommerce/routes"
 	"github.com/gorilla/mux"
 
+	_ "github.com/akinolaemmanuel49/gocommerce/docs"
 	"github.com/akinolaemmanuel49/gocommerce/internal/database"
 	"github.com/akinolaemmanuel49/gocommerce/internal/queue"
+	httpSwagger "github.com/swaggo/http-swagger"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+// @title GoCommerce API
+// @version 1.0
+// @description This is an e-commerce server GoCommerce server.
+// @termsOfService http://swagger.io/terms/
+
+// @contact.name Akinola Abiodun E.
+// @contact.email biteatertest@gmail.com
+
+// @license.name Apache 2.0
+// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @host localhost
 const (
 	RouteHealth = "/health"
 )
@@ -112,8 +126,7 @@ func main() {
 
 func setupRoutes(config *configs.Config, router *mux.Router, db *mongo.Database, logger, errorLogger *log.Logger) {
 	// Health check
-	// routes.RegisterHealthRoute(router, logger, errorLogger)
-	routes.RegisterHealthRoute(router, logger, errorLogger, config)
+	routes.RegisterHealthRoute(config, router, logger, errorLogger)
 
 	// User routes
 	routes.RegisterUserRoutes(config, router, db, logger, errorLogger)
@@ -133,6 +146,9 @@ func setupRoutes(config *configs.Config, router *mux.Router, db *mongo.Database,
 	// Auth routes
 	auth_routes.RegisterAuthRoutes(config, router, db, logger, errorLogger)
 
+	// Swagger documentation route
+	router.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
+
 	// Catch-all for unmatched routes
 	router.NotFoundHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		errors.HandleError(w, r, errors.NewNotFoundError("route", "path", r.URL.Path), errorLogger)
@@ -142,6 +158,7 @@ func setupRoutes(config *configs.Config, router *mux.Router, db *mongo.Database,
 	router.MethodNotAllowedHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		errors.HandleError(w, r, errors.NewMethodNotAllowedError(r.Method), errorLogger)
 	})
+
 }
 
 func gracefulShutdown(server *http.Server, logger, errorLogger *log.Logger) {

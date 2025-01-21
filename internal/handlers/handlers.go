@@ -81,3 +81,8 @@ type CartHandler struct {
 	logger      *log.Logger
 	errorLogger *log.Logger
 }
+
+type HealthHandler struct {
+	logger      *log.Logger
+	errorLogger *log.Logger
+}
