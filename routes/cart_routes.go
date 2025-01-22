@@ -36,7 +36,7 @@ func RegisterCartRoutes(config *configs.Config, router *mux.Router, db *mongo.Da
 
 	router.Handle(RouteCarts, authMiddleware(http.HandlerFunc(cartHandler.Create))).Methods("POST")
 	router.Handle(RouteCarts, authMiddleware(http.HandlerFunc(cartHandler.Read))).Methods("GET")
-	router.Handle(RouteCarts, authMiddleware(http.HandlerFunc(cartHandler.ReadAll))).Methods("GET")
+	router.Handle(RouteCarts+"/all", authMiddleware(http.HandlerFunc(cartHandler.ReadAll))).Methods("GET")
 	router.Handle(RouteCarts+"{id}/items/add", http.HandlerFunc(cartHandler.AddProductToCart)).Methods("PUT")
 	router.Handle(RouteCarts+"{id}/items/remove", http.HandlerFunc(cartHandler.RemoveProductFromCart)).Methods("PUT")
 	router.Handle(RouteCarts+"{id}", http.HandlerFunc(cartHandler.Delete)).Methods("DELETE")
