@@ -340,7 +340,7 @@ func (h *OrderHandler) UpdateOrderShippingAddress(w http.ResponseWriter, r *http
 // @Failure 401 "Unauthorized"
 // @Failure 404 "Not Found"
 // @Failure 500 "Internal Server Error"
-// @Router /orders/{id}/carts/add [put]
+// @Router /orders/{id}/carts/add/{cartID} [put]
 func (h *OrderHandler) AddCartToOrder(w http.ResponseWriter, r *http.Request) {
 	// Initialize context
 	ctx := r.Context()
@@ -395,7 +395,7 @@ func (h *OrderHandler) AddCartToOrder(w http.ResponseWriter, r *http.Request) {
 // @Failure 401 "Unauthorized"
 // @Failure 404 "Not Found"
 // @Failure 500 "Internal Server Error"
-// @Router /orders/{id}/carts/remove [put]
+// @Router /orders/{id}/carts/remove/{cartID} [put]
 func (h *OrderHandler) RemoveCartFromOrder(w http.ResponseWriter, r *http.Request) {
 	// Initialize context
 	ctx := r.Context()

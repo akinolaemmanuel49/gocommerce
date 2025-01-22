@@ -17,22 +17,22 @@
 - [x] Implement messaging for orders, whenever the status of an order changes, a message is sent to the queue.
 - [ ] Add route protection to concerned routes.
     - [x] Users
-    - [ ] Orders
-    - [ ] Products
-    - [ ] Categories
-    - [ ] Carts
+    - [x] Orders
+    - [x] Products
+    - [x] Categories
+    - [x] Carts
 - [x] Document implemented and planned API routes using SWAGGER
-    - [ ] Orders
+    - [x] Orders
     - [x] Users
-    - [ ] Products
-    - [ ] Categories
-    - [ ] Carts
+    - [x] Products
+    - [x] Categories
+    - [x] Carts
     - [x] Auth
     - [x] Health
-- [ ] Implement email messaging for order creation, status changes and cancellation.
 - [ ] Write tests
     - [ ] Users
     - [ ] Products
     - [ ] Categories
     - [ ] Carts
     - [ ] Auth
+- [ ] Implement email messaging for order creation, status changes and cancellation.

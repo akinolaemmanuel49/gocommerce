@@ -938,7 +938,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/orders/{id}/carts/add": {
+        "/orders/{id}/carts/add/{cartID}": {
             "put": {
                 "description": "Add a cart to an existing order by IDs",
                 "consumes": [
@@ -989,7 +989,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/orders/{id}/carts/remove": {
+        "/orders/{id}/carts/remove/{cartID}": {
             "put": {
                 "description": "Remove a cart from an existing order by IDs",
                 "consumes": [
