@@ -100,13 +100,6 @@ definitions:
     properties:
       name:
         type: string
-      totalPrice:
-        type: number
-      userId:
-        type: string
-    required:
-    - totalPrice
-    - userId
     type: object
   models.CreateCategory:
     properties:
@@ -313,34 +306,6 @@ paths:
       summary: Delete cart
       tags:
       - Carts
-    get:
-      consumes:
-      - application/json
-      description: This endpoint fetches a single cart.
-      parameters:
-      - description: Cart ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Returned cart
-          schema:
-            $ref: '#/definitions/models.Cart'
-        "400":
-          description: Invalid Cart ID
-        "404":
-          description: Not Found
-        "500":
-          description: Internal Server Error
-      security:
-      - BearerAuth: []
-      summary: Read a cart
-      tags:
-      - Carts
     post:
       consumes:
       - application/json
@@ -370,6 +335,35 @@ paths:
       security:
       - BearerAuth: []
       summary: Create a new cart.
+      tags:
+      - Carts
+  /carts/{id}:
+    get:
+      consumes:
+      - application/json
+      description: This endpoint fetches a single cart.
+      parameters:
+      - description: Cart ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Returned cart
+          schema:
+            $ref: '#/definitions/models.Cart'
+        "400":
+          description: Invalid Cart ID
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+      summary: Read a cart
       tags:
       - Carts
   /carts/{id}/items/add:

@@ -70,50 +70,6 @@ const docTemplate = `{
             }
         },
         "/carts": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "This endpoint fetches a single cart.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Carts"
-                ],
-                "summary": "Read a cart",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Cart ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Returned cart",
-                        "schema": {
-                            "$ref": "#/definitions/models.Cart"
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid Cart ID"
-                    },
-                    "404": {
-                        "description": "Not Found"
-                    },
-                    "500": {
-                        "description": "Internal Server Error"
-                    }
-                }
-            },
             "post": {
                 "security": [
                     {
@@ -247,6 +203,52 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/models.MultipleEntityClientResponse"
                         }
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            }
+        },
+        "/carts/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "This endpoint fetches a single cart.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Carts"
+                ],
+                "summary": "Read a cart",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Cart ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Returned cart",
+                        "schema": {
+                            "$ref": "#/definitions/models.Cart"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid Cart ID"
+                    },
+                    "404": {
+                        "description": "Not Found"
                     },
                     "500": {
                         "description": "Internal Server Error"
@@ -1278,18 +1280,8 @@ const docTemplate = `{
         },
         "models.CreateCart": {
             "type": "object",
-            "required": [
-                "totalPrice",
-                "userId"
-            ],
             "properties": {
                 "name": {
-                    "type": "string"
-                },
-                "totalPrice": {
-                    "type": "number"
-                },
-                "userId": {
                     "type": "string"
                 }
             }
