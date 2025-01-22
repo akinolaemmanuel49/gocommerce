@@ -26,7 +26,7 @@ func AuthMiddleware(jwtSecretKey []byte) func(http.Handler) http.Handler {
 
 			// Token format: "Bearer <token>"
 			tokenString := strings.TrimPrefix(authHeader, "Bearer ")
-			if tokenString == authHeader {
+			if tokenString != strings.TrimPrefix(authHeader, "Bearer ") {
 				http.Error(w, "Invalid Authorization header format", http.StatusUnauthorized)
 				return
 			}
