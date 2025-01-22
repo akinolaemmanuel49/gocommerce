@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/akinolaemmanuel49/gocommerce/configs"
+	auth_middleware "github.com/akinolaemmanuel49/gocommerce/internal/auth/middlewares"
 	"github.com/akinolaemmanuel49/gocommerce/internal/handlers"
 	"github.com/akinolaemmanuel49/gocommerce/internal/queue"
 	"github.com/akinolaemmanuel49/gocommerce/internal/repositories"
@@ -16,6 +17,7 @@ import (
 
 func RegisterOrderRoutes(config *configs.Config, router *mux.Router, db *mongo.Database, logger, errorLogger *log.Logger) {
 	const RouteOrders = "/orders"
+	jwtSecretKey := []byte(config.JWTSecretKey)
 
 	// Initialize repositories
 	orderRepository := repositories.NewOrderRepository(db)
@@ -39,82 +41,16 @@ func RegisterOrderRoutes(config *configs.Config, router *mux.Router, db *mongo.D
 	orderHandler := handlers.NewOrderHandler(orderService, logger, errorLogger)
 
 	router.Use(middlewares.ErrorMiddleware) // Attach ErrorMiddleware
+	authMiddleware := auth_middleware.AuthMiddleware(jwtSecretKey)
 
-	router.HandleFunc(RouteOrders, func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case "GET":
-			orderHandler.ReadAll(w, r)
-		case "POST":
-			orderHandler.Create(w, r)
-		default:
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		}
-	})
-
-	router.HandleFunc(RouteOrders+"/{id}", func(w http.ResponseWriter, r *http.Request) {
-		id := mux.Vars(r)["id"] // Extract the `id` path parameter
-
-		switch r.Method {
-		case "GET":
-			orderHandler.Read(w, r, id)
-		case "DELETE":
-			orderHandler.Delete(w, r, id)
-		}
-	})
-
-	router.HandleFunc(RouteOrders+"/{id}/address", func(w http.ResponseWriter, r *http.Request) {
-		id := mux.Vars(r)["id"] // Extract the `id` path parameter
-
-		switch r.Method {
-		case "PUT":
-			orderHandler.UpdateOrderShippingAddress(w, r, id)
-		}
-	})
-
-	router.HandleFunc(RouteOrders+"/{id}/status", func(w http.ResponseWriter, r *http.Request) {
-		id := mux.Vars(r)["id"] // Extract the `id` path parameter
-
-		switch r.Method {
-		case "PUT":
-			orderHandler.UpdateOrderStatus(w, r, id)
-		}
-	})
-
-	router.HandleFunc(RouteOrders+"/{id}/carts/remove/{cartId}", func(w http.ResponseWriter, r *http.Request) {
-		id := mux.Vars(r)["id"]         // Extract the `id` path parameter
-		cartId := mux.Vars(r)["cartId"] // Extract the `cartId` path parameter
-
-		switch r.Method {
-		case "PUT":
-			orderHandler.RemoveCartFromOrder(w, r, id, cartId)
-		}
-	})
-
-	router.HandleFunc(RouteOrders+"/{id}/carts/add/{cartId}", func(w http.ResponseWriter, r *http.Request) {
-		id := mux.Vars(r)["id"]         // Extract the `id` path parameter
-		cartId := mux.Vars(r)["cartId"] // Extract the `cartId` path parameter
-
-		switch r.Method {
-		case "PUT":
-			orderHandler.AddCartToOrder(w, r, id, cartId)
-		}
-	})
-
-	router.HandleFunc(RouteOrders+"/{id}/confirm", func(w http.ResponseWriter, r *http.Request) {
-		id := mux.Vars(r)["id"] // Extract the `id` path parameter
-
-		switch r.Method {
-		case "PUT":
-			orderHandler.ConfirmOrder(w, r, id)
-		}
-	})
-
-	router.HandleFunc(RouteOrders+"/{id}/cancel", func(w http.ResponseWriter, r *http.Request) {
-		id := mux.Vars(r)["id"] // Extract the `id` path parameter
-
-		switch r.Method {
-		case "PUT":
-			orderHandler.CancelOrder(w, r, id)
-		}
-	})
+	router.Handle(RouteOrders, authMiddleware(http.HandlerFunc(orderHandler.Create))).Methods("POST")
+	router.Handle(RouteOrders, authMiddleware(http.HandlerFunc(orderHandler.Read))).Methods("GET")
+	router.Handle(RouteOrders, authMiddleware(http.HandlerFunc(orderHandler.ReadAll))).Methods("GET")
+	router.Handle(RouteOrders+"{id}/status", http.HandlerFunc(orderHandler.UpdateOrderStatus)).Methods("PUT")
+	router.Handle(RouteOrders+"{id}/address", http.HandlerFunc(orderHandler.UpdateOrderShippingAddress)).Methods("PUT")
+	router.Handle(RouteOrders+"{id}/carts/add", http.HandlerFunc(orderHandler.AddCartToOrder)).Methods("PUT")
+	router.Handle(RouteOrders+"{id}/items/remove", http.HandlerFunc(orderHandler.RemoveCartFromOrder)).Methods("PUT")
+	router.Handle(RouteOrders+"{id}/confirm", http.HandlerFunc(orderHandler.ConfirmOrder)).Methods("PUT")
+	router.Handle(RouteOrders+"{id}/cancel", http.HandlerFunc(orderHandler.CancelOrder)).Methods("PUT")
+	router.Handle(RouteOrders+"{id}", http.HandlerFunc(orderHandler.Delete)).Methods("DELETE")
 }

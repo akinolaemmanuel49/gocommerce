@@ -16,51 +16,76 @@ import (
 )
 
 func NewOrderHandler(orderService *services.OrderService, logger, errorLogger *log.Logger) *OrderHandler {
-	return &OrderHandler{orderService: orderService, logger: logger, errorLogger: errorLogger}
+	return &OrderHandler{
+		orderService: orderService,
+		logger:       logger,
+		errorLogger:  errorLogger,
+	}
 }
 
 var _ IOrderHandler = (*OrderHandler)(nil)
 
-// Create handles POST /orders requests and accepts CreateOrder as input
+// Create handles POST /orders requests and accepts CreateOrder as req [CUSTOMER]
 func (h *OrderHandler) Create(w http.ResponseWriter, r *http.Request) {
-	var input models.CreateOrder
+	// Initialize context
+	ctx := r.Context()
 
-	// Parse request body
-	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		errors.HandleError(w, r, errors.NewValidationError("", "Invalid request body"), h.errorLogger)
-		return
-	}
-
-	// Call service to create order
-	order, err := h.orderService.CreateOrder(r.Context(), &input)
+	// Get claims from context
+	claims, err := utils.IsAuthorized(ctx)
 	if err != nil {
 		errors.HandleError(w, r, err, h.errorLogger)
 		return
 	}
 
-	// Respond with the created order
+	// Initialize request body
+	var req models.CreateOrder
+
+	// Parse request body
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		errors.HandleError(w, r, errors.NewValidationError("", "Invalid request body"), h.errorLogger)
+		return
+	}
+
+	// Call service to create order
+	order, err := h.orderService.CreateOrder(ctx, claims.UserID, &req)
+	if err != nil {
+		errors.HandleError(w, r, err, h.errorLogger)
+		return
+	}
+
+	// Write response to client
 	utils.WriteJSON(w, r, http.StatusCreated, order, h.logger)
 }
 
-// func (h *OrderHandler) Read(w http.ResponseWriter, r *http.Request, id string) {
-func (h *OrderHandler) Read(w http.ResponseWriter, r *http.Request, id string) {
+// Read handles GET /orders/:id requests [CUSTOMER]
+func (h *OrderHandler) Read(w http.ResponseWriter, r *http.Request) {
 	// Initialize context
 	ctx := r.Context()
 
-	// Validate ID
-	if err := utils.ValidateID(id, "Order"); err != nil {
-		errors.HandleError(w, r, errors.NewValidationError("id", "Invalid order ID"), h.errorLogger)
+	// Get claims from context
+	claims, err := utils.IsAuthorized(ctx)
+	if err != nil {
+		errors.HandleError(w, r, err, h.errorLogger)
+		return
+	}
+
+	// Get ID from URL
+	ID := utils.GetIDFromURL(r, "id")
+
+	// Validate the ID
+	if err := utils.ValidateID(ID, "Order"); err != nil {
+		errors.HandleError(w, r, errors.NewValidationError("ID", "Invalid order ID"), h.errorLogger)
 		return
 	}
 
 	// Call service to read order by ID
-	order, err := h.orderService.RetrieveOrderByID(ctx, id)
+	order, err := h.orderService.RetrieveOrderByID(ctx, claims.UserID, ID)
 
 	switch err {
 	case nil:
 		// No error
 	case mongo.ErrNoDocuments:
-		errors.HandleError(w, r, errors.NewNotFoundError("Order", "ID", id), h.errorLogger)
+		errors.HandleError(w, r, errors.NewNotFoundError("Order", "ID", ID), h.errorLogger)
 		return
 	default:
 		errors.HandleError(w, r, err, h.errorLogger)
@@ -76,6 +101,13 @@ func (h *OrderHandler) ReadAll(w http.ResponseWriter, r *http.Request) {
 	// Initialize context
 	ctx := r.Context()
 
+	// Get claims from context
+	claims, err := utils.IsAuthorized(ctx)
+	if err != nil {
+		errors.HandleError(w, r, err, h.errorLogger)
+		return
+	}
+
 	// Parse query parameters for filters and pagination
 	query := r.URL.Query()
 	lastID := query.Get("lastID")
@@ -90,6 +122,13 @@ func (h *OrderHandler) ReadAll(w http.ResponseWriter, r *http.Request) {
 
 	// Build filter map from query parameters
 	filter := map[string]interface{}{}
+	// Convert string to object id
+	objectID, err := utils.StringToObjectID(claims.UserID)
+	if err != nil {
+		errors.HandleError(w, r, err, h.errorLogger)
+		return
+	}
+	filter["userId"] = objectID
 	if status := query.Get("status"); status != "" {
 		filter["status"] = status
 	}
@@ -127,27 +166,37 @@ func (h *OrderHandler) ReadAll(w http.ResponseWriter, r *http.Request) {
 }
 
 // UpdateOrderStatus handles PUT /orders/:id/status requests
-func (h *OrderHandler) UpdateOrderStatus(w http.ResponseWriter, r *http.Request, id string) {
+func (h *OrderHandler) UpdateOrderStatus(w http.ResponseWriter, r *http.Request) {
 	// Initialize context
 	ctx := r.Context()
 
-	// Validate ID
-	if err := utils.ValidateID(id, "Order"); err != nil {
-		errors.HandleError(w, r, errors.NewValidationError("id", "Invalid order ID"), h.errorLogger)
+	// Get ID from URL
+	ID := utils.GetIDFromURL(r, "id")
+
+	// Get claims from context and check if user is an admin
+	_, err := utils.IsAdmin(ctx)
+	if err != nil {
+		errors.HandleError(w, r, err, h.errorLogger)
+		return
+	}
+
+	// Validate the ID
+	if err := utils.ValidateID(ID, "Order"); err != nil {
+		errors.HandleError(w, r, errors.NewValidationError("ID", "Invalid order ID"), h.errorLogger)
 		return
 	}
 
 	// Initialize request body
-	var input models.OrderStatusUpdate
+	var req models.OrderStatusUpdate
 
 	// Parse request body
-	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		errors.HandleError(w, r, errors.NewValidationError("", "Invalid request body"), h.errorLogger)
 		return
 	}
 
 	// Call service to update order status
-	err := h.orderService.ChangeOrderStatusByID(ctx, id, input.Status)
+	err = h.orderService.ChangeOrderStatusByID(ctx, ID, req.Status)
 	if err != nil {
 		errors.HandleError(w, r, err, h.errorLogger)
 		return
@@ -163,27 +212,37 @@ func (h *OrderHandler) UpdateOrderStatus(w http.ResponseWriter, r *http.Request,
 }
 
 // UpdateOrderShippingAddress handles PUT /orders/:id/address requests
-func (h *OrderHandler) UpdateOrderShippingAddress(w http.ResponseWriter, r *http.Request, id string) {
+func (h *OrderHandler) UpdateOrderShippingAddress(w http.ResponseWriter, r *http.Request) {
 	// Initialize context
 	ctx := r.Context()
 
-	// Validate ID
-	if err := utils.ValidateID(id, "Order"); err != nil {
-		errors.HandleError(w, r, errors.NewValidationError("id", "Invalid order ID"), h.errorLogger)
+	// Get claims from context
+	claims, err := utils.IsAuthorized(ctx)
+	if err != nil {
+		errors.HandleError(w, r, err, h.errorLogger)
+		return
+	}
+
+	// Get ID from URL
+	ID := utils.GetIDFromURL(r, "id")
+
+	// Validate the ID
+	if err := utils.ValidateID(ID, "Order"); err != nil {
+		errors.HandleError(w, r, errors.NewValidationError("ID", "Invalid order ID"), h.errorLogger)
 		return
 	}
 
 	// Initialize request body
-	var input models.UpdateAddress
+	var req models.UpdateAddress
 
 	// Parse request body
-	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		errors.HandleError(w, r, errors.NewValidationError("", "Invalid request body"), h.errorLogger)
 		return
 	}
 
 	// Call service to update order address
-	err := h.orderService.ChangeOrderShippingAddressByID(ctx, id, &input)
+	err = h.orderService.ChangeOrderShippingAddressByID(ctx, ID, claims.UserID, &req)
 	if err != nil {
 		errors.HandleError(w, r, err, h.errorLogger)
 		return
@@ -198,85 +257,121 @@ func (h *OrderHandler) UpdateOrderShippingAddress(w http.ResponseWriter, r *http
 	utils.WriteJSON(w, r, http.StatusOK, response, h.logger)
 }
 
-// AddCartToOrder handles PUT /orders/:id/carts/add/:cartID requests
-func (h *OrderHandler) AddCartToOrder(w http.ResponseWriter, r *http.Request, id string, cartID string) {
+// AddCartToOrder handles PUT /orders/:id/carts/add requests
+func (h *OrderHandler) AddCartToOrder(w http.ResponseWriter, r *http.Request) {
 	// Initialize context
 	ctx := r.Context()
 
-	// Validate the IDs
-	if err := utils.ValidateID(id, "Order"); err != nil {
-		errors.HandleError(w, r, errors.NewValidationError("id", "Invalid order ID"), h.errorLogger)
+	// Get claims from context
+	claims, err := utils.IsAuthorized(ctx)
+	if err != nil {
+		errors.HandleError(w, r, err, h.errorLogger)
 		return
 	}
-	if err := utils.ValidateID(id, "Cart"); err != nil {
-		errors.HandleError(w, r, errors.NewValidationError("id", "Invalid cart ID"), h.errorLogger)
+
+	// Get ID from URL
+	ID := utils.GetIDFromURL(r, "id")
+	cartID := utils.GetIDFromURL(r, "cartID")
+
+	// Validate the IDs
+	if err := utils.ValidateID(ID, "Order"); err != nil {
+		errors.HandleError(w, r, errors.NewValidationError("ID", "Invalid order ID"), h.errorLogger)
+		return
+	}
+	if err := utils.ValidateID(cartID, "Cart"); err != nil {
+		errors.HandleError(w, r, errors.NewValidationError("cartID", "Invalid cart ID"), h.errorLogger)
 		return
 	}
 
 	// Call service to add new cart to order
-	err := h.orderService.AddCartToOrderByID(ctx, id, cartID)
+	err = h.orderService.AddCartToOrderByID(ctx, ID, claims.UserID, cartID)
 	if err != nil {
 		errors.HandleError(w, r, err, h.errorLogger)
 		return
 	}
 
 	// Build response map
-	response := map[string]interface{}{
-		"message": "Add cart to order was successful",
+	response := models.ClientResponse{
+		Message: "Add cart to order was successful",
 	}
 
 	// Write response to client
 	utils.WriteJSON(w, r, http.StatusOK, response, h.logger)
 }
 
-// RemoveCartFromOrder handles PUT /orders/:id/carts/remove/:cartID requests
-func (h *OrderHandler) RemoveCartFromOrder(w http.ResponseWriter, r *http.Request, id string, cartID string) {
+// RemoveCartFromOrder handles PUT /orders/:id/carts/remove requests
+func (h *OrderHandler) RemoveCartFromOrder(w http.ResponseWriter, r *http.Request) {
 	// Initialize context
 	ctx := r.Context()
 
+	// Get claims from context
+	claims, err := utils.IsAuthorized(ctx)
+	if err != nil {
+		errors.HandleError(w, r, err, h.errorLogger)
+		return
+	}
+
+	// Get ID from URL
+	ID := utils.GetIDFromURL(r, "id")
+	cartID := utils.GetIDFromURL(r, "cartID")
+
 	// Validate the IDs
-	if err := utils.ValidateID(id, "Order"); err != nil {
+	if err := utils.ValidateID(ID, "Order"); err != nil {
 		errors.HandleError(w, r, errors.NewValidationError("id", "Invalid order ID"), h.errorLogger)
 		return
 	}
 	if err := utils.ValidateID(cartID, "Cart"); err != nil {
-		errors.HandleError(w, r, errors.NewValidationError("id", "Invalid cart ID"), h.errorLogger)
+		errors.HandleError(w, r, errors.NewValidationError("cartID", "Invalid cart ID"), h.errorLogger)
 		return
 	}
 
 	// Call service to add new cart to order
-	err := h.orderService.RemoveCartFromOrderByID(ctx, id, cartID)
+	err = h.orderService.RemoveCartFromOrderByID(ctx, ID, claims.UserID, cartID)
 	if err != nil {
 		errors.HandleError(w, r, err, h.errorLogger)
 		return
 	}
 
 	// Respond with success message
-	response := map[string]string{"message": "Remove cart from order was successful"}
+	response := models.ClientResponse{
+		Message: "Remove cart from order was successful",
+	}
+
+	// Write response to client
 	utils.WriteJSON(w, r, http.StatusOK, response, h.logger)
 }
 
 // ConfirmOrder handles PUT /orders/:id/confirm requests
-func (h *OrderHandler) ConfirmOrder(w http.ResponseWriter, r *http.Request, id string) {
+func (h *OrderHandler) ConfirmOrder(w http.ResponseWriter, r *http.Request) {
 	// Initialize context
 	ctx := r.Context()
 
+	// Get ID from URL
+	ID := utils.GetIDFromURL(r, "id")
+
+	// Get claims from context
+	claims, err := utils.IsAuthorized(ctx)
+	if err != nil {
+		errors.HandleError(w, r, err, h.errorLogger)
+		return
+	}
+
 	// Validate the ID
-	if err := utils.ValidateID(id, "Order"); err != nil {
-		errors.HandleError(w, r, errors.NewValidationError("id", "Invalid order ID"), h.errorLogger)
+	if err := utils.ValidateID(ID, "Order"); err != nil {
+		errors.HandleError(w, r, errors.NewValidationError("ID", "Invalid order ID"), h.errorLogger)
 		return
 	}
 
 	// Call service to confirm order
-	_, err := h.orderService.ConfirmOrderByID(ctx, id)
+	_, err = h.orderService.ConfirmOrderByID(ctx, ID, claims.UserID)
 	if err != nil {
 		errors.HandleError(w, r, err, h.errorLogger)
 		return
 	}
 
 	// Build response map
-	response := map[string]interface{}{
-		"message": fmt.Sprintf("Order with id: %s confirmed", id),
+	response := models.ClientResponse{
+		Message: fmt.Sprintf("Order with id: %s confirmed", ID),
 	}
 
 	// Write response to client
@@ -284,26 +379,36 @@ func (h *OrderHandler) ConfirmOrder(w http.ResponseWriter, r *http.Request, id s
 }
 
 // CancelOrder handles PUT /orders/:id/cancel requests
-func (h *OrderHandler) CancelOrder(w http.ResponseWriter, r *http.Request, id string) {
+func (h *OrderHandler) CancelOrder(w http.ResponseWriter, r *http.Request) {
 	// Initialize context
 	ctx := r.Context()
 
+	// Get claims from context
+	claims, err := utils.IsAuthorized(ctx)
+	if err != nil {
+		errors.HandleError(w, r, err, h.errorLogger)
+		return
+	}
+
+	// Get ID from URL
+	ID := utils.GetIDFromURL(r, "id")
+
 	// Validate the ID
-	if err := utils.ValidateID(id, "Order"); err != nil {
-		errors.HandleError(w, r, errors.NewValidationError("id", "Invalid order ID"), h.errorLogger)
+	if err := utils.ValidateID(ID, "Order"); err != nil {
+		errors.HandleError(w, r, errors.NewValidationError("ID", "Invalid order ID"), h.errorLogger)
 		return
 	}
 
 	// Call service to cancel order
-	_, err := h.orderService.CancelOrderByID(ctx, id)
+	_, err = h.orderService.CancelOrderByID(ctx, ID, claims.UserID)
 	if err != nil {
 		errors.HandleError(w, r, err, h.errorLogger)
 		return
 	}
 
 	// Build response map
-	response := map[string]interface{}{
-		"message": fmt.Sprintf("Order with id: %s cancelled", id),
+	response := models.ClientResponse{
+		Message: fmt.Sprintf("Order with id: %s cancelled", ID),
 	}
 
 	// Write response to client
@@ -311,22 +416,35 @@ func (h *OrderHandler) CancelOrder(w http.ResponseWriter, r *http.Request, id st
 }
 
 // Delete handles DELETE /orders/:id requests
-func (h *OrderHandler) Delete(w http.ResponseWriter, r *http.Request, id string) {
+func (h *OrderHandler) Delete(w http.ResponseWriter, r *http.Request) {
+	// Initialize context
+	ctx := r.Context()
+
+	// Get claims from context
+	claims, err := utils.IsAuthorized(ctx)
+	if err != nil {
+		errors.HandleError(w, r, err, h.errorLogger)
+		return
+	}
+
+	// Get ID from URL
+	ID := utils.GetIDFromURL(r, "id")
+
 	// Validate ID
-	if err := utils.ValidateID(id, "Order"); err != nil {
-		errors.HandleError(w, r, errors.NewValidationError("id", "Invalid order ID"), h.errorLogger)
+	if err := utils.ValidateID(ID, "Order"); err != nil {
+		errors.HandleError(w, r, errors.NewValidationError("ID", "Invalid order ID"), h.errorLogger)
 		return
 	}
 
 	// Call service to delete order
-	if err := h.orderService.DeleteOrderByID(r.Context(), id); err != nil {
+	if err := h.orderService.DeleteOrderByID(ctx, ID, claims.UserID); err != nil {
 		errors.HandleError(w, r, err, h.errorLogger)
 		return
 	}
 
 	// Build response map
-	response := map[string]interface{}{
-		"message": fmt.Sprintf("Order with ID: %s was successfully deleted", id),
+	response := models.ClientResponse{
+		Message: fmt.Sprintf("Order with ID: %s was successfully deleted", ID),
 	}
 
 	// Write response to client

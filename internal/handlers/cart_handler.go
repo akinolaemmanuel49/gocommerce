@@ -21,7 +21,7 @@ func NewCartHandler(cartService *services.CartService, logger, errorLogger *log.
 
 var _ ICartHandler = (*CartHandler)(nil)
 
-// Create handles POST /carts requests and accepts CreateCart as input [CUSTOMER]
+// Create handles POST /carts requests and accepts CreateCart as req [CUSTOMER]
 // @Security BearerAuth
 // @Summary Create a new cart.
 // @Description This endpoint creates a new cart.
@@ -36,17 +36,27 @@ var _ ICartHandler = (*CartHandler)(nil)
 // @Failure 500 "Internal Server Error"
 // @Router /carts [post]
 func (h *CartHandler) Create(w http.ResponseWriter, r *http.Request) {
-	var input models.CreateCart
+	// Initialize context
 	ctx := r.Context()
 
+	// Get claims from context
+	claims, err := utils.IsAuthorized(ctx)
+	if err != nil {
+		errors.HandleError(w, r, err, h.errorLogger)
+		return
+	}
+
+	// Initialize request body
+	var req models.CreateCart
+
 	// Parse request body
-	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		errors.HandleError(w, r, errors.NewValidationError("", "Invalid request body"), h.errorLogger)
 		return
 	}
 
 	// Call service to create cart
-	cart, err := h.cartService.CreateCart(ctx, &input)
+	cart, err := h.cartService.CreateCart(ctx, &req, claims.UserID)
 	if err != nil {
 		errors.HandleError(w, r, err, h.errorLogger)
 		return
@@ -68,29 +78,41 @@ func (h *CartHandler) Create(w http.ResponseWriter, r *http.Request) {
 // @Failure 400 "Invalid Cart ID"
 // @Failure 404 "Not Found"
 // @Failure 500 "Internal Server Error"
-// @Router /carts [get]
-func (h *CartHandler) Read(w http.ResponseWriter, r *http.Request, id string) {
+// @Router /carts/{id} [get]
+func (h *CartHandler) Read(w http.ResponseWriter, r *http.Request) {
+	// Initialize context
 	ctx := r.Context()
-	// Validate ID
-	if err := utils.ValidateID(id, "Cart"); err != nil {
-		errors.HandleError(w, r, errors.NewValidationError("id", "Invalid cart ID"), h.errorLogger)
+
+	// Get claims from context
+	_, err := utils.IsAuthorized(ctx)
+	if err != nil {
+		errors.HandleError(w, r, err, h.errorLogger)
 		return
 	}
 
-	// Fetch cart by ID
-	cart, err := h.cartService.RetrieveCartByID(ctx, id)
+	// Get ID from URL
+	ID := utils.GetIDFromURL(r, "id")
+
+	// Validate the ID
+	if err := utils.ValidateID(ID, "Cart"); err != nil {
+		errors.HandleError(w, r, err, h.errorLogger)
+		return
+	}
+
+	// Call service to get cart by ID
+	cart, err := h.cartService.RetrieveCartByID(ctx, ID)
 	switch err {
 	case nil:
-		// No error
+		// No error continue execution
 	case mongo.ErrNoDocuments:
-		errors.HandleError(w, r, errors.NewNotFoundError("Cart", "ID", id), h.errorLogger)
+		errors.HandleError(w, r, errors.NewNotFoundError("Cart", "ID", ID), h.errorLogger)
 		return
 	default:
 		errors.HandleError(w, r, err, h.errorLogger)
 		return
 	}
 
-	// Respond with the cart
+	// Write response to client
 	utils.WriteJSON(w, r, http.StatusOK, cart, h.logger)
 }
 
@@ -107,7 +129,15 @@ func (h *CartHandler) Read(w http.ResponseWriter, r *http.Request, id string) {
 // @Failure 500 "Internal Server Error"
 // @Router /carts/all [get]
 func (h *CartHandler) ReadAll(w http.ResponseWriter, r *http.Request) {
+	// Initialize context
 	ctx := r.Context()
+
+	// Get claims from context
+	claims, err := utils.IsAuthorized(ctx)
+	if err != nil {
+		errors.HandleError(w, r, err, h.errorLogger)
+		return
+	}
 
 	// Parse query parameters for filters and pagination
 	query := r.URL.Query()
@@ -122,20 +152,31 @@ func (h *CartHandler) ReadAll(w http.ResponseWriter, r *http.Request) {
 	}
 
 	filter := map[string]interface{}{}
+	// Convert string to object id
+	objectID, err := utils.StringToObjectID(claims.UserID)
+	if err != nil {
+		errors.HandleError(w, r, err, h.errorLogger)
+		return
+	}
+	filter["userId"] = objectID
 	if name := query.Get("name"); name != "" {
 		filter["name"] = bson.M{"$regex": name, "$options": "i"}
 	}
 
+	// Call service to fetch all carts
 	carts, nextCursor, err := h.cartService.RetrieveAllCarts(ctx, filter, lastID, limit)
 	if err != nil {
 		errors.HandleError(w, r, err, h.errorLogger)
 		return
 	}
 
-	response := map[string]interface{}{
-		"data":       carts,
-		"nextCursor": nextCursor,
+	// Build response map
+	response := models.MultipleEntityClientResponse{
+		Data:       carts,
+		NextCursor: nextCursor,
 	}
+
+	// Write response to client
 	utils.WriteJSON(w, r, http.StatusOK, response, h.logger)
 }
 
@@ -153,33 +194,48 @@ func (h *CartHandler) ReadAll(w http.ResponseWriter, r *http.Request) {
 // @Failure 403 "Forbidden"
 // @Failure 500 "Internal Server Error"
 // @Router /carts/{id}/items/add [put]
-func (h *CartHandler) AddProductToCart(w http.ResponseWriter, r *http.Request, id string) {
+func (h *CartHandler) AddProductToCart(w http.ResponseWriter, r *http.Request) {
+	// Initialize context
 	ctx := r.Context()
-	// Validate ID
-	if err := utils.ValidateID(id, "Cart"); err != nil {
-		errors.HandleError(w, r, errors.NewValidationError("id", "Invalid order ID"), h.errorLogger)
-		return
-	}
 
-	var input models.CartItemCreate
-
-	// Parse request body
-	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		errors.HandleError(w, r, errors.NewValidationError("", "Invalid request body"), h.errorLogger)
-		return
-	}
-
-	// Call service to add new item to cart
-	_, err := h.cartService.AddProductToCart(ctx, id, input.ProductID, input.Quantity)
+	// Get claims from context
+	claims, err := utils.IsAuthorized(ctx)
 	if err != nil {
 		errors.HandleError(w, r, err, h.errorLogger)
 		return
 	}
 
-	// Respond with success message
+	// Get ID from URL
+	ID := utils.GetIDFromURL(r, "id")
+
+	// Validate the ID
+	if err := utils.ValidateID(ID, "Cart"); err != nil {
+		errors.HandleError(w, r, errors.NewValidationError("ID", "Invalid order ID"), h.errorLogger)
+		return
+	}
+
+	// Initialize request body
+	var req models.CartItemCreate
+
+	// Parse request body
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		errors.HandleError(w, r, errors.NewValidationError("", "Invalid request body"), h.errorLogger)
+		return
+	}
+
+	// Call service to add new item to cart
+	_, err = h.cartService.AddProductToCart(ctx, ID, claims.UserID, req.ProductID, req.Quantity)
+	if err != nil {
+		errors.HandleError(w, r, err, h.errorLogger)
+		return
+	}
+
+	// Build response map
 	response := models.ClientResponse{
 		Message: "Add cart item was successful",
 	}
+
+	// Write response to client
 	utils.WriteJSON(w, r, http.StatusOK, response, h.logger)
 }
 
@@ -197,33 +253,48 @@ func (h *CartHandler) AddProductToCart(w http.ResponseWriter, r *http.Request, i
 // @Failure 403 "Forbidden"
 // @Failure 500 "Internal Server Error"
 // @Router /carts/{id}/items/remove [put]
-func (h *CartHandler) RemoveProductFromCart(w http.ResponseWriter, r *http.Request, id string, productID string) {
+func (h *CartHandler) RemoveProductFromCart(w http.ResponseWriter, r *http.Request) {
+	// Initialize context
 	ctx := r.Context()
-	// Validate IDs
-	if err := utils.ValidateID(id, "Cart"); err != nil {
-		errors.HandleError(w, r, errors.NewValidationError("id", "Invalid cart ID"), h.errorLogger)
-		return
-	}
 
-	var input models.CartItemUpdate
-
-	// Parse request body
-	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		errors.HandleError(w, r, errors.NewValidationError("", "Invalid request body"), h.errorLogger)
-		return
-	}
-
-	// Call service to add new item to cart
-	_, err := h.cartService.RemoveProductFromCart(ctx, id, input.ProductID, input.Quantity)
+	// Get claims from context
+	claims, err := utils.IsAuthorized(ctx)
 	if err != nil {
 		errors.HandleError(w, r, err, h.errorLogger)
 		return
 	}
 
-	// Respond with success message
+	// Get ID from URL
+	ID := utils.GetIDFromURL(r, "id")
+
+	// Validate the ID
+	if err := utils.ValidateID(ID, "Cart"); err != nil {
+		errors.HandleError(w, r, errors.NewValidationError("id", "Invalid cart ID"), h.errorLogger)
+		return
+	}
+
+	// Initialize request body
+	var req models.CartItemUpdate
+
+	// Parse request body
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		errors.HandleError(w, r, errors.NewValidationError("", "Invalid request body"), h.errorLogger)
+		return
+	}
+
+	// Call service to add new item to cart
+	_, err = h.cartService.RemoveProductFromCart(ctx, ID, claims.UserID, req.ProductID, req.Quantity)
+	if err != nil {
+		errors.HandleError(w, r, err, h.errorLogger)
+		return
+	}
+
+	// Build response map
 	response := models.ClientResponse{
 		Message: "Remove cart item was successful",
 	}
+
+	// Write response to client
 	utils.WriteJSON(w, r, http.StatusOK, response, h.logger)
 }
 
@@ -240,23 +311,35 @@ func (h *CartHandler) RemoveProductFromCart(w http.ResponseWriter, r *http.Reque
 // @Failure 403 "Forbidden"
 // @Failure 500 "Internal Server Error"
 // @Router /carts [delete]
-func (h *CartHandler) Delete(w http.ResponseWriter, r *http.Request, id string) {
+func (h *CartHandler) Delete(w http.ResponseWriter, r *http.Request) {
+	// Initialize context
 	ctx := r.Context()
-	// Validate ID
-	if err := utils.ValidateID(id, "Cart"); err != nil {
-		errors.HandleError(w, r, errors.NewValidationError("id", "Invalid cart ID"), h.errorLogger)
+
+	// Get claims from context
+	claims, err := utils.IsAuthorized(ctx)
+	if err != nil {
+		errors.HandleError(w, r, err, h.errorLogger)
 		return
 	}
 
-	// Delete cart
-	if err := h.cartService.DeleteCartByID(ctx, id); err != nil {
+	// Get ID from URL
+	ID := utils.GetIDFromURL(r, "id")
+
+	// Validate the ID
+	if err := utils.ValidateID(ID, "Cart"); err != nil {
+		errors.HandleError(w, r, err, h.errorLogger)
+		return
+	}
+
+	// Call service to delete cart
+	if err := h.cartService.DeleteCartByID(ctx, claims.UserID, ID); err != nil {
 		errors.HandleError(w, r, err, h.errorLogger)
 		return
 	}
 
 	// Build response map
 	response := map[string]interface{}{
-		"message": fmt.Sprintf("Cart with ID: %s was successfully deleted", id),
+		"message": fmt.Sprintf("Cart with ID: %s was successfully deleted", ID),
 	}
 
 	// Write response to client
