@@ -26,6 +26,19 @@ func NewOrderHandler(orderService *services.OrderService, logger, errorLogger *l
 var _ IOrderHandler = (*OrderHandler)(nil)
 
 // Create handles POST /orders requests and accepts CreateOrder as req [CUSTOMER]
+// @Security BearerAuth
+// @Summary Create a new order.
+// @Description This endpoint creates a new order.
+// @Tags Orders
+// @Accept json
+// @Produce json
+// @Param order body models.CreateOrder true "Order Details"
+// @Success 201 {object} models.Order "Created order"
+// @Failure 400 "Invalid Request Body"
+// @Failure 401 "Unauthorized"
+// @Failure 409 "Conflict"
+// @Failure 500 "Internal Server Error"
+// @Router /orders [post]
 func (h *OrderHandler) Create(w http.ResponseWriter, r *http.Request) {
 	// Initialize context
 	ctx := r.Context()
@@ -58,6 +71,19 @@ func (h *OrderHandler) Create(w http.ResponseWriter, r *http.Request) {
 }
 
 // Read handles GET /orders/:id requests [CUSTOMER]
+// @Security BearerAuth
+// @Summary Retrieve an order by ID.
+// @Description This endpoint retrieves a specific order by its ID. Only authorized users can access their own orders.
+// @Tags Orders
+// @Accept json
+// @Produce json
+// @Param id path string true "Order ID"
+// @Success 200 {object} models.Order "Order details"
+// @Failure 400 "Invalid order ID"
+// @Failure 401 "Unauthorized"
+// @Failure 404 "Order not found"
+// @Failure 500 "Internal server error"
+// @Router /orders/{id} [get]
 func (h *OrderHandler) Read(w http.ResponseWriter, r *http.Request) {
 	// Initialize context
 	ctx := r.Context()
@@ -96,7 +122,25 @@ func (h *OrderHandler) Read(w http.ResponseWriter, r *http.Request) {
 	utils.WriteJSON(w, r, http.StatusOK, order, h.logger)
 }
 
-// ReadAll handles GET /orders requests with optional filters
+// ReadAll handles GET /orders/all requests with optional filters
+// @Security BearerAuth
+// @Summary Retrieve a list of orders with optional filters and pagination.
+// @Description This endpoint retrieves all orders for the authenticated user. Filters and pagination can be applied.
+// @Tags Orders
+// @Accept json
+// @Produce json
+// @Param lastID query string false "Cursor for pagination (last ID from previous result)"
+// @Param limit query int false "Number of records to retrieve (default: 10)"
+// @Param status query string false "Filter by order status (e.g., pending, completed)"
+// @Param isCancelled query boolean false "Filter by cancellation status"
+// @Param isLocked query boolean false "Filter by locked status"
+// @Param dateStart query string false "Start date for filtering orders (format: YYYY-MM-DD)"
+// @Param dateEnd query string false "End date for filtering orders (format: YYYY-MM-DD)"
+// @Success 200 {object} models.MultipleEntityClientResponse "List of orders and pagination cursor"
+// @Failure 400 "Invalid query parameters"
+// @Failure 401 "Unauthorized"
+// @Failure 500 "Internal server error"
+// @Router /orders/all [get]
 func (h *OrderHandler) ReadAll(w http.ResponseWriter, r *http.Request) {
 	// Initialize context
 	ctx := r.Context()
@@ -156,9 +200,9 @@ func (h *OrderHandler) ReadAll(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Build response map
-	response := map[string]interface{}{
-		"data":       orders,
-		"nextCursor": nextCursor,
+	response := models.MultipleEntityClientResponse{
+		Data:       orders,
+		NextCursor: nextCursor,
 	}
 
 	// Write response to client
@@ -166,6 +210,19 @@ func (h *OrderHandler) ReadAll(w http.ResponseWriter, r *http.Request) {
 }
 
 // UpdateOrderStatus handles PUT /orders/:id/status requests
+// @Summary Update order status
+// @Description Update the status of an order by its ID
+// @Tags Orders
+// @Accept json
+// @Produce json
+// @Param id path string true "Order ID"
+// @Param status body models.OrderStatusUpdate true "New order status"
+// @Success 200 {object} models.ClientResponse
+// @Failure 400 "Invalid Request Body"
+// @Failure 401 "Unauthorized"
+// @Failure 404 "Not Found"
+// @Failure 500 "Internal Server Error"
+// @Router /orders/{id}/status [put]
 func (h *OrderHandler) UpdateOrderStatus(w http.ResponseWriter, r *http.Request) {
 	// Initialize context
 	ctx := r.Context()
@@ -203,8 +260,8 @@ func (h *OrderHandler) UpdateOrderStatus(w http.ResponseWriter, r *http.Request)
 	}
 
 	// Build response map
-	response := map[string]interface{}{
-		"message": "Order status update was successful",
+	response := models.ClientResponse{
+		Message: "Order status update was successful",
 	}
 
 	// Write response to client
@@ -212,6 +269,19 @@ func (h *OrderHandler) UpdateOrderStatus(w http.ResponseWriter, r *http.Request)
 }
 
 // UpdateOrderShippingAddress handles PUT /orders/:id/address requests
+// @Summary Update order shipping address
+// @Description Update the shipping address of an order by its ID
+// @Tags Orders
+// @Accept json
+// @Produce json
+// @Param id path string true "Order ID"
+// @Param address body models.UpdateAddress true "New shipping address"
+// @Success 200 {object} models.ClientResponse
+// @Failure 400 "Invalid Request Body"
+// @Failure 401 "Unauthorized"
+// @Failure 404 "Not Found"
+// @Failure 500 "Internal Server Error"
+// @Router /orders/{id}/address [put]
 func (h *OrderHandler) UpdateOrderShippingAddress(w http.ResponseWriter, r *http.Request) {
 	// Initialize context
 	ctx := r.Context()
@@ -249,8 +319,8 @@ func (h *OrderHandler) UpdateOrderShippingAddress(w http.ResponseWriter, r *http
 	}
 
 	// Build response map
-	response := map[string]interface{}{
-		"message": "Order shipping address update was successful",
+	response := models.ClientResponse{
+		Message: "Order shipping address update was successful",
 	}
 
 	// Write response to client
@@ -258,6 +328,19 @@ func (h *OrderHandler) UpdateOrderShippingAddress(w http.ResponseWriter, r *http
 }
 
 // AddCartToOrder handles PUT /orders/:id/carts/add requests
+// @Summary Add a cart to an order
+// @Description Add a cart to an existing order by IDs
+// @Tags Orders
+// @Accept json
+// @Produce json
+// @Param id path string true "Order ID"
+// @Param cartID path string true "Cart ID"
+// @Success 200 {object} models.ClientResponse
+// @Failure 400 "Invalid Request Body"
+// @Failure 401 "Unauthorized"
+// @Failure 404 "Not Found"
+// @Failure 500 "Internal Server Error"
+// @Router /orders/{id}/carts/add [put]
 func (h *OrderHandler) AddCartToOrder(w http.ResponseWriter, r *http.Request) {
 	// Initialize context
 	ctx := r.Context()
@@ -300,6 +383,19 @@ func (h *OrderHandler) AddCartToOrder(w http.ResponseWriter, r *http.Request) {
 }
 
 // RemoveCartFromOrder handles PUT /orders/:id/carts/remove requests
+// @Summary Remove a cart from an order
+// @Description Remove a cart from an existing order by IDs
+// @Tags Orders
+// @Accept json
+// @Produce json
+// @Param id path string true "Order ID"
+// @Param cartID path string true "Cart ID"
+// @Success 200 {object} models.ClientResponse
+// @Failure 400 "Invalid Request Body"
+// @Failure 401 "Unauthorized"
+// @Failure 404 "Not Found"
+// @Failure 500 "Internal Server Error"
+// @Router /orders/{id}/carts/remove [put]
 func (h *OrderHandler) RemoveCartFromOrder(w http.ResponseWriter, r *http.Request) {
 	// Initialize context
 	ctx := r.Context()
@@ -342,6 +438,18 @@ func (h *OrderHandler) RemoveCartFromOrder(w http.ResponseWriter, r *http.Reques
 }
 
 // ConfirmOrder handles PUT /orders/:id/confirm requests
+// @Summary Confirm an order
+// @Description Confirm an order by its ID
+// @Tags Orders
+// @Accept json
+// @Produce json
+// @Param id path string true "Order ID"
+// @Success 200 {object} models.ClientResponse
+// @Failure 400 "Invalid Request Body"
+// @Failure 401 "Unauthorized"
+// @Failure 404 "Not Found"
+// @Failure 500 "Internal Server Error"
+// @Router /orders/{id}/confirm [put]
 func (h *OrderHandler) ConfirmOrder(w http.ResponseWriter, r *http.Request) {
 	// Initialize context
 	ctx := r.Context()
@@ -379,6 +487,18 @@ func (h *OrderHandler) ConfirmOrder(w http.ResponseWriter, r *http.Request) {
 }
 
 // CancelOrder handles PUT /orders/:id/cancel requests
+// @Summary Cancel an order
+// @Description Cancel an order by its ID
+// @Tags Orders
+// @Accept json
+// @Produce json
+// @Param id path string true "Order ID"
+// @Success 200 {object} models.ClientResponse
+// @Failure 400 "Invalid Request Body"
+// @Failure 401 "Unauthorized"
+// @Failure 404 "Not Found"
+// @Failure 500 "Internal Server Error"
+// @Router /orders/{id}/cancel [put]
 func (h *OrderHandler) CancelOrder(w http.ResponseWriter, r *http.Request) {
 	// Initialize context
 	ctx := r.Context()
@@ -416,6 +536,18 @@ func (h *OrderHandler) CancelOrder(w http.ResponseWriter, r *http.Request) {
 }
 
 // Delete handles DELETE /orders/:id requests
+// @Summary Delete an order
+// @Description Delete an order by its ID
+// @Tags Orders
+// @Accept json
+// @Produce json
+// @Param id path string true "Order ID"
+// @Success 200 {object} models.ClientResponse
+// @Failure 400 "Invalid Request Body"
+// @Failure 401 "Unauthorized"
+// @Failure 404 "Not Found"
+// @Failure 500 "Internal Server Error"
+// @Router /orders/{id} [delete]
 func (h *OrderHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	// Initialize context
 	ctx := r.Context()

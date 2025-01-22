@@ -618,6 +618,525 @@ const docTemplate = `{
                 }
             }
         },
+        "/orders": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "This endpoint creates a new order.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Orders"
+                ],
+                "summary": "Create a new order.",
+                "parameters": [
+                    {
+                        "description": "Order Details",
+                        "name": "order",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.CreateOrder"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created order",
+                        "schema": {
+                            "$ref": "#/definitions/models.Order"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid Request Body"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "409": {
+                        "description": "Conflict"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            }
+        },
+        "/orders/all": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "This endpoint retrieves all orders for the authenticated user. Filters and pagination can be applied.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Orders"
+                ],
+                "summary": "Retrieve a list of orders with optional filters and pagination.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Cursor for pagination (last ID from previous result)",
+                        "name": "lastID",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Number of records to retrieve (default: 10)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by order status (e.g., pending, completed)",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Filter by cancellation status",
+                        "name": "isCancelled",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Filter by locked status",
+                        "name": "isLocked",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Start date for filtering orders (format: YYYY-MM-DD)",
+                        "name": "dateStart",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "End date for filtering orders (format: YYYY-MM-DD)",
+                        "name": "dateEnd",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of orders and pagination cursor",
+                        "schema": {
+                            "$ref": "#/definitions/models.MultipleEntityClientResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid query parameters"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                }
+            }
+        },
+        "/orders/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "This endpoint retrieves a specific order by its ID. Only authorized users can access their own orders.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Orders"
+                ],
+                "summary": "Retrieve an order by ID.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Order ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Order details",
+                        "schema": {
+                            "$ref": "#/definitions/models.Order"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid order ID"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Order not found"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                }
+            },
+            "delete": {
+                "description": "Delete an order by its ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Orders"
+                ],
+                "summary": "Delete an order",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Order ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.ClientResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid Request Body"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            }
+        },
+        "/orders/{id}/address": {
+            "put": {
+                "description": "Update the shipping address of an order by its ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Orders"
+                ],
+                "summary": "Update order shipping address",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Order ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "New shipping address",
+                        "name": "address",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.UpdateAddress"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.ClientResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid Request Body"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            }
+        },
+        "/orders/{id}/cancel": {
+            "put": {
+                "description": "Cancel an order by its ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Orders"
+                ],
+                "summary": "Cancel an order",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Order ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.ClientResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid Request Body"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            }
+        },
+        "/orders/{id}/carts/add": {
+            "put": {
+                "description": "Add a cart to an existing order by IDs",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Orders"
+                ],
+                "summary": "Add a cart to an order",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Order ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Cart ID",
+                        "name": "cartID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.ClientResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid Request Body"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            }
+        },
+        "/orders/{id}/carts/remove": {
+            "put": {
+                "description": "Remove a cart from an existing order by IDs",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Orders"
+                ],
+                "summary": "Remove a cart from an order",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Order ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Cart ID",
+                        "name": "cartID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.ClientResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid Request Body"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            }
+        },
+        "/orders/{id}/confirm": {
+            "put": {
+                "description": "Confirm an order by its ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Orders"
+                ],
+                "summary": "Confirm an order",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Order ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.ClientResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid Request Body"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            }
+        },
+        "/orders/{id}/status": {
+            "put": {
+                "description": "Update the status of an order by its ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Orders"
+                ],
+                "summary": "Update order status",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Order ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "New order status",
+                        "name": "status",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.OrderStatusUpdate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.ClientResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid Request Body"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            }
+        },
         "/products": {
             "get": {
                 "description": "This endpoint fetches a single product.",
@@ -1310,6 +1829,37 @@ const docTemplate = `{
                 }
             }
         },
+        "models.CreateOrder": {
+            "type": "object",
+            "required": [
+                "carts",
+                "shippingAddress",
+                "status",
+                "totalPrice"
+            ],
+            "properties": {
+                "carts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Cart"
+                    }
+                },
+                "shippingAddress": {
+                    "$ref": "#/definitions/models.Address"
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "pending",
+                        "shipped",
+                        "delivered"
+                    ]
+                },
+                "totalPrice": {
+                    "type": "number"
+                }
+            }
+        },
         "models.CreateProduct": {
             "type": "object",
             "required": [
@@ -1382,6 +1932,64 @@ const docTemplate = `{
                 }
             }
         },
+        "models.Order": {
+            "type": "object",
+            "properties": {
+                "carts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Cart"
+                    }
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "isCancelled": {
+                    "type": "boolean"
+                },
+                "isDeleted": {
+                    "type": "boolean"
+                },
+                "isLocked": {
+                    "type": "boolean"
+                },
+                "shippingAddress": {
+                    "$ref": "#/definitions/models.Address"
+                },
+                "status": {
+                    "description": "\"pending\", \"shipped\", \"delivered\"",
+                    "type": "string"
+                },
+                "totalPrice": {
+                    "type": "number"
+                },
+                "updatedAt": {
+                    "type": "string"
+                },
+                "userId": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.OrderStatusUpdate": {
+            "type": "object",
+            "required": [
+                "status"
+            ],
+            "properties": {
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "pending",
+                        "shipped",
+                        "delivered"
+                    ]
+                }
+            }
+        },
         "models.Product": {
             "type": "object",
             "properties": {
@@ -1426,6 +2034,33 @@ const docTemplate = `{
                 "token": {
                     "type": "string",
                     "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NzhkMTQzNDU2ZDAyYzFjYzI0ODMwODkiLCJyb2xlIjoiYWRtaW4iLCJleHAiOjE3Mzc1NDQ0MTMsImlhdCI6MTczNzQ1ODAxM30.-g29ffyyjSkV5oB8RXzq-aydW78LBETLGdCPQoOjjH4"
+                }
+            }
+        },
+        "models.UpdateAddress": {
+            "type": "object",
+            "required": [
+                "city",
+                "country",
+                "state",
+                "street",
+                "zip"
+            ],
+            "properties": {
+                "city": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
+                },
+                "state": {
+                    "type": "string"
+                },
+                "street": {
+                    "type": "string"
+                },
+                "zip": {
+                    "type": "string"
                 }
             }
         },

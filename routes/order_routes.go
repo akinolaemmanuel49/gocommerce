@@ -45,7 +45,7 @@ func RegisterOrderRoutes(config *configs.Config, router *mux.Router, db *mongo.D
 
 	router.Handle(RouteOrders, authMiddleware(http.HandlerFunc(orderHandler.Create))).Methods("POST")
 	router.Handle(RouteOrders, authMiddleware(http.HandlerFunc(orderHandler.Read))).Methods("GET")
-	router.Handle(RouteOrders, authMiddleware(http.HandlerFunc(orderHandler.ReadAll))).Methods("GET")
+	router.Handle(RouteOrders+"/all", authMiddleware(http.HandlerFunc(orderHandler.ReadAll))).Methods("GET")
 	router.Handle(RouteOrders+"{id}/status", http.HandlerFunc(orderHandler.UpdateOrderStatus)).Methods("PUT")
 	router.Handle(RouteOrders+"{id}/address", http.HandlerFunc(orderHandler.UpdateOrderShippingAddress)).Methods("PUT")
 	router.Handle(RouteOrders+"{id}/carts/add", http.HandlerFunc(orderHandler.AddCartToOrder)).Methods("PUT")
