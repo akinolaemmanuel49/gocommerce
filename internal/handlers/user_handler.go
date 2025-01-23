@@ -205,6 +205,7 @@ func (h *UserHandler) ReadAll(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Produce json
 // @Param id query string false "User ID"
+// @Param userUpdate body models.UpdateUser true "User Details"
 // @Success 200 {object} models.User "Updated user"
 // @Failure 400 "Invalid Request Body"
 // @Failure 401 "Unauthorized"

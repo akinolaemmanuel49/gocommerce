@@ -429,6 +429,15 @@ const docTemplate = `{
                         "description": "Category ID",
                         "name": "id",
                         "in": "path"
+                    },
+                    {
+                        "description": "Category Details",
+                        "name": "categoryUpdate",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.UpdateCategory"
+                        }
                     }
                 ],
                 "responses": {
@@ -1200,6 +1209,15 @@ const docTemplate = `{
                         "description": "Product ID",
                         "name": "id",
                         "in": "path"
+                    },
+                    {
+                        "description": "Product Details",
+                        "name": "productUpdate",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.UpdateProduct"
+                        }
                     }
                 ],
                 "responses": {
@@ -1453,6 +1471,15 @@ const docTemplate = `{
                         "description": "User ID",
                         "name": "id",
                         "in": "query"
+                    },
+                    {
+                        "description": "User Details",
+                        "name": "userUpdate",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.UpdateUser"
+                        }
                     }
                 ],
                 "responses": {
@@ -1797,6 +1824,20 @@ const docTemplate = `{
                 }
             }
         },
+        "models.CommonFields": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "isDeleted": {
+                    "type": "boolean"
+                },
+                "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
         "models.CreateCart": {
             "type": "object",
             "properties": {
@@ -2064,14 +2105,68 @@ const docTemplate = `{
                 }
             }
         },
+        "models.UpdateCategory": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "description": {
+                    "description": "Optional description",
+                    "type": "string"
+                },
+                "image": {
+                    "type": "string"
+                },
+                "name": {
+                    "description": "Name is required",
+                    "type": "string"
+                }
+            }
+        },
+        "models.UpdateProduct": {
+            "type": "object",
+            "required": [
+                "name",
+                "price"
+            ],
+            "properties": {
+                "brand": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "number"
+                }
+            }
+        },
+        "models.UpdateUser": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "$ref": "#/definitions/models.UpdateAddress"
+                },
+                "firstName": {
+                    "type": "string"
+                },
+                "lastName": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                }
+            }
+        },
         "models.User": {
             "type": "object",
             "properties": {
                 "address": {
                     "$ref": "#/definitions/models.Address"
-                },
-                "createdAt": {
-                    "type": "string"
                 },
                 "email": {
                     "type": "string"
@@ -2082,8 +2177,8 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
-                "isDeleted": {
-                    "type": "boolean"
+                "inline": {
+                    "$ref": "#/definitions/models.CommonFields"
                 },
                 "lastName": {
                     "type": "string"
@@ -2092,9 +2187,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "role": {
-                    "type": "string"
-                },
-                "updatedAt": {
                     "type": "string"
                 }
             }

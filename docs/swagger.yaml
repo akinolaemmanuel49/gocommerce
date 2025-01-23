@@ -96,6 +96,15 @@ definitions:
       message:
         type: string
     type: object
+  models.CommonFields:
+    properties:
+      createdAt:
+        type: string
+      isDeleted:
+        type: boolean
+      updatedAt:
+        type: string
+    type: object
   models.CreateCart:
     properties:
       name:
@@ -279,27 +288,61 @@ definitions:
     - street
     - zip
     type: object
+  models.UpdateCategory:
+    properties:
+      description:
+        description: Optional description
+        type: string
+      image:
+        type: string
+      name:
+        description: Name is required
+        type: string
+    required:
+    - name
+    type: object
+  models.UpdateProduct:
+    properties:
+      brand:
+        type: string
+      description:
+        type: string
+      name:
+        type: string
+      price:
+        type: number
+    required:
+    - name
+    - price
+    type: object
+  models.UpdateUser:
+    properties:
+      address:
+        $ref: '#/definitions/models.UpdateAddress'
+      firstName:
+        type: string
+      lastName:
+        type: string
+      phone:
+        type: string
+    type: object
   models.User:
     properties:
       address:
         $ref: '#/definitions/models.Address'
-      createdAt:
-        type: string
       email:
         type: string
       firstName:
         type: string
       id:
         type: string
-      isDeleted:
-        type: boolean
+      inline:
+        $ref: '#/definitions/models.CommonFields'
       lastName:
         type: string
       phone:
         type: string
       role:
-        type: string
-      updatedAt:
         type: string
     type: object
   models.UserCredentials:
@@ -644,6 +687,12 @@ paths:
         in: path
         name: id
         type: string
+      - description: Category Details
+        in: body
+        name: categoryUpdate
+        required: true
+        schema:
+          $ref: '#/definitions/models.UpdateCategory'
       produces:
       - application/json
       responses:
@@ -1147,6 +1196,12 @@ paths:
         in: path
         name: id
         type: string
+      - description: Product Details
+        in: body
+        name: productUpdate
+        required: true
+        schema:
+          $ref: '#/definitions/models.UpdateProduct'
       produces:
       - application/json
       responses:
@@ -1308,6 +1363,12 @@ paths:
         in: query
         name: id
         type: string
+      - description: User Details
+        in: body
+        name: userUpdate
+        required: true
+        schema:
+          $ref: '#/definitions/models.UpdateUser'
       produces:
       - application/json
       responses:

@@ -168,6 +168,7 @@ func (h *CategoryHandler) ReadAll(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Produce json
 // @Param id path string false "Category ID"
+// @Param categoryUpdate body models.UpdateCategory true "Category Details"
 // @Success 200 {object} models.Category "Updated category"
 // @Failure 400 "Invalid Request Body"
 // @Failure 401 "Unauthorized"

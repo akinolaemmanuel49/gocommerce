@@ -188,6 +188,7 @@ func (h *ProductHandler) ReadAll(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Produce json
 // @Param id path string false "Product ID"
+// @Param productUpdate body models.UpdateProduct true "Product Details"
 // @Success 200 {object} models.Product "Updated product"
 // @Failure 400 "Invalid Request Body"
 // @Failure 401 "Unauthorized"
