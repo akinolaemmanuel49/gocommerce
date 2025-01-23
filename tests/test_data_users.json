@@ -1,0 +1,92 @@
+[
+  {
+    "id": "67741f7269b3319809a59c02",
+    "email": "johndoe@example.com",
+    "passwordHash": "$2a$10$tbP6YLiT1A8rWwzdNthKAugBvmc5zF8GSF6QDdewDFh9pfWpqcvgW",
+    "firstName": "John",
+    "lastName": "Doe",
+    "address": {
+      "street": "",
+      "city": "",
+      "state": "",
+      "zip": "",
+      "country": ""
+    },
+    "role": "customer",
+    "createdAt": "2025-01-22T15:09:06.15542378+01:00",
+    "updatedAt": "2025-01-22T15:09:06.155424243+01:00",
+    "isDeleted": false
+  },
+  {
+    "id": "67793a81658d37500576075d",
+    "email": "janedoe@example.com",
+    "passwordHash": "$2a$10$tbP6YLiT1A8rWwzdNthKAugBvmc5zF8GSF6QDdewDFh9pfWpqcvgW",
+    "firstName": "Jane",
+    "lastName": "Doe",
+    "address": {
+      "street": "",
+      "city": "",
+      "state": "",
+      "zip": "",
+      "country": ""
+    },
+    "role": "admin",
+    "createdAt": "2025-01-22T15:09:06.15542639+01:00",
+    "updatedAt": "2025-01-22T15:09:06.155426684+01:00",
+    "isDeleted": false
+  },
+  {
+    "id": "677e54096cce8f4f94eb05de",
+    "email": "jessicadoe@example.com",
+    "passwordHash": "$2a$10$tbP6YLiT1A8rWwzdNthKAugBvmc5zF8GSF6QDdewDFh9pfWpqcvgW",
+    "firstName": "Jessica",
+    "lastName": "Doe",
+    "address": {
+      "street": "",
+      "city": "",
+      "state": "",
+      "zip": "",
+      "country": ""
+    },
+    "role": "customer",
+    "createdAt": "2025-01-22T15:09:06.155428804+01:00",
+    "updatedAt": "2025-01-22T15:09:06.155429125+01:00",
+    "isDeleted": false
+  },
+  {
+    "id": "677e547c6cce8f4f94eb05df",
+    "email": "jenniferdoe@example.com",
+    "passwordHash": "$2a$10$tbP6YLiT1A8rWwzdNthKAugBvmc5zF8GSF6QDdewDFh9pfWpqcvgW",
+    "firstName": "Jennifer",
+    "lastName": "Doe",
+    "address": {
+      "street": "",
+      "city": "",
+      "state": "",
+      "zip": "",
+      "country": ""
+    },
+    "role": "customer",
+    "createdAt": "2025-01-22T15:09:06.155430952+01:00",
+    "updatedAt": "2025-01-22T15:09:06.155431246+01:00",
+    "isDeleted": false
+  },
+  {
+    "id": "677e8f3035ac2496d8813a87",
+    "email": "kanedoe@example.com",
+    "passwordHash": "$2a$10$tbP6YLiT1A8rWwzdNthKAugBvmc5zF8GSF6QDdewDFh9pfWpqcvgW",
+    "firstName": "Kane",
+    "lastName": "Doe",
+    "address": {
+      "street": "",
+      "city": "",
+      "state": "",
+      "zip": "",
+      "country": ""
+    },
+    "role": "customer",
+    "createdAt": "2025-01-22T15:09:06.155432341+01:00",
+    "updatedAt": "2025-01-22T15:09:06.155432627+01:00",
+    "isDeleted": false
+  }
+]
