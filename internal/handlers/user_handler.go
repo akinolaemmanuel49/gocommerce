@@ -141,10 +141,22 @@ func (h *UserHandler) ReadAll(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	// Get claims from context and check if user is an admin
-	_, err := utils.IsAdmin(ctx)
+	claims, err := utils.IsAdmin(ctx)
 	if err != nil {
 		errors.HandleError(w, r, err, h.errorLogger)
 		return
+	}
+
+	// Verify that user exists
+	if _, err = h.userService.RetrieveUserByID(ctx, claims.UserID); err != nil {
+		switch err {
+		case mongo.ErrNoDocuments:
+			errors.HandleError(w, r, errors.NewNotFoundError("User", "ID", claims.UserID), h.errorLogger)
+			return
+		default:
+			errors.HandleError(w, r, err, h.errorLogger)
+			return
+		}
 	}
 
 	// Parse query parameters for pagination
