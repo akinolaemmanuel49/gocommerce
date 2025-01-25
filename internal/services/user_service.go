@@ -136,6 +136,9 @@ func (s *UserService) RetrieveAllUsers(ctx context.Context, filter map[string]in
 func (s *UserService) UpdateUserByID(ctx context.Context, ID string, updatedUser *models.UpdateUser) (*models.User, error) {
 	// Check for existing user
 	existingUser, err := s.userRepository.FindByID(ctx, ID)
+	if err == mongo.ErrNoDocuments {
+		return nil, errors.NewNotFoundError("User", "ID", ID)
+	}
 	if err != nil {
 		return nil, err
 	}
