@@ -16,7 +16,7 @@ type User struct {
 	Address      Address `bson:"address,omitempty" json:"address,omitempty"`
 	Phone        string  `bson:"phone,omitempty" json:"phone,omitempty"`
 	Role         string  `bson:"role,omitempty" json:"role,omitempty"`
-	CommonFields `bson:"inline" json:"inline"`
+	CommonFields `bson:"inline"`
 }
 
 func ResponseUser(user *User) (*User, error) {
@@ -29,8 +29,8 @@ func ResponseUser(user *User) (*User, error) {
 		Phone:     user.Phone,
 		Role:      user.Role,
 		CommonFields: CommonFields{
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
+			CreatedAt: user.CreatedAt,
+			UpdatedAt: user.UpdatedAt,
 			IsDeleted: false,
 		},
 	}
