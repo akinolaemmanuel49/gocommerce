@@ -35,7 +35,7 @@
     - [x] Auth
     - [x] Health
 - [ ] Write tests
-    - [ ] Users
+    - [x] Users
     - [ ] Products
     - [ ] Categories
     - [ ] Carts
