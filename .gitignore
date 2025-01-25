@@ -27,3 +27,6 @@ gocommerce.env
 
 # Binaries
 gocommerce
+
+dev-docker-compose.yml
+docker.env
