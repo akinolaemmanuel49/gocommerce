@@ -4,10 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"io"
+	"net/http"
+	"testing"
 
 	"os"
 	"time"
 
+	"github.com/akinolaemmanuel49/gocommerce/internal/auth/utils"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -80,4 +83,24 @@ func (tdb *TestDatabase) SeedDatabase(collectionName string, filePath string) er
 	collection := tdb.Database.Collection(collectionName)
 	_, err = collection.InsertMany(context.Background(), docs)
 	return err
+}
+
+func GetRequestAuthenticated(t *testing.T, jwtSecretKey []byte, userID string, role string, req *http.Request) *http.Request {
+	validTokenString, _ := utils.GenerateJWT(jwtSecretKey, userID, role)
+
+	type contextKey string
+	const UserClaimsKey contextKey = "userClaims"
+
+	req.Header.Set("Authorization", "Bearer "+validTokenString)
+	req.Header.Set("Content-Type", "application/json")
+
+	// Parse and validate the token
+	claims, err := utils.ParseJWT(jwtSecretKey, validTokenString)
+	if err != nil {
+		t.Fatalf("Failed to extract claims from token")
+	}
+
+	ctx := context.WithValue(req.Context(), UserClaimsKey, claims)
+	req = req.WithContext(ctx)
+	return req
 }
