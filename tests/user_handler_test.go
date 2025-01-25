@@ -12,7 +12,6 @@ import (
 	"time"
 
 	auth_middlewares "github.com/akinolaemmanuel49/gocommerce/internal/auth/middlewares"
-	"github.com/akinolaemmanuel49/gocommerce/internal/auth/utils"
 	"github.com/akinolaemmanuel49/gocommerce/internal/handlers"
 	"github.com/akinolaemmanuel49/gocommerce/internal/models"
 	"github.com/akinolaemmanuel49/gocommerce/internal/repositories"
@@ -45,7 +44,7 @@ type userDbIn struct {
 
 func TestUserHandler_Create(t *testing.T) {
 	// Setup the test database
-	testDB := setupTest(t)
+	testDB := setupUserTest(t)
 	defer testDB.TeardownTestDatabase()
 
 	userHandler := spawnUserHandler(testDB.Database)
@@ -139,7 +138,7 @@ func TestUserHandler_Create(t *testing.T) {
 
 func TestUserHandler_Read(t *testing.T) {
 	// Setup the test database
-	testDB := setupTest(t)
+	testDB := setupUserTest(t)
 	defer testDB.TeardownTestDatabase()
 
 	userHandler := spawnUserHandler(testDB.Database)
@@ -156,6 +155,9 @@ func TestUserHandler_Read(t *testing.T) {
 	authMiddleware := auth_middlewares.AuthMiddleware(jwtSecretKey)
 	router.Handle("/users", authMiddleware(http.HandlerFunc(userHandler.Read))).Methods(http.MethodGet)
 
+	createdAt := time.Date(2025, time.January, 23, 12, 53, 47, 406000000, time.UTC)
+	updatedAt := time.Date(2025, time.January, 23, 12, 53, 47, 406000000, time.UTC)
+
 	// Mock customer user
 	mockAdminUser := userDbIn{
 		ID:           adminObjectID,
@@ -167,8 +169,8 @@ func TestUserHandler_Read(t *testing.T) {
 		Phone:        "91 123 456",
 		Role:         "admin",
 		CommonFields: models.CommonFields{
-			CreatedAt: time.Date(2025, time.January, 23, 12, 53, 47, 406286520, time.Local),
-			UpdatedAt: time.Date(2025, time.January, 23, 12, 53, 47, 406286705, time.Local),
+			CreatedAt: createdAt,
+			UpdatedAt: updatedAt,
 			IsDeleted: false,
 		},
 	}
@@ -183,8 +185,8 @@ func TestUserHandler_Read(t *testing.T) {
 		Phone:        "91 123 456",
 		Role:         "customer",
 		CommonFields: models.CommonFields{
-			CreatedAt: time.Date(2025, time.January, 23, 12, 53, 47, 406286520, time.Local),
-			UpdatedAt: time.Date(2025, time.January, 23, 12, 53, 47, 406286705, time.Local),
+			CreatedAt: createdAt,
+			UpdatedAt: updatedAt,
 			IsDeleted: false,
 		},
 	}
@@ -221,7 +223,8 @@ func TestUserHandler_Read(t *testing.T) {
 		expectedUser models.User
 		expectedCode int
 	}{
-		{name: "Read Own Customer User",
+		{
+			name:        "Read Own Customer User",
 			userID:      "679203704b42eafa5d57d30b",
 			query:       "",
 			otherUserID: "",
@@ -235,14 +238,15 @@ func TestUserHandler_Read(t *testing.T) {
 				Phone:     "91 123 456",
 				Role:      "customer",
 				CommonFields: models.CommonFields{
-					CreatedAt: insertedCustomerUser.CreatedAt,
-					UpdatedAt: insertedCustomerUser.UpdatedAt,
+					CreatedAt: createdAt,
+					UpdatedAt: updatedAt,
 					IsDeleted: false,
 				},
 			},
 			expectedCode: http.StatusOK,
 		},
-		{name: "Read Own Admin User",
+		{
+			name:        "Read Own Admin User",
 			userID:      "679203704b42eafa5d57d30a",
 			query:       "",
 			otherUserID: "",
@@ -256,14 +260,15 @@ func TestUserHandler_Read(t *testing.T) {
 				Phone:     "91 123 456",
 				Role:      "admin",
 				CommonFields: models.CommonFields{
-					CreatedAt: insertedCustomerUser.CreatedAt,
-					UpdatedAt: insertedCustomerUser.UpdatedAt,
+					CreatedAt: createdAt,
+					UpdatedAt: updatedAt,
 					IsDeleted: false,
 				},
 			},
 			expectedCode: http.StatusOK,
 		},
-		{name: "Read Other Admin User",
+		{
+			name:        "Read Other Admin User",
 			userID:      "679203704b42eafa5d57d30a",
 			query:       "?id=",
 			otherUserID: "679203704b42eafa5d57d30b",
@@ -277,28 +282,31 @@ func TestUserHandler_Read(t *testing.T) {
 				Phone:     "91 123 456",
 				Role:      "customer",
 				CommonFields: models.CommonFields{
-					CreatedAt: insertedCustomerUser.CreatedAt,
-					UpdatedAt: insertedCustomerUser.UpdatedAt,
+					CreatedAt: createdAt,
+					UpdatedAt: updatedAt,
 					IsDeleted: false,
 				},
 			},
 			expectedCode: http.StatusOK,
 		},
-		{name: "Read Other Customer User",
+		{
+			name:         "Read Other Customer User",
 			userID:       "679203704b42eafa5d57d30b",
 			query:        "?id=",
 			otherUserID:  "679203704b42eafa5d57d30a",
 			role:         "customer",
 			expectedCode: http.StatusForbidden,
 		},
-		{name: "Read Own Non Existent User",
+		{
+			name:         "Read Own Non Existent User",
 			userID:       "679203704b42eafa5d57d30c",
 			query:        "",
 			otherUserID:  "",
 			role:         "customer",
 			expectedCode: http.StatusNotFound,
 		},
-		{name: "Read Other Non Existent User",
+		{
+			name:         "Read Other Non Existent User",
 			userID:       "679203704b42eafa5d57d30a",
 			query:        "?id=",
 			otherUserID:  "679203704b42eafa5d57d30c",
@@ -311,9 +319,8 @@ func TestUserHandler_Read(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// Create the HTTP request
 			req, _ := http.NewRequest(http.MethodGet, "/users"+tt.query+tt.otherUserID, nil)
-			req.Header.Set("Content-Type", "application/json")
 
-			req = getRequestAuthenticated(t, jwtSecretKey, tt.userID, tt.role, req)
+			req = GetRequestAuthenticated(t, jwtSecretKey, tt.userID, tt.role, req)
 
 			// Create response recorder
 			rr := httptest.NewRecorder()
@@ -330,8 +337,8 @@ func TestUserHandler_Read(t *testing.T) {
 			assert.Equal(t, tt.expectedCode, rr.Code)
 			if tt.expectedUser != (models.User{}) {
 				// Hacky, but fixes the problem with time fields
-				user.CreatedAt = insertedCustomerUser.CreatedAt
-				user.UpdatedAt = insertedCustomerUser.UpdatedAt
+				// user.CreatedAt = createdAt
+				// user.UpdatedAt = updatedAt
 				assert.Equal(t, tt.expectedUser, user)
 			}
 		})
@@ -340,7 +347,7 @@ func TestUserHandler_Read(t *testing.T) {
 
 func TestUserHandler_ReadAll(t *testing.T) {
 	// Setup the test database
-	testDB := setupTest(t)
+	testDB := setupUserTest(t)
 
 	defer testDB.TeardownTestDatabase()
 
@@ -353,6 +360,14 @@ func TestUserHandler_ReadAll(t *testing.T) {
 	customerObjectID, _ := primitive.ObjectIDFromHex("679203704b42eafa5d57d30b")
 	adminObjectID, _ := primitive.ObjectIDFromHex("679203704b42eafa5d57d30a")
 
+	// Set up the router
+	router := mux.NewRouter()
+	authMiddleware := auth_middlewares.AuthMiddleware(jwtSecretKey)
+	router.Handle("/users/all", authMiddleware(http.HandlerFunc(userHandler.ReadAll))).Methods(http.MethodGet)
+
+	createdAt := time.Date(2025, time.January, 23, 12, 53, 47, 406000000, time.UTC)
+	updatedAt := time.Date(2025, time.January, 23, 12, 53, 47, 406000000, time.UTC)
+
 	// Mock customer user
 	mockAdminUser := userDbIn{
 		ID:           adminObjectID,
@@ -364,8 +379,8 @@ func TestUserHandler_ReadAll(t *testing.T) {
 		Phone:        "91 123 456",
 		Role:         "admin",
 		CommonFields: models.CommonFields{
-			CreatedAt: time.Date(2025, time.January, 23, 12, 53, 47, 406286520, time.Local),
-			UpdatedAt: time.Date(2025, time.January, 23, 12, 53, 47, 406286705, time.Local),
+			CreatedAt: createdAt,
+			UpdatedAt: updatedAt,
 			IsDeleted: false,
 		},
 	}
@@ -380,8 +395,8 @@ func TestUserHandler_ReadAll(t *testing.T) {
 		Phone:        "91 123 456",
 		Role:         "customer",
 		CommonFields: models.CommonFields{
-			CreatedAt: time.Date(2025, time.January, 23, 12, 53, 47, 406286520, time.Local),
-			UpdatedAt: time.Date(2025, time.January, 23, 12, 53, 47, 406286705, time.Local),
+			CreatedAt: createdAt,
+			UpdatedAt: updatedAt,
 			IsDeleted: false,
 		},
 	}
@@ -409,367 +424,489 @@ func TestUserHandler_ReadAll(t *testing.T) {
 		t.Fatalf("Failed to retrieve inserted user: %v", err)
 	}
 
-	// Success Case: Read All Users Admin
-	t.Run("Read All Users Admin", func(t *testing.T) {
-		// Create a mock HTTP request
-		req, err := http.NewRequest(http.MethodGet, "/users/all", nil)
-		if err != nil {
-			t.Fatalf("Failed to create request: %v", err)
-		}
+	tests := []struct {
+		name         string
+		userID       string
+		role         string
+		expectedCode int
+	}{
+		{
+			name:         "Read All Users Admin",
+			userID:       insertedAdminUser.ID,
+			role:         insertedAdminUser.Role,
+			expectedCode: http.StatusOK,
+		},
+		{
+			name:         "Forbidden",
+			userID:       insertedCustomerUser.ID,
+			role:         insertedCustomerUser.Role,
+			expectedCode: http.StatusForbidden,
+		},
+		{
+			name:         "Not Found",
+			userID:       "679203704b42eafa5d57d30c",
+			role:         "admin",
+			expectedCode: http.StatusNotFound,
+		},
+		{
+			name:         "Unauthorized",
+			expectedCode: http.StatusUnauthorized,
+		},
+	}
 
-		// JWT token for user Valentina Doe
-		validTokenString, _ := utils.GenerateJWT(jwtSecretKey, "679203704b42eafa5d57d30a", "admin")
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Create the HTTP request
+			req, _ := http.NewRequest(http.MethodGet, "/users/all", nil)
 
-		type contextKey string
-		const UserClaimsKey contextKey = "userClaims"
+			req = GetRequestAuthenticated(t, jwtSecretKey, tt.userID, tt.role, req)
+			if tt.name == "Unauthorized" {
+				req.Header.Del("Authorization")
+			}
 
-		req.Header.Set("Authorization", "Bearer "+validTokenString)
-		req.Header.Set("Content-Type", "application/json")
+			// Create response recorder
+			rr := httptest.NewRecorder()
 
-		// Parse and validate the token
-		claims, err := utils.ParseJWT(jwtSecretKey, validTokenString)
-		if err != nil {
-			t.Fatalf("Failed to extract claims from token")
-		}
+			// Serve the request using the router
+			router.ServeHTTP(rr, req)
 
-		ctx := context.WithValue(req.Context(), UserClaimsKey, claims)
-		req = req.WithContext(ctx)
-
-		// Create response recorder
-		rr := httptest.NewRecorder()
-
-		// Call the handler's ReadAll method
-		authMiddleware := auth_middlewares.AuthMiddleware(jwtSecretKey)
-		chain := authMiddleware(http.HandlerFunc(userHandler.ReadAll))
-		chain.ServeHTTP(rr, req)
-
-		// Make assertions
-		assert.Equal(t, req.Header.Get("Authorization"), "Bearer "+validTokenString)
-		assert.Equal(t, http.StatusOK, rr.Code)
-	})
-
-	// Failure Case: Read All Users Customer
-	t.Run("Read All Users Customer", func(t *testing.T) {
-		// Create a mock HTTP request
-		req, err := http.NewRequest(http.MethodGet, "/users/all", nil)
-		if err != nil {
-			t.Fatalf("Failed to create request: %v", err)
-		}
-
-		// JWT token for user Valentina Doe
-		validTokenString, _ := utils.GenerateJWT(jwtSecretKey, "679203704b42eafa5d57d30b", "customer")
-
-		type contextKey string
-		const UserClaimsKey contextKey = "userClaims"
-
-		req.Header.Set("Authorization", "Bearer "+validTokenString)
-		req.Header.Set("Content-Type", "application/json")
-
-		// Parse and validate the token
-		claims, err := utils.ParseJWT(jwtSecretKey, validTokenString)
-		if err != nil {
-			t.Fatalf("Failed to extract claims from token")
-		}
-
-		ctx := context.WithValue(req.Context(), UserClaimsKey, claims)
-		req = req.WithContext(ctx)
-
-		// Create response recorder
-		rr := httptest.NewRecorder()
-
-		// Call the handler's ReadAll method
-		authMiddleware := auth_middlewares.AuthMiddleware(jwtSecretKey)
-		chain := authMiddleware(http.HandlerFunc(userHandler.ReadAll))
-		chain.ServeHTTP(rr, req)
-
-		// Make assertions
-		assert.Equal(t, req.Header.Get("Authorization"), "Bearer "+validTokenString)
-		assert.Equal(t, http.StatusForbidden, rr.Code)
-	})
-
-	// Failure Case: Unauthorized
-	t.Run("Unauthorized", func(t *testing.T) {
-		// Create a mock HTTP request
-		req, err := http.NewRequest(http.MethodGet, "/users/all", nil)
-		if err != nil {
-			t.Fatalf("Failed to create request: %v", err)
-		}
-
-		req.Header.Set("Content-Type", "application/json")
-
-		// Create a response recorder
-		rr := httptest.NewRecorder()
-
-		// Call the handler's Read method
-		authMiddleware := auth_middlewares.AuthMiddleware(jwtSecretKey)
-		chain := authMiddleware(http.HandlerFunc(userHandler.ReadAll))
-		chain.ServeHTTP(rr, req)
-
-		// Make assertions
-		assert.Equal(t, http.StatusUnauthorized, rr.Code)
-	})
+			// Assert the response status code
+			assert.Equal(t, tt.expectedCode, rr.Code)
+		})
+	}
 }
 
 func TestUserHandler_Update(t *testing.T) {
 	// Setup the test database
-	testDB := setupTest(t)
+	testDB := setupUserTest(t)
 
 	defer testDB.TeardownTestDatabase()
 
 	userHandler := spawnUserHandler(testDB.Database)
 
-	// Success Case: Update Customer
-	t.Run("Create Customer", func(t *testing.T) {
-		// Create a mock HTTP request
-		payload := map[string]string{
-			"email":     "samueldoe@example.com",
-			"password":  "password",
-			"firstName": "Samuel",
-			"lastName":  "Doe",
-			"role":      "customer", // role is customer
-		}
-		body, _ := json.Marshal(payload)
-		req, err := http.NewRequest(http.MethodPost, "/users", bytes.NewReader(body))
-		if err != nil {
-			t.Fatalf("Failed to create request: %v", err)
-		}
-		req.Header.Set("Content-Type", "application/json")
+	// Generate JWT token
+	jwtSecretKey := []byte("jwt-secret-key")
 
-		// Create a response recorder
-		rr := httptest.NewRecorder()
+	// Seed the database with the mock users
+	customerObjectID, _ := primitive.ObjectIDFromHex("679203704b42eafa5d57d30b")
+	adminObjectID, _ := primitive.ObjectIDFromHex("679203704b42eafa5d57d30a")
 
-		// Call the handler's Create method
-		http.HandlerFunc(userHandler.Create).ServeHTTP(rr, req)
+	// Set up the router
+	router := mux.NewRouter()
+	authMiddleware := auth_middlewares.AuthMiddleware(jwtSecretKey)
+	router.Handle("/users", authMiddleware(http.HandlerFunc(userHandler.Update))).Methods(http.MethodPut)
 
-		// Make assertions
-		assert.Equal(t, http.StatusCreated, rr.Code)
+	createdAt := time.Date(2025, time.January, 23, 12, 53, 47, 406000000, time.UTC)
+	updatedAt := time.Date(2025, time.January, 23, 12, 53, 47, 406000000, time.UTC)
 
-		var createdUser models.User
-		json.NewDecoder(rr.Body).Decode(&createdUser)
-		assert.Equal(t, "customer", createdUser.Role)
-	})
+	// Mock customer user
+	mockAdminUser := userDbIn{
+		ID:           adminObjectID,
+		Email:        "valentinadoe@example.com",
+		PasswordHash: "$2a$10$tbP6YLiT1A8rWwzdNthKAugBvmc5zF8GSF6QDdewDFh9pfWpqcvgW",
+		FirstName:    "Valentina",
+		LastName:     "Doe",
+		Address:      models.Address{},
+		Phone:        "91 123 456",
+		Role:         "admin",
+		CommonFields: models.CommonFields{
+			CreatedAt: createdAt,
+			UpdatedAt: updatedAt,
+			IsDeleted: false,
+		},
+	}
 
-	t.Run("Create Admin", func(t *testing.T) {
-		// Create a mock HTTP request
-		payload := map[string]string{
-			"email":     "jeremiahdoe@example.com",
-			"password":  "password",
-			"firstName": "Jeremiah",
-			"lastName":  "Doe",
-			"role":      "admin", // role is admin
-		}
-		body, _ := json.Marshal(payload)
-		req, err := http.NewRequest(http.MethodPost, "/users", bytes.NewReader(body))
-		if err != nil {
-			t.Fatalf("Failed to create request: %v", err)
-		}
-		req.Header.Set("Content-Type", "application/json")
+	mockCustomerUser := userDbIn{
+		ID:           customerObjectID,
+		Email:        "brandondoe@example.com",
+		PasswordHash: "$2a$10$tbP6YLiT1A8rWwzdNthKAugBvmc5zF8GSF6QDdewDFh9pfWpqcvgW",
+		FirstName:    "Brandon",
+		LastName:     "Doe",
+		Address:      models.Address{},
+		Phone:        "91 123 456",
+		Role:         "customer",
+		CommonFields: models.CommonFields{
+			CreatedAt: createdAt,
+			UpdatedAt: updatedAt,
+			IsDeleted: false,
+		},
+	}
 
-		// Create a response recorder
-		rr := httptest.NewRecorder()
+	// Insert mock users
+	_, err := testDB.Database.Collection("users").InsertOne(context.TODO(), mockAdminUser)
+	if err != nil {
+		t.Fatalf("Failed to insert mock user: %v", err)
+	}
 
-		// Call the handler's Create method
-		http.HandlerFunc(userHandler.Create).ServeHTTP(rr, req)
+	_, err = testDB.Database.Collection("users").InsertOne(context.TODO(), mockCustomerUser)
+	if err != nil {
+		t.Fatalf("Failed to insert mock user: %v", err)
+	}
 
-		// Make assertions
-		assert.Equal(t, http.StatusCreated, rr.Code)
+	var insertedAdminUser models.User
+	err = testDB.Database.Collection("users").FindOne(context.TODO(), bson.M{"_id": adminObjectID}).Decode(&insertedAdminUser)
+	if err != nil {
+		t.Fatalf("Failed to retrieve inserted user: %v", err)
+	}
 
-		var createdUser models.User
-		json.NewDecoder(rr.Body).Decode(&createdUser)
-		assert.Equal(t, "admin", createdUser.Role)
-	})
+	var insertedCustomerUser models.User
+	err = testDB.Database.Collection("users").FindOne(context.TODO(), bson.M{"_id": customerObjectID}).Decode(&insertedCustomerUser)
+	if err != nil {
+		t.Fatalf("Failed to retrieve inserted user: %v", err)
+	}
 
-	// Failure Case: Email Empty String
-	t.Run("Email Empty String", func(t *testing.T) {
-		// Create a mock HTTP request
-		payload := map[string]string{
-			"email":     "", // email is empty string
-			"password":  "password",
-			"firstName": "Isaac",
-			"lastName":  "Doe",
-			"role":      "customer",
-		}
-		body, _ := json.Marshal(payload)
-		req, _ := http.NewRequest(http.MethodPost, "/users", bytes.NewReader(body))
-		req.Header.Set("Content-Type", "application/json")
+	tests := []struct {
+		name         string
+		userID       string
+		query        string
+		otherUserID  string
+		role         string
+		payload      map[string]interface{}
+		expectedUser models.User
+		expectedCode int
+	}{
+		{
+			name:   "Update Own Admin User",
+			userID: insertedAdminUser.ID,
+			role:   insertedAdminUser.Role,
+			payload: map[string]interface{}{
+				"firstName": "Valeria",
+				"lastName":  "Smart",
+				"phone":     "91 321 654",
+				"address": models.Address{
+					Street:  "21 Baker St.",
+					City:    "Manchester",
+					State:   "Grand",
+					Zip:     "112233",
+					Country: "Ujigan",
+				},
+			},
+			expectedUser: models.User{
+				ID:    "679203704b42eafa5d57d30a",
+				Email: "valentinadoe@example.com",
+				// PasswordHash: "$2a$10$tbP6YLiT1A8rWwzdNthKAugBvmc5zF8GSF6QDdewDFh9pfWpqcvgW",
+				FirstName: "Valeria",
+				LastName:  "Smart",
+				Address: models.Address{
+					Street:  "21 Baker St.",
+					City:    "Manchester",
+					State:   "Grand",
+					Zip:     "112233",
+					Country: "Ujigan",
+				},
+				Phone: "91 321 654",
+				Role:  "admin",
+				CommonFields: models.CommonFields{
+					CreatedAt: createdAt,
+					UpdatedAt: updatedAt,
+					IsDeleted: false,
+				},
+			},
+			expectedCode: http.StatusOK,
+		}, {
+			name:   "Update Own Customer User",
+			userID: insertedCustomerUser.ID,
+			role:   insertedCustomerUser.Role,
+			payload: map[string]interface{}{
+				"firstName": "Brady",
+				"lastName":  "Smart",
+				"phone":     "91 321 654",
+				"address": models.Address{
+					Street:  "21 Baker St.",
+					City:    "Manchester",
+					State:   "Grand",
+					Zip:     "112233",
+					Country: "Ujigan",
+				},
+			},
+			expectedUser: models.User{
+				ID:    "679203704b42eafa5d57d30b",
+				Email: "brandondoe@example.com",
+				// PasswordHash: "$2a$10$tbP6YLiT1A8rWwzdNthKAugBvmc5zF8GSF6QDdewDFh9pfWpqcvgW",
+				FirstName: "Brady",
+				LastName:  "Smart",
+				Address: models.Address{
+					Street:  "21 Baker St.",
+					City:    "Manchester",
+					State:   "Grand",
+					Zip:     "112233",
+					Country: "Ujigan",
+				},
+				Phone: "91 321 654",
+				Role:  "customer",
+				CommonFields: models.CommonFields{
+					CreatedAt: createdAt,
+					UpdatedAt: updatedAt,
+				},
+			},
+			expectedCode: http.StatusOK,
+		}, {
+			name:        "Update Other Admin User",
+			userID:      insertedAdminUser.ID,
+			role:        insertedAdminUser.Role,
+			query:       "?id=",
+			otherUserID: "679203704b42eafa5d57d30b",
+			payload: map[string]interface{}{
+				"firstName": "Brandon",
+				"lastName":  "Doe",
+				"phone":     "91 321 654",
+				"address": models.Address{
+					Street:  "21 Baker St.",
+					City:    "Manchester",
+					State:   "Grand",
+					Zip:     "112233",
+					Country: "Ujigan",
+				},
+			},
+			expectedUser: models.User{
+				ID:    "679203704b42eafa5d57d30b",
+				Email: "brandondoe@example.com",
+				// PasswordHash: "$2a$10$tbP6YLiT1A8rWwzdNthKAugBvmc5zF8GSF6QDdewDFh9pfWpqcvgW",
+				FirstName: "Brandon",
+				LastName:  "Doe",
+				Address: models.Address{
+					Street:  "21 Baker St.",
+					City:    "Manchester",
+					State:   "Grand",
+					Zip:     "112233",
+					Country: "Ujigan",
+				},
+				Phone: "91 321 654",
+				Role:  "customer",
+				CommonFields: models.CommonFields{
+					CreatedAt: createdAt,
+					UpdatedAt: updatedAt,
+				},
+			},
+			expectedCode: http.StatusOK,
+		}, {
+			name:         "Forbidden",
+			userID:       insertedCustomerUser.ID,
+			role:         insertedCustomerUser.Role,
+			query:        "?id=",
+			otherUserID:  "679203704b42eafa5d57d30a",
+			expectedCode: http.StatusForbidden,
+		}, {
+			name:         "Not Found",
+			userID:       insertedAdminUser.ID,
+			role:         insertedAdminUser.Role,
+			query:        "?id=",
+			otherUserID:  "679203704b42eafa5d57d30c",
+			expectedCode: http.StatusNotFound,
+		}, {
+			name:         "Unauthorized",
+			expectedCode: http.StatusUnauthorized,
+		},
+	}
 
-		// Create a response recorder
-		rr := httptest.NewRecorder()
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Marshall the payload to JSON
+			body, _ := json.Marshal(tt.payload)
 
-		// Call the handler's Create method
-		http.HandlerFunc(userHandler.Create).ServeHTTP(rr, req)
+			// Create the HTTP request
+			req, _ := http.NewRequest(http.MethodPut, "/users"+tt.query+tt.otherUserID, bytes.NewReader(body))
+			req = GetRequestAuthenticated(t, jwtSecretKey, tt.userID, tt.role, req)
+			if tt.name == "Unauthorized" {
+				req.Header.Del("Authorization")
+			}
 
-		// Assert the response
-		assert.Equal(t, http.StatusBadRequest, rr.Code)
-	})
+			// Create a response recorder
+			rr := httptest.NewRecorder()
 
-	// Failure Case: Email Invalid
-	t.Run("Email Invalid", func(t *testing.T) {
-		// Create a mock HTTP request
-		payload := map[string]string{
-			"email":     "isaacdoeexample.com", // email is missing an '@'
-			"password":  "password",
-			"firstName": "Isaac",
-			"lastName":  "Doe",
-			"role":      "customer",
-		}
-		body, _ := json.Marshal(payload)
-		req, _ := http.NewRequest(http.MethodPost, "/users", bytes.NewReader(body))
-		req.Header.Set("Content-Type", "application/json")
+			// Serve the request using the router
+			router.ServeHTTP(rr, req)
 
-		// Create a response recorder
-		rr := httptest.NewRecorder()
+			// Assert the response status code
+			assert.Equal(t, tt.expectedCode, rr.Code)
 
-		// Call the handler's Create method
-		http.HandlerFunc(userHandler.Create).ServeHTTP(rr, req)
+			var updatedUser models.User
+			json.NewDecoder(rr.Body).Decode(&updatedUser)
+			if tt.expectedUser != (models.User{}) {
+				updatedUser.CreatedAt = createdAt
+				updatedUser.UpdatedAt = updatedAt
+				assert.Equal(t, tt.expectedUser, updatedUser)
+			}
+		})
+	}
+}
 
-		// Assert the response
-		assert.Equal(t, http.StatusBadRequest, rr.Code)
-	})
+func TestUserHandler_Delete(t *testing.T) {
+	// Setup the test database
+	testDB := setupUserTest(t)
 
-	// Failure Case: Password Empty String
-	t.Run("Password Empty String", func(t *testing.T) {
-		// Create a mock HTTP request
-		payload := map[string]string{
-			"email":     "isaacdoe@example.com",
-			"password":  "", // password is empty string
-			"firstName": "Isaac",
-			"lastName":  "Doe",
-			"role":      "customer",
-		}
-		body, _ := json.Marshal(payload)
-		req, _ := http.NewRequest(http.MethodPost, "/users", bytes.NewReader(body))
-		req.Header.Set("Content-Type", "application/json")
+	defer testDB.TeardownTestDatabase()
 
-		// Create a response recorder
-		rr := httptest.NewRecorder()
+	userHandler := spawnUserHandler(testDB.Database)
 
-		// Call the handler's Create method
-		http.HandlerFunc(userHandler.Create).ServeHTTP(rr, req)
+	// Generate JWT token
+	jwtSecretKey := []byte("jwt-secret-key")
 
-		// Assert the response
-		assert.Equal(t, http.StatusBadRequest, rr.Code)
-	})
+	// Seed the database with the mock users
+	adminObjectID, _ := primitive.ObjectIDFromHex("679203704b42eafa5d57d30a")
+	customerAObjectID, _ := primitive.ObjectIDFromHex("679203704b42eafa5d57d30b")
+	customerBObjectID, _ := primitive.ObjectIDFromHex("679203704b42eafa5d57d30c")
 
-	// Failure Case: Password Length Validation
-	t.Run("Password Length Validation", func(t *testing.T) {
-		// Create a mock HTTP request
-		payload := map[string]string{
-			"email":     "isaacdoe@example.com",
-			"password":  "pass", // password length is less than 8
-			"firstName": "Isaac",
-			"lastName":  "Doe",
-			"role":      "customer",
-		}
-		body, _ := json.Marshal(payload)
-		req, _ := http.NewRequest(http.MethodPost, "/users", bytes.NewReader(body))
-		req.Header.Set("Content-Type", "application/json")
+	// Set up the router
+	router := mux.NewRouter()
+	authMiddleware := auth_middlewares.AuthMiddleware(jwtSecretKey)
+	router.Handle("/users", authMiddleware(http.HandlerFunc(userHandler.Update))).Methods(http.MethodPut)
 
-		// Create a response recorder
-		rr := httptest.NewRecorder()
+	createdAt := time.Date(2025, time.January, 23, 12, 53, 47, 406000000, time.UTC)
+	updatedAt := time.Date(2025, time.January, 23, 12, 53, 47, 406000000, time.UTC)
 
-		// Call the handler's Create method
-		http.HandlerFunc(userHandler.Create).ServeHTTP(rr, req)
+	// Mock customer user
+	mockAdminUser := userDbIn{
+		ID:           adminObjectID,
+		Email:        "valentinadoe@example.com",
+		PasswordHash: "$2a$10$tbP6YLiT1A8rWwzdNthKAugBvmc5zF8GSF6QDdewDFh9pfWpqcvgW",
+		FirstName:    "Valentina",
+		LastName:     "Doe",
+		Address:      models.Address{},
+		Phone:        "91 123 456",
+		Role:         "admin",
+		CommonFields: models.CommonFields{
+			CreatedAt: createdAt,
+			UpdatedAt: updatedAt,
+			IsDeleted: false,
+		},
+	}
 
-		// Assert the response
-		assert.Equal(t, http.StatusBadRequest, rr.Code)
-	})
+	mockCustomerUserA := userDbIn{
+		ID:           customerAObjectID,
+		Email:        "brandondoe@example.com",
+		PasswordHash: "$2a$10$tbP6YLiT1A8rWwzdNthKAugBvmc5zF8GSF6QDdewDFh9pfWpqcvgW",
+		FirstName:    "Brandon",
+		LastName:     "Doe",
+		Address:      models.Address{},
+		Phone:        "91 123 456",
+		Role:         "customer",
+		CommonFields: models.CommonFields{
+			CreatedAt: createdAt,
+			UpdatedAt: updatedAt,
+			IsDeleted: false,
+		},
+	}
 
-	// Failure Case: First Name Empty String
-	t.Run("First Name Empty String", func(t *testing.T) {
-		// Create a mock HTTP request
-		payload := map[string]string{
-			"email":     "isaacdoe@example.com",
-			"password":  "password",
-			"firstName": "", // firstName is empty string
-			"lastName":  "Doe",
-			"role":      "customer",
-		}
-		body, _ := json.Marshal(payload)
-		req, _ := http.NewRequest(http.MethodPost, "/users", bytes.NewReader(body))
-		req.Header.Set("Content-Type", "application/json")
+	mockCustomerUserB := userDbIn{
+		ID:           customerBObjectID,
+		Email:        "janicedoe@example.com",
+		PasswordHash: "$2a$10$tbP6YLiT1A8rWwzdNthKAugBvmc5zF8GSF6QDdewDFh9pfWpqcvgW",
+		FirstName:    "Janice",
+		LastName:     "Doe",
+		Address:      models.Address{},
+		Phone:        "91 123 456",
+		Role:         "customer",
+		CommonFields: models.CommonFields{
+			CreatedAt: createdAt,
+			UpdatedAt: updatedAt,
+			IsDeleted: false,
+		},
+	}
 
-		// Create a response recorder
-		rr := httptest.NewRecorder()
+	// Insert mock users
+	_, err := testDB.Database.Collection("users").InsertOne(context.TODO(), mockAdminUser)
+	if err != nil {
+		t.Fatalf("Failed to insert mock user: %v", err)
+	}
 
-		// Call the handler's Create method
-		http.HandlerFunc(userHandler.Create).ServeHTTP(rr, req)
+	_, err = testDB.Database.Collection("users").InsertOne(context.TODO(), mockCustomerUserA)
+	if err != nil {
+		t.Fatalf("Failed to insert mock user: %v", err)
+	}
 
-		// Assert the response
-		assert.Equal(t, http.StatusBadRequest, rr.Code)
-	})
+	_, err = testDB.Database.Collection("users").InsertOne(context.TODO(), mockCustomerUserB)
+	if err != nil {
+		t.Fatalf("Failed to insert mock user: %v", err)
+	}
+	var insertedAdminUser models.User
+	err = testDB.Database.Collection("users").FindOne(context.TODO(), bson.M{"_id": adminObjectID}).Decode(&insertedAdminUser)
+	if err != nil {
+		t.Fatalf("Failed to retrieve inserted user: %v", err)
+	}
 
-	// Failure Case: Last Name Empty String
-	t.Run("Last Name Empty String", func(t *testing.T) {
-		// Create a mock HTTP request
-		payload := map[string]string{
-			"email":     "isaacdoe@example.com",
-			"password":  "password",
-			"firstName": "Isaac",
-			"lastName":  "", // lastName is empty string
-			"role":      "customer",
-		}
-		body, _ := json.Marshal(payload)
-		req, _ := http.NewRequest(http.MethodPost, "/users", bytes.NewReader(body))
-		req.Header.Set("Content-Type", "application/json")
+	var insertedCustomerUserA models.User
+	err = testDB.Database.Collection("users").FindOne(context.TODO(), bson.M{"_id": customerAObjectID}).Decode(&insertedCustomerUserA)
+	if err != nil {
+		t.Fatalf("Failed to retrieve inserted user: %v", err)
+	}
 
-		// Create a response recorder
-		rr := httptest.NewRecorder()
+	var insertedCustomerUserB models.User
+	err = testDB.Database.Collection("users").FindOne(context.TODO(), bson.M{"_id": customerBObjectID}).Decode(&insertedCustomerUserB)
+	if err != nil {
+		t.Fatalf("Failed to retrieve inserted user: %v", err)
+	}
 
-		// Call the handler's Create method
-		http.HandlerFunc(userHandler.Create).ServeHTTP(rr, req)
+	tests := []struct {
+		name         string
+		userID       string
+		query        string
+		otherUserID  string
+		role         string
+		payload      map[string]interface{}
+		expectedUser models.User
+		expectedCode int
+	}{
+		{
+			name:         "Delete Own Customer User",
+			userID:       insertedCustomerUserA.ID,
+			role:         insertedCustomerUserA.Role,
+			expectedCode: http.StatusOK,
+		}, {
+			name:         "Forbidden",
+			userID:       insertedCustomerUserB.ID,
+			role:         insertedCustomerUserB.Role,
+			query:        "?id=",
+			otherUserID:  "679203704b42eafa5d57d30a",
+			expectedCode: http.StatusForbidden,
+		}, {
+			name:         "Delete Other Admin User",
+			userID:       insertedAdminUser.ID,
+			role:         insertedAdminUser.Role,
+			query:        "?id=",
+			otherUserID:  "679203704b42eafa5d57d30c",
+			expectedCode: http.StatusOK,
+		}, {
+			name:         "Delete Own Admin User",
+			userID:       insertedAdminUser.ID,
+			role:         insertedAdminUser.Role,
+			expectedCode: http.StatusOK,
+		}, {
+			name:         "Unauthorized",
+			expectedCode: http.StatusUnauthorized,
+		},
+	}
 
-		// Assert the response
-		assert.Equal(t, http.StatusBadRequest, rr.Code)
-	})
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Marshall the payload to JSON
+			body, _ := json.Marshal(tt.payload)
 
-	// Failure Case: Role Empty String
-	t.Run("Role Empty String", func(t *testing.T) {
-		// Create a mock HTTP request
-		payload := map[string]string{
-			"email":     "isaacdoe@example.com",
-			"password":  "password",
-			"firstName": "Isaac",
-			"lastName":  "Doe",
-			"role":      "", // role is empty string
-		}
-		body, _ := json.Marshal(payload)
-		req, _ := http.NewRequest(http.MethodPost, "/users", bytes.NewReader(body))
-		req.Header.Set("Content-Type", "application/json")
+			// Create the HTTP request
+			req, _ := http.NewRequest(http.MethodPut, "/users"+tt.query+tt.otherUserID, bytes.NewReader(body))
+			req = GetRequestAuthenticated(t, jwtSecretKey, tt.userID, tt.role, req)
+			if tt.name == "Unauthorized" {
+				req.Header.Del("Authorization")
+			}
 
-		// Create a response recorder
-		rr := httptest.NewRecorder()
+			// Create a response recorder
+			rr := httptest.NewRecorder()
 
-		// Call the handler's Create method
-		http.HandlerFunc(userHandler.Create).ServeHTTP(rr, req)
+			// Serve the request using the router
+			router.ServeHTTP(rr, req)
 
-		// Assert the response
-		assert.Equal(t, http.StatusBadRequest, rr.Code)
-	})
+			// Assert the response status code
+			assert.Equal(t, tt.expectedCode, rr.Code)
 
-	// Failure Case: Email Conflict
-	t.Run("Email Conflict", func(t *testing.T) {
-		// Create a mock HTTP request
-		payload := map[string]string{
-			"email":     "jeremiahdoe@example.com", // email already in use
-			"password":  "password",
-			"firstName": "Jeremiah",
-			"lastName":  "Doe",
-			"role":      "customer",
-		}
-		body, _ := json.Marshal(payload)
-		req, _ := http.NewRequest(http.MethodPost, "/users", bytes.NewReader(body))
-		req.Header.Set("Content-Type", "application/json")
-
-		// Create a response recorder
-		rr := httptest.NewRecorder()
-
-		// Call the handler's Create method
-		http.HandlerFunc(userHandler.Create).ServeHTTP(rr, req)
-
-		// Assert the response
-		assert.Equal(t, http.StatusConflict, rr.Code)
-	})
+			var updatedUser models.User
+			json.NewDecoder(rr.Body).Decode(&updatedUser)
+			if tt.expectedUser != (models.User{}) {
+				updatedUser.CreatedAt = createdAt
+				updatedUser.UpdatedAt = updatedAt
+				assert.Equal(t, tt.expectedUser, updatedUser)
+			}
+		})
+	}
 }
 
 // Spawn user handler
@@ -787,7 +924,7 @@ func spawnUserService(db *mongo.Database) *services.UserService {
 	return services.NewUserService(userRepository)
 }
 
-func setupTest(t *testing.T) *TestDatabase {
+func setupUserTest(t *testing.T) *TestDatabase {
 	testDB, err := SetupTestDatabase(mongoURI, dbName)
 	if err != nil {
 		t.Fatalf("Failed to set up test database: %v", err)
@@ -798,24 +935,4 @@ func setupTest(t *testing.T) *TestDatabase {
 		t.Fatalf("Failed to seed database: %v", err)
 	}
 	return testDB
-}
-
-func getRequestAuthenticated(t *testing.T, jwtSecretKey []byte, userID string, role string, req *http.Request) *http.Request {
-	validTokenString, _ := utils.GenerateJWT(jwtSecretKey, userID, role)
-
-	type contextKey string
-	const UserClaimsKey contextKey = "userClaims"
-
-	req.Header.Set("Authorization", "Bearer "+validTokenString)
-	req.Header.Set("Content-Type", "application/json")
-
-	// Parse and validate the token
-	claims, err := utils.ParseJWT(jwtSecretKey, validTokenString)
-	if err != nil {
-		t.Fatalf("Failed to extract claims from token")
-	}
-
-	ctx := context.WithValue(req.Context(), UserClaimsKey, claims)
-	req = req.WithContext(ctx)
-	return req
 }
