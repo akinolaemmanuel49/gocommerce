@@ -15,6 +15,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+// NewOrderHandler creates a new instance of OrderHandler
 func NewOrderHandler(orderService *services.OrderService, logger, errorLogger *log.Logger) *OrderHandler {
 	return &OrderHandler{
 		orderService: orderService,
@@ -23,6 +24,7 @@ func NewOrderHandler(orderService *services.OrderService, logger, errorLogger *l
 	}
 }
 
+// Compile-time check that OrderHandler implements IOrderHandler
 var _ IOrderHandler = (*OrderHandler)(nil)
 
 // Create handles POST /orders requests and accepts CreateOrder as req [CUSTOMER]

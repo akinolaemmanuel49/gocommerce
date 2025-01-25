@@ -170,8 +170,8 @@ func (s *CartService) RetrieveCartByID(ctx context.Context, cartID string) (*mod
 }
 
 // RetrieveAllCarts retrieves all carts based on filters and implements cursor-based pagination
-func (s *CartService) RetrieveAllCarts(ctx context.Context, filter map[string]interface{}, lastId string, limit int) ([]models.Cart, string, error) {
-	carts, nextCursor, err := s.cartRepository.FindAll(ctx, filter, lastId, limit)
+func (s *CartService) RetrieveAllCarts(ctx context.Context, filter map[string]interface{}, lastID string, limit int) ([]models.Cart, string, error) {
+	carts, nextCursor, err := s.cartRepository.FindAll(ctx, filter, lastID, limit)
 	if err != nil {
 		return nil, "", err
 	}
@@ -179,7 +179,7 @@ func (s *CartService) RetrieveAllCarts(ctx context.Context, filter map[string]in
 	return carts, nextCursor, nil
 }
 
-// DeleteCart deletes a cart
+// DeleteCartByID deletes a cart
 func (s *CartService) DeleteCartByID(ctx context.Context, userID string, ID string) error {
 	// Check for existing cart
 	existingCart, err := s.cartRepository.FindByID(ctx, ID)

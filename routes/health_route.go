@@ -9,6 +9,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// RegisterHealthRoute initializes repositories, services and attaches handlers to the router
 func RegisterHealthRoute(config *configs.Config, router *mux.Router, logger, errorLogger *log.Logger) {
 	const RouteHealth = "/health"
 

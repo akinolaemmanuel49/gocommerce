@@ -14,6 +14,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+// RegisterUserRoutes initializes repositories, services and attaches handlers to the router
 func RegisterUserRoutes(config *configs.Config, router *mux.Router, db *mongo.Database, logger, errorLogger *log.Logger) {
 	const RouteUsers = "/users"
 	jwtSecretKey := []byte(config.JWTSecretKey)

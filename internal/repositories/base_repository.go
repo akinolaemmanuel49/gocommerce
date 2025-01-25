@@ -8,6 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+// BaseRepository represents data layer access for defined collections
 type BaseRepository struct {
 	Collection *mongo.Collection
 }

@@ -8,17 +8,17 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-// Define the interface
+// IDatabase interface defines the methods of the Database struct
 type IDatabase interface {
 	Connect(uri string, dbName string) (*mongo.Database, error)
 }
 
-// Struct implementing the interface
+// Database defines a structure for the database instance
 type Database struct {
 	database *mongo.Database
 }
 
-// Implement the Connect method
+// Connect method for Database provides implementation for the database connection
 func (db *Database) Connect(uri string, dbName string) (*mongo.Database, error) {
 	// SetServerAPIOptions method to set the version of the Stable API on the client
 	serverAPI := options.ServerAPI(options.ServerAPIVersion1)
@@ -42,7 +42,7 @@ func (db *Database) Connect(uri string, dbName string) (*mongo.Database, error) 
 	return db.database, nil
 }
 
-// Factory function to create a new Database
+// NewDatabase creates a new instance of Database
 func NewDatabase() IDatabase {
 	return &Database{}
 }

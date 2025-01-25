@@ -85,6 +85,8 @@ func (tdb *TestDatabase) SeedDatabase(collectionName string, filePath string) er
 	return err
 }
 
+// GetRequestAuthenticated generates a valid token string,
+// sets the authentication header, extract claims from the token
 func GetRequestAuthenticated(t *testing.T, jwtSecretKey []byte, userID string, role string, req *http.Request) *http.Request {
 	validTokenString, _ := utils.GenerateJWT(jwtSecretKey, userID, role)
 

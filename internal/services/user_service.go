@@ -14,9 +14,8 @@ import (
 	"github.com/akinolaemmanuel49/gocommerce/utils"
 )
 
-const (
-	HashCost = 10
-)
+// HashCost defines the cost of hashing a password.
+const HashCost = 10
 
 // NewUserService creates a new instance of UserService
 func NewUserService(userRepository *repositories.UserRepository) *UserService {

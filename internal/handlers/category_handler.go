@@ -15,11 +15,12 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+// NewCategoryHandler creates a new instance of CategoryHandler
 func NewCategoryHandler(categoryService *services.CategoryService, logger, errorLogger *log.Logger) *CategoryHandler {
 	return &CategoryHandler{categoryService: categoryService, logger: logger, errorLogger: errorLogger}
 }
 
-// Compile-time check that CategoryHandler implements HandlerInterface
+// Compile-time check that CategoryHandler implements ICategoryHandler
 var _ ICategoryHandler = (*CategoryHandler)(nil)
 
 // Create handles POST /categories requests and accepts CreateCategory as input [ADMIN]

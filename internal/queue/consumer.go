@@ -8,6 +8,7 @@ import (
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
+// OrderNotification defines the structure for order notifications
 type OrderNotification struct {
 	OrderID          string `json:"orderID"`
 	UserID           string `json:"userID"`
@@ -15,6 +16,7 @@ type OrderNotification struct {
 	Message          string `json:"message"`
 }
 
+// ConsumeOrderNotifications consumes a published message
 func ConsumeOrderNotifications(config *configs.Config, ch *amqp.Channel, logger, errorLogger *log.Logger) {
 	msgs, err := ch.Consume(
 		config.OrderQueueName, // Queue name

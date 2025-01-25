@@ -80,8 +80,8 @@ func (s *OrderService) RetrieveOrderByID(ctx context.Context, userID string, ID 
 }
 
 // RetrieveAllOrders retrieves paginated orders with optional filters
-func (s *OrderService) RetrieveAllOrders(ctx context.Context, filter map[string]interface{}, lastId string, limit int) ([]models.Order, string, error) {
-	orders, nextCursor, err := s.orderRepository.FindAll(ctx, filter, lastId, limit)
+func (s *OrderService) RetrieveAllOrders(ctx context.Context, filter map[string]interface{}, lastID string, limit int) ([]models.Order, string, error) {
+	orders, nextCursor, err := s.orderRepository.FindAll(ctx, filter, lastID, limit)
 	if err != nil {
 		return nil, "", err
 	}

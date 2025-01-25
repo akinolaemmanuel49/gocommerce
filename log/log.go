@@ -11,22 +11,22 @@ import (
 // Mutex to protect file access
 var fileMutex sync.Mutex
 
-// LogFileWriter is a custom writer that ensures thread-safe writes to a file
-type LogFileWriter struct {
+// FileWriter is a custom writer that ensures thread-safe writes to a file
+type FileWriter struct {
 	file *os.File
 }
 
 // NewLogFileWriter creates a new instance of LogFileWriter
-func NewLogFileWriter(fileName string) (*LogFileWriter, error) {
+func NewLogFileWriter(fileName string) (*FileWriter, error) {
 	file, err := os.OpenFile(fileName, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open log file: %v", err)
 	}
-	return &LogFileWriter{file: file}, nil
+	return &FileWriter{file: file}, nil
 }
 
 // Write implements the io.Writer interface and ensures that log file writes are thread-safe
-func (w *LogFileWriter) Write(p []byte) (n int, err error) {
+func (w *FileWriter) Write(p []byte) (n int, err error) {
 	// Lock the mutex before writing to the file
 	fileMutex.Lock()
 	defer fileMutex.Unlock()

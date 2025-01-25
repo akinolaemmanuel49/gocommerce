@@ -1,29 +1,30 @@
+
 services:
-  # gocommerce:
-  #   image: gocommerce:latest
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile
-  #   ports:
-  #     - "8000-8009:8000"
-  #   environment:
-  #     - PORT=8000
-  #     - MONGODB_URI=mongodb://mongo:27017
-  #     - MONGODB_NAME=gocommerce
-  #     - RABBITMQ_URI=amqp://guest:guest@rabbitmq:5672
-  #     - ORDER_QUEUE_NAME=orderNotifications
-  #     - DEFAULT_TIMEOUT=30
-  #     - JWT_SECRET_KEY=jwt-secret-key
-  #   deploy:
-  #     mode: replicated
-  #     replicas: 10
-  #   depends_on:
-  #     mongo:
-  #       condition: service_healthy
-  #       restart: true
-  #     rabbitmq:
-  #       condition: service_healthy
-  #       restart: true
+  gocommerce:
+    image: gocommerce:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000-8009:8000"
+    environment:
+      - PORT=${PORT}
+      - MONGODB_URI=${MONGODB_URI}
+      - MONGODB_NAME=${MONGODB_NAME}
+      - RABBITMQ_URI=${RABBITMQ_URI}
+      - ORDER_QUEUE_NAME=${ORDER_QUEUE_NAME}
+      - DEFAULT_TIMEOUT=${DEFAULT_TIMEOUT}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+    deploy:
+      mode: replicated
+      replicas: 10
+    depends_on:
+      mongo:
+        condition: service_healthy
+        restart: true
+      rabbitmq:
+        condition: service_healthy
+        restart: true
 
   mongo:
     image: mongo:latest
@@ -46,8 +47,8 @@ services:
       - "5672:5672"
       - "15672:15672"
     environment:
-      - RABBITMQ_DEFAULT_USER=guest
-      - RABBITMQ_DEFAULT_PASS=guest
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS}
     healthcheck:
       test: ["CMD", "rabbitmqctl", "status"]
       interval: 30s
@@ -55,17 +56,17 @@ services:
       retries: 5
       start_period: 1m
 
-  # nginx:
-  #   image: nginx:latest
-  #   container_name: nginx
-  #   ports:
-  #     - "80:80"
-  #   volumes:
-  #     - ./nginx.conf:/etc/nginx/nginx.conf:ro
-  #   depends_on:
-  #     - gocommerce
-  #     - mongo
-  #     - rabbitmq
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - gocommerce
+      - mongo
+      - rabbitmq
 
 volumes:
   mongo_data:

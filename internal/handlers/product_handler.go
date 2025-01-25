@@ -15,11 +15,12 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+// NewProductHandler creates a new instance of ProductHandler
 func NewProductHandler(productService *services.ProductService, logger, errorLogger *log.Logger) *ProductHandler {
 	return &ProductHandler{productService: productService, logger: logger, errorLogger: errorLogger}
 }
 
-// Compile-time check that ProductHandler implements HandlerInterface
+// Compile-time check that ProductHandler implements IProductHandler
 var _ IProductHandler = (*ProductHandler)(nil)
 
 // Create handles POST /products requests and accepts CreateProduct as input [ADMIN]

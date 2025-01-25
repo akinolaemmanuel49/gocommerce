@@ -11,6 +11,7 @@ import (
 
 type contextKey string
 
+// UserClaimsKey variable holds the context key value
 const UserClaimsKey contextKey = "userClaims"
 
 // AuthMiddleware validates JWT tokens and adds claims to the request context

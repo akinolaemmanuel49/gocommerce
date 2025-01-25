@@ -10,6 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+// OrderRepository represents data layer access for order collections
 type OrderRepository struct {
 	*BaseRepository
 }

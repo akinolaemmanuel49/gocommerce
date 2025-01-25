@@ -14,6 +14,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+// RegisterCategoryRoutes initializes repositories, services and attaches handlers to the router
 func RegisterCategoryRoutes(config *configs.Config, router *mux.Router, db *mongo.Database, logger, errorLogger *log.Logger) {
 	const RouteCategories = "/categories"
 	jwtSecretKey := []byte(config.JWTSecretKey)

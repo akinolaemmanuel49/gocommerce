@@ -2,14 +2,17 @@ package models
 
 import "time"
 
+// OrderStatusUpdate provides an interface to modify order status
 type OrderStatusUpdate struct {
 	Status string `json:"status" validate:"required,oneof=pending shipped delivered"`
 }
 
+// OrderShippingAddressUpdate provides an interface to modify shipping address
 type OrderShippingAddressUpdate struct {
 	ShippingAddress Address `json:"shippingAddress,omitempty"`
 }
 
+// Order model with bson and json tags
 type Order struct {
 	ID              string  `bson:"_id,omitempty" json:"id,omitempty"`
 	UserID          string  `bson:"userId,omitempty" json:"userId,omitempty"`
@@ -22,6 +25,7 @@ type Order struct {
 	CommonFields    `bson:"inline"`
 }
 
+// CreateOrder provides an interface to create a new order
 type CreateOrder struct {
 	Carts           []Cart  `json:"carts" validate:"required,dive"`
 	TotalPrice      float64 `json:"totalPrice" validate:"required,gt=0"`
@@ -29,11 +33,12 @@ type CreateOrder struct {
 	ShippingAddress Address `json:"shippingAddress" validate:"required"`
 }
 
-type UpdateOrder struct {
-	Status          string  `json:"status,omitempty" validate:"omitempty,oneof=pending shipped delivered"`
-	ShippingAddress Address `json:"shippingAddress,omitempty"`
-}
+// type UpdateOrder struct {
+// 	Status          string  `json:"status,omitempty" validate:"omitempty,oneof=pending shipped delivered"`
+// 	ShippingAddress Address `json:"shippingAddress,omitempty"`
+// }
 
+// NewOrder returns a pointer to the new order
 func NewOrder(newOrder *CreateOrder, user *User) *Order {
 	return &Order{
 		UserID:          user.ID,

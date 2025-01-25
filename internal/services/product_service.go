@@ -54,8 +54,8 @@ func (s *ProductService) RetrieveProductByID(ctx context.Context, ID string) (*m
 }
 
 // RetrieveAllProducts retrieves paginated products with optional filters
-func (s *ProductService) RetrieveAllProducts(ctx context.Context, filter map[string]interface{}, lastId string, limit int) ([]models.Product, string, error) {
-	products, nextCursor, err := s.productRepository.FindAll(ctx, filter, lastId, limit)
+func (s *ProductService) RetrieveAllProducts(ctx context.Context, filter map[string]interface{}, lastID string, limit int) ([]models.Product, string, error) {
+	products, nextCursor, err := s.productRepository.FindAll(ctx, filter, lastID, limit)
 	if err != nil {
 		return nil, "", err
 	}

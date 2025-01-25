@@ -14,6 +14,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+// RegisterCartRoutes initializes repositories, services and attaches handlers to the router
 func RegisterCartRoutes(config *configs.Config, router *mux.Router, db *mongo.Database, logger, errorLogger *log.Logger) {
 	const RouteCarts = "/carts"
 	jwtSecretKey := []byte(config.JWTSecretKey)

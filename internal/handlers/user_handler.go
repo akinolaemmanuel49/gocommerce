@@ -20,7 +20,7 @@ func NewUserHandler(userService *services.UserService, logger, errorLogger *log.
 	return &UserHandler{userService: userService, logger: logger, errorLogger: errorLogger}
 }
 
-// Compile-time check that UserHandler implements HandlerInterface
+// Compile-time check that UserHandler implements IUserHandler
 var _ IUserHandler = (*UserHandler)(nil)
 
 // Create handles POST /user requests [PUBLIC]

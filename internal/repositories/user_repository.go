@@ -10,6 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+// UserRepository represents data layer access for user collections
 type UserRepository struct {
 	*BaseRepository
 }

@@ -15,6 +15,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+// RegisterOrderRoutes initializes repositories, services and attaches handlers to the router
 func RegisterOrderRoutes(config *configs.Config, router *mux.Router, db *mongo.Database, logger, errorLogger *log.Logger) {
 	const RouteOrders = "/orders"
 	jwtSecretKey := []byte(config.JWTSecretKey)

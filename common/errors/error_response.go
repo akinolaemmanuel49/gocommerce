@@ -6,6 +6,7 @@ import (
 	"net/http"
 )
 
+// ErrorResponse represents error response to be encoded
 type ErrorResponse struct {
 	Error string `json:"error"`
 }
@@ -38,6 +39,7 @@ func HandleError(w http.ResponseWriter, r *http.Request, err error, errorLogger 
 	}
 }
 
+// WriteErrorResponse sets status code, logs error and encodes the error response in JSON
 func WriteErrorResponse(w http.ResponseWriter, r *http.Request, statusCode int, message string, errorLogger *log.Logger) {
 	w.WriteHeader(statusCode)
 	errorLogger.Printf("%s %d %s [User-Agent: %s]: %v", r.Method, statusCode, r.URL.Path, r.UserAgent(), message)

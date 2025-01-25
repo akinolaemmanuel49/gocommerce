@@ -14,6 +14,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+// RegisterProductRoutes initializes repositories, services and attaches handlers to the router
 func RegisterProductRoutes(config *configs.Config, router *mux.Router, db *mongo.Database, logger, errorLogger *log.Logger) {
 	const RouteProducts = "/products"
 	jwtSecretKey := []byte(config.JWTSecretKey)

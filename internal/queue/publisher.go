@@ -22,7 +22,7 @@ type OrderMessage struct {
 	NotificationTime time.Time `json:"notificationTime"`
 }
 
-// Publisher handles publishing messages to the queue
+// Publisher represents a message queue publisher
 type Publisher struct {
 	conn    *amqp.Connection
 	channel *amqp.Channel
@@ -56,6 +56,7 @@ func NewPublisher(config *configs.Config) (*Publisher, error) {
 	}, nil
 }
 
+// Publish method for the Publisher struct publishes a message to the queue
 func (p *Publisher) Publish(ctx context.Context, message OrderMessage) error {
 	body, err := json.Marshal(message)
 	if err != nil {
@@ -75,7 +76,7 @@ func (p *Publisher) Publish(ctx context.Context, message OrderMessage) error {
 	)
 }
 
-// Close closes the connection and channel
+// Close terminates the connection and channel
 func (p *Publisher) Close() {
 	if p.channel != nil {
 		p.channel.Close()

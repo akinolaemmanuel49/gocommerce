@@ -15,10 +15,12 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+// NewCartHandler creates a new instance of CartHandler
 func NewCartHandler(cartService *services.CartService, logger, errorLogger *log.Logger) *CartHandler {
 	return &CartHandler{cartService: cartService, logger: logger, errorLogger: errorLogger}
 }
 
+// Compile-time check that CartHandler implements ICartHandler
 var _ ICartHandler = (*CartHandler)(nil)
 
 // Create handles POST /carts requests and accepts CreateCart as req [CUSTOMER]

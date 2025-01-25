@@ -6,7 +6,7 @@ import (
 	"github.com/akinolaemmanuel49/gocommerce/internal/auth/utils"
 )
 
-// Database model with bson tags
+// User model with bson and json tags
 type User struct {
 	ID           string  `bson:"_id,omitempty" json:"id,omitempty"`
 	Email        string  `bson:"email,omitempty" json:"email,omitempty"`
@@ -19,6 +19,7 @@ type User struct {
 	CommonFields `bson:"inline"`
 }
 
+// ResponseUser returns a pointer to User
 func ResponseUser(user *User) (*User, error) {
 	responseUser := &User{
 		ID:        user.ID,
@@ -38,7 +39,7 @@ func ResponseUser(user *User) (*User, error) {
 	return responseUser, nil
 }
 
-// Request DTO for creating a user
+// CreateUser provides an interface for creating a new user
 type CreateUser struct {
 	Email     string `json:"email" validate:"required,email"`
 	Password  string `json:"password" validate:"required,min=8"`
@@ -47,7 +48,7 @@ type CreateUser struct {
 	Role      string `json:"role" validate:"required,oneof=customer admin"`
 }
 
-// Request DTO for updating a user
+// UpdateUser provides an interface for updating user details
 type UpdateUser struct {
 	FirstName *string        `json:"firstName,omitempty"`
 	LastName  *string        `json:"lastName,omitempty"`
@@ -55,6 +56,7 @@ type UpdateUser struct {
 	Address   *UpdateAddress `json:"address,omitempty"`
 }
 
+// NewUser hashes new user password and returns a pointer to the new user
 func NewUser(newUser *CreateUser, HashCost int) (*User, error) {
 	// Hash the password
 	passwordHashString, err := utils.HashPassword(newUser.Password, HashCost)
@@ -78,6 +80,7 @@ func NewUser(newUser *CreateUser, HashCost int) (*User, error) {
 	return user, nil
 }
 
+// UserUpdate updates a user's details and returns a pointer to the updated user
 func UserUpdate(updatedUser *UpdateUser, existingUser *User) *User {
 	return &User{
 		FirstName: IfNotNil(updatedUser.FirstName, existingUser.FirstName),

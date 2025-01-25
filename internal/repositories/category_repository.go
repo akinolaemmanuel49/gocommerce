@@ -11,6 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+// CategoryRepository represents data layer access for category collections
 type CategoryRepository struct {
 	*BaseRepository
 }

@@ -16,6 +16,7 @@ func NewAuthHandler(authService *services.AuthService, logger *log.Logger, error
 	return &AuthHandler{authService: authService, logger: logger, errorLogger: errorLogger}
 }
 
+// Compile-time check that AuthHandler implements IAuthHandler
 var _ IAuthHandler = (*AuthHandler)(nil)
 
 // Login handles POST /auth/login requests and accepts UserCredentials as input

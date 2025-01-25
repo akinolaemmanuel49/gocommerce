@@ -45,6 +45,7 @@ const (
 	RouteHealth = "/health"
 )
 
+// Config variable contains project config details
 var Config configs.Config
 
 func main() {

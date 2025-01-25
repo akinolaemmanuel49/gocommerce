@@ -7,11 +7,12 @@ import (
 	"github.com/akinolaemmanuel49/gocommerce/utils"
 )
 
+// NewHealthHandler creates a new instance of HealthHandler
 func NewHealthHandler(logger, errorLogger *log.Logger) *HealthHandler {
 	return &HealthHandler{logger: logger, errorLogger: errorLogger}
 }
 
-// healthHandler handles GET /health requests
+// CheckHealth handles GET /health requests
 // @Summary Health check
 // @Description Returns the health status of the API
 // @Tags Health

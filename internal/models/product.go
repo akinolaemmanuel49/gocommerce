@@ -4,6 +4,7 @@ import (
 	"time"
 )
 
+// Product model with bson tags
 type Product struct {
 	ID          string   `bson:"_id,omitempty"`
 	Name        string   `bson:"name,omitempty"`
@@ -17,6 +18,7 @@ type Product struct {
 	CommonFields `bson:"inline"`
 }
 
+// CreateProduct provides an interface to create new products
 type CreateProduct struct {
 	Name        string   `json:"name,omitempty" validate:"required"`
 	Description string   `json:"description,omitempty"`
@@ -26,6 +28,7 @@ type CreateProduct struct {
 	Brand       string   `json:"brand,omitempty"`
 }
 
+// UpdateProduct provides an interface to update products
 type UpdateProduct struct {
 	Name        *string  `json:"name,omitempty" validate:"required"`
 	Description *string  `json:"description,omitempty"`
@@ -33,6 +36,7 @@ type UpdateProduct struct {
 	Brand       *string  `json:"brand,omitempty"`
 }
 
+// NewProduct returns a pointer to the new product
 func NewProduct(newProduct *CreateProduct) *Product {
 	return &Product{
 		Name:        newProduct.Name,
@@ -41,8 +45,6 @@ func NewProduct(newProduct *CreateProduct) *Product {
 		Images:      newProduct.Images,
 		CategoryID:  newProduct.CategoryID,
 		Brand:       newProduct.Brand,
-		// Rating:       3.0,
-		// ReviewsCount: 0,
 		CommonFields: CommonFields{
 			CreatedAt: time.Now(),
 			UpdatedAt: time.Now(),
@@ -51,6 +53,7 @@ func NewProduct(newProduct *CreateProduct) *Product {
 	}
 }
 
+// ProductUpdate returns a pointer to the updated product
 func ProductUpdate(updatedProduct *UpdateProduct, existingProduct *Product) *Product {
 	return &Product{
 		Name:        IfNotNil(updatedProduct.Name, existingProduct.Name),

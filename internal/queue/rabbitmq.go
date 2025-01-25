@@ -7,6 +7,7 @@ import (
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
+// ConnectRabbitMQ implements logic for connecting to the RabbitMQ queue
 func ConnectRabbitMQ(config *configs.Config, logger, errorLogger *log.Logger, isConsumer bool) (*amqp.Connection, *amqp.Channel, error) {
 	conn, err := amqp.Dial(config.RabbitMQURI)
 	if err != nil {
@@ -31,6 +32,7 @@ func ConnectRabbitMQ(config *configs.Config, logger, errorLogger *log.Logger, is
 	return conn, ch, nil
 }
 
+// setupQueue declares a queue
 func setupQueue(config *configs.Config, ch *amqp.Channel, errorLogger *log.Logger) error {
 	_, err := ch.QueueDeclare(
 		config.OrderQueueName, // Queue name

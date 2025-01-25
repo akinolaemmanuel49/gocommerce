@@ -11,6 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+// ProductRepository represents data layer access for product collections
 type ProductRepository struct {
 	*BaseRepository
 }

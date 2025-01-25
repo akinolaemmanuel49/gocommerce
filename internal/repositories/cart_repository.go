@@ -10,6 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+// CartRepository represents data layer access for cart collections
 type CartRepository struct {
 	*BaseRepository
 }

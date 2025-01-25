@@ -2,13 +2,16 @@ package errors
 
 import "fmt"
 
-// NotFoundError represents an error for a missing entity
+// NotFoundError represents a not found error
 type NotFoundError struct {
 	Entity string
 	Field  string
 	Value  string
 }
 
+// Error method for the NotFoundError struct. This method defines how the
+// NotFoundError error type should be represented as a string when it is converted to an error
+// message.
 func (e *NotFoundError) Error() string {
 	if e.Entity == "" && e.Field == "" && e.Value == "" {
 		return "resource not found"
@@ -25,37 +28,51 @@ func NewNotFoundError(entity, field, value string) error {
 	}
 }
 
+// InternalServerError represents an internal server error.
 type InternalServerError struct {
 }
 
+// Error method for the InternalServerError struct. This method defines how the
+// InternalServerError error type should be represented as a string when it is converted to an error
+// message.
 func (e *InternalServerError) Error() string {
 	return "internal server error"
 }
 
+// NewInternalServerError creates a new instance of InternalServerError
 func NewInternalServerError() error {
 	return &InternalServerError{}
 }
 
+// MethodNotAllowedError represents method not allowed error
 type MethodNotAllowedError struct {
 	Method string
 }
 
+// Error method for the MethodNotAllowedError struct. This method defines how the
+// MethodNotAllowedError error type should be represented as a string when it is converted to an error
+// message.
 func (e *MethodNotAllowedError) Error() string {
 	return fmt.Sprintf("%s method not allowed", e.Method)
 }
 
+// NewMethodNotAllowedError creates a new instance of MethodNotAllowedError
 func NewMethodNotAllowedError(method string) error {
 	return &MethodNotAllowedError{
 		Method: method,
 	}
 }
 
+// ConflictError represents conflict error
 type ConflictError struct {
 	Entity string
 	Field  string
 	Value  string
 }
 
+// Error method for the ConflictError struct. This method defines how the
+// ConflictError error type should be represented as a string when it is converted to an error
+// message.
 func (e *ConflictError) Error() string {
 	return fmt.Sprintf(" %s with %s: %s already exists", e.Entity, e.Field, e.Value)
 }
@@ -75,6 +92,9 @@ type ValidationError struct {
 	Err   string
 }
 
+// Error method for the ValidationError struct. This method defines how the
+// ValidationError error type should be represented as a string when it is converted to an error
+// message.
 func (e *ValidationError) Error() string {
 	if e.Field == "" {
 		return fmt.Sprint(e.Err)
@@ -90,10 +110,14 @@ func NewValidationError(field, err string) error {
 	}
 }
 
+// BadRequestError represents bad request error
 type BadRequestError struct {
 	Err string
 }
 
+// Error method for the BadRequestError struct. This method defines how the
+// BadRequestError error type should be represented as a string when it is converted to an error
+// message.
 func (e *BadRequestError) Error() string {
 	return fmt.Sprintf("Bad Request: %s", e.Err)
 }
@@ -110,6 +134,9 @@ type AuthorizationError struct {
 	Err string
 }
 
+// Error method for the AuthorizationError struct. This method defines how the
+// AuthorizationError error type should be represented as a string when it is converted to an error
+// message.
 func (e *AuthorizationError) Error() string {
 	if e.Err != "" {
 		return "Unauthorized"
@@ -124,11 +151,14 @@ func NewAuthorizationError(err string) error {
 	}
 }
 
-// ForbiddenError represents an error for forbidden access
+// ForbiddenError represents an error for forbidden
 type ForbiddenError struct {
 	Err string
 }
 
+// Error method for the ForbiddenError struct. This method defines how the
+// ForbiddenError error type should be represented as a string when it is converted to an error
+// message.
 func (e *ForbiddenError) Error() string {
 	if e.Err != "" {
 		return "Forbidden"
