@@ -3,6 +3,7 @@ package configs
 import (
 	"fmt"
 	"log"
+	"os"
 	"time"
 
 	"github.com/spf13/viper"
@@ -49,12 +50,9 @@ func LoadConfig(path string) (config Config, err error) {
 	return
 }
 
+// GetMongoDBURI reads the value of environment variable MONGODB_URI
+// and returns the value
 func GetMongoDBURI() string {
-	config, err := LoadConfig(".")
-	if err != nil {
-		log.SetFlags(log.Ldate | log.Ltime)
-		log.Fatalf("%s", fmt.Sprintf("%-7s: Error setting up error logger: %v", "ERROR", err))
-	}
-
-	return config.MongoDBURI
+	mongoURI := os.Getenv("MONGODB_URI")
+	return mongoURI
 }

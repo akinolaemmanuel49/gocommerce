@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -46,8 +45,6 @@ type userDbIn struct {
 }
 
 func TestUserHandler_Create(t *testing.T) {
-	fmt.Println("LOUD!!!")
-	fmt.Println(mongoURI)
 	// Setup the test database
 	testDB := setupUserTest(t)
 	defer testDB.TeardownTestDatabase()
