@@ -1,6 +1,8 @@
 package configs
 
 import (
+	"fmt"
+	"log"
 	"time"
 
 	"github.com/spf13/viper"
@@ -29,24 +31,30 @@ func LoadConfig(path string) (config Config, err error) {
 
 	err = viper.ReadInConfig()
 	if err != nil {
-		return
+		log.SetFlags(log.Ldate | log.Ltime)
+		log.Fatalf("%s", fmt.Sprintf("%-7s: Config file not found or cannot be read: %v", "ERROR", err))
+	} else {
+		log.SetFlags(log.Ldate | log.Ltime)
+		log.Printf("%s", fmt.Sprintf("%-7s: Config file loaded successfully", "INFO"))
 	}
 
-	config.DefaultTimeout = viper.GetDuration("DEFAULT_TIMEOUT")
-
 	err = viper.Unmarshal(&config)
+	if err != nil {
+		log.SetFlags(log.Ldate | log.Ltime)
+		log.Fatalf("%s", fmt.Sprintf("%-7s: Error unmarshalling config: %v", "ERROR", err))
+	}
+
+	// config.DefaultTimeout = viper.GetDuration("DEFAULT_TIMEOUT")
+
 	return
 }
 
-func GetConfig() (*Config, error) {
+func GetMongoDBURI() string {
 	config, err := LoadConfig(".")
 	if err != nil {
-		return nil, err
+		log.SetFlags(log.Ldate | log.Ltime)
+		log.Fatalf("%s", fmt.Sprintf("%-7s: Error setting up error logger: %v", "ERROR", err))
 	}
-	return &config, nil
-}
 
-func GetMongoDBURI() string {
-	config, _ := GetConfig()
 	return config.MongoDBURI
 }

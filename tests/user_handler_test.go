@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -24,13 +25,13 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+var mongoURI = configs.GetMongoDBURI()
+
 const (
 	dbName         = "GoCommerceTest"
 	seedFile       = "../tests/test_data_users.json"
 	collectionName = "users"
 )
-
-var mongoURI = configs.GetMongoDBURI()
 
 type userDbIn struct {
 	ID                  primitive.ObjectID `bson:"_id,omitempty"`
@@ -45,6 +46,8 @@ type userDbIn struct {
 }
 
 func TestUserHandler_Create(t *testing.T) {
+	fmt.Println("LOUD!!!")
+	fmt.Println(mongoURI)
 	// Setup the test database
 	testDB := setupUserTest(t)
 	defer testDB.TeardownTestDatabase()
