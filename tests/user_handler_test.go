@@ -11,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/akinolaemmanuel49/gocommerce/configs"
 	auth_middlewares "github.com/akinolaemmanuel49/gocommerce/internal/auth/middlewares"
 	"github.com/akinolaemmanuel49/gocommerce/internal/handlers"
 	"github.com/akinolaemmanuel49/gocommerce/internal/models"
@@ -24,11 +25,12 @@ import (
 )
 
 const (
-	mongoURI       = "mongodb://localhost:27017"
-	dbName         = "test_gocommerce"
+	dbName         = "GoCommerceTest"
 	seedFile       = "../tests/test_data_users.json"
 	collectionName = "users"
 )
+
+var mongoURI = configs.GetMongoDBURI()
 
 type userDbIn struct {
 	ID                  primitive.ObjectID `bson:"_id,omitempty"`
