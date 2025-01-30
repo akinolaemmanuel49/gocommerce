@@ -28,6 +28,9 @@ jobs:
 
       - name: Run Tests
         run: go test -v ./...
+        env:
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          
     
   build-and-push:
     runs-on: ubuntu-latest
