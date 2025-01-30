@@ -46,14 +46,13 @@ jobs:
     # Step 3: Set up Docker Compose
     - name: Set up Docker Compose
       run: |
-        docker-compose build
-        docker-compose push
+        docker compose build
+        docker compose push
       env:
         JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
-        RABBITMQ_DEFAULT_USER: ${{ secrets.RABBITMQ_DEFAULT_USER }}
-        RABBITMQ_DEFAULT_PASS: ${{ secrets.RABBITMQ_DEFAULT_PASS }}
-        MONGODB_URI: mongodb://mongo:27017
-        MONGODB_NAME: gocommerce
+        RABBITMQ_URI: ${{ secrets.RABBITMQ_URI }}
+        MONGODB_URI: ${{ secrets.MONGODB_URI }}
+        MONGODB_NAME: GoCommerce
         ORDER_QUEUE_NAME: orderNotifications
-        DEFAULT_TIMEOUT: 30
+        DEFAULT_TIMEOUT: 30s
         PORT: 8000
