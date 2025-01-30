@@ -62,11 +62,11 @@ func main() {
 	}
 
 	// Load config
-	config, err := configs.LoadConfig(".")
+	config, err := configs.GetConfig()
 	if err != nil {
 		errorLogger.Fatalf("Error reading config file: %v", err)
 	}
-	Config = config
+	Config = *config
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -90,7 +90,7 @@ func main() {
 	logger.Println("Connected to MongoDB successfully")
 
 	// Initialize RabbitMQ
-	conn, ch, err := queue.ConnectRabbitMQ(&config, logger, errorLogger, true)
+	conn, ch, err := queue.ConnectRabbitMQ(config, logger, errorLogger, true)
 	if err != nil {
 		logger.Fatalf("Failed to connect to RabbitMQ: %v", err)
 	}
@@ -107,11 +107,11 @@ func main() {
 	}()
 
 	// Start consuming messages from RabbitMQ
-	go queue.ConsumeOrderNotifications(&config, ch, logger, errorLogger)
+	go queue.ConsumeOrderNotifications(config, ch, logger, errorLogger)
 
 	// Setup HTTP routes
 	router := mux.NewRouter()
-	setupRoutes(&config, router, db, logger, errorLogger)
+	setupRoutes(config, router, db, logger, errorLogger)
 
 	// Start the HTTP server with graceful shutdown
 	server := &http.Server{
