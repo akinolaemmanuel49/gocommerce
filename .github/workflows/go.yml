@@ -46,11 +46,13 @@ jobs:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
 
-    # Step 3: Set up Docker Compose
-    - name: Set up Docker Compose
-      run: |
-        docker compose build
-        docker compose push
+    # Step 3: Build and push Docker image
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with: 
+        context: .
+        push: true
+        tags: ${{ secrets.DOCKER_USERNAME }}/gocommerce:latest
       env:
         JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
         RABBITMQ_URI: ${{ secrets.RABBITMQ_URI }}
