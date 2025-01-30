@@ -62,7 +62,7 @@ func main() {
 	}
 
 	// Load config
-	config, err := configs.LoadConfig(".")
+	config, err := configs.LoadConfig(".", logger, errorLogger)
 	if err != nil {
 		errorLogger.Fatalf("Error reading config file: %v", err)
 	}

@@ -1,7 +1,6 @@
 package configs
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"time"
@@ -23,7 +22,7 @@ type Config struct {
 
 // LoadConfig loads environment variable into the Config struct by
 // unmarshalling them
-func LoadConfig(path string) (config Config, err error) {
+func LoadConfig(path string, logger *log.Logger, errorLogger *log.Logger) (config Config, err error) {
 	viper.AddConfigPath(path)
 	viper.SetConfigName("gocommerce")
 	viper.SetConfigType("env")
@@ -32,20 +31,15 @@ func LoadConfig(path string) (config Config, err error) {
 
 	err = viper.ReadInConfig()
 	if err != nil {
-		log.SetFlags(log.Ldate | log.Ltime)
-		log.Fatalf("%s", fmt.Sprintf("%-7s: Config file not found or cannot be read: %v", "ERROR", err))
+		errorLogger.Fatalf("Config file not found or cannot be read: %v", err)
 	} else {
-		log.SetFlags(log.Ldate | log.Ltime)
-		log.Printf("%s", fmt.Sprintf("%-7s: Config file loaded successfully", "INFO"))
+		logger.Println("Config file loaded successfully")
 	}
 
 	err = viper.Unmarshal(&config)
 	if err != nil {
-		log.SetFlags(log.Ldate | log.Ltime)
-		log.Fatalf("%s", fmt.Sprintf("%-7s: Error unmarshalling config: %v", "ERROR", err))
+		errorLogger.Fatalf("Error unmarshalling config: %v", err)
 	}
-
-	// config.DefaultTimeout = viper.GetDuration("DEFAULT_TIMEOUT")
 
 	return
 }
