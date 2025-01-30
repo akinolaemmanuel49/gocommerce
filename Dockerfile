@@ -2,8 +2,8 @@ FROM golang:1.23-alpine
 
 # Copy source code into container and get packages
 WORKDIR /app
-COPY go.mod go.sum ./
-RUN go mod download
+COPY go.mod ./
+RUN go mod tidy
 COPY . .
 
 # Build binary within container
