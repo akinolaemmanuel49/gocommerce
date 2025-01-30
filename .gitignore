@@ -13,7 +13,6 @@
 
 # Dependency files
 vendor/
-go.sum
 
 # Build and output directories
 bin/
