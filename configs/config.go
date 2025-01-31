@@ -43,8 +43,10 @@ func LoadConfig(path string, logger *log.Logger, errorLogger *log.Logger) (confi
 	return
 }
 
+// SetTestConfigFile loads and/or sets environment variables from
+// a .env or from environment variables `viper.AutomaticEnv`
 func SetTestConfigFile() (config Config) {
-	viper.SetConfigFile("../test_gocommerce.env")
+	viper.SetConfigFile("../gocommerce.env")
 	err := viper.ReadInConfig()
 	if err != nil {
 		fmt.Println("Config file not found or cannot be read; using environment variables only")
@@ -59,13 +61,7 @@ func SetTestConfigFile() (config Config) {
 		fmt.Printf("Error unmarshalling config: %v", err)
 		os.Exit(1) // Exit on failure
 	}
+	config.MongoDBName = "GoCommerceTest"
 
 	return
-}
-
-// GetMongoDBURI reads the value of environment variable MONGODB_URI
-// and returns the value
-func GetMongoDBURI() string {
-	mongoURI := os.Getenv("MONGODB_URI")
-	return mongoURI
 }
