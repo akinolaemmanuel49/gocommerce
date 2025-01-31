@@ -10,6 +10,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/akinolaemmanuel49/gocommerce/configs"
 	"github.com/akinolaemmanuel49/gocommerce/internal/auth/utils"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -22,10 +23,13 @@ type TestDatabase struct {
 }
 
 // SetupTestDatabase sets up a MongoDB test database
-func SetupTestDatabase(uri, dbName string) (*TestDatabase, error) {
+// func SetupTestDatabase(uri, dbName string) (*TestDatabase, error) {
+func SetupTestDatabase() (*TestDatabase, error) {
+	config := configs.SetTestConfigFile()
 	serverAPI := options.ServerAPI(options.ServerAPIVersion1)
 	opts := options.Client().
-		ApplyURI(uri).
+		// ApplyURI(uri).
+		ApplyURI(config.MongoDBURI).
 		SetServerAPIOptions(serverAPI)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -38,8 +42,9 @@ func SetupTestDatabase(uri, dbName string) (*TestDatabase, error) {
 
 	// Return the test database
 	return &TestDatabase{
-		Client:   client,
-		Database: client.Database(dbName),
+		Client: client,
+		// Database: client.Database(dbName),
+		Database: client.Database(config.MongoDBName),
 	}, nil
 }
 

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
@@ -49,6 +50,10 @@ const (
 var Config configs.Config
 
 func main() {
+	// Setup flags
+	envFile := flag.String("env-file", ".", "Path to the .env file")
+	flag.Parse()
+
 	// Setup logger
 	logger, err := l.SetupLogger("service.log", "INFO")
 	if err != nil {
@@ -62,7 +67,7 @@ func main() {
 	}
 
 	// Load config
-	config, err := configs.LoadConfig(".", logger, errorLogger)
+	config, err := configs.LoadConfig(*envFile, logger, errorLogger)
 	if err != nil {
 		errorLogger.Fatalf("Error reading config file: %v", err)
 	}

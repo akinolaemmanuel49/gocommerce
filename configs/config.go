@@ -1,6 +1,7 @@
 package configs
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"time"
@@ -23,11 +24,7 @@ type Config struct {
 // LoadConfig loads environment variable into the Config struct by
 // unmarshalling them
 func LoadConfig(path string, logger *log.Logger, errorLogger *log.Logger) (config Config, err error) {
-	viper.AddConfigPath(path)
-	viper.SetConfigName("gocommerce")
-	viper.SetConfigType("env")
-
-	viper.AutomaticEnv()
+	viper.SetConfigFile(path)
 
 	err = viper.ReadInConfig()
 	if err != nil {
@@ -36,9 +33,31 @@ func LoadConfig(path string, logger *log.Logger, errorLogger *log.Logger) (confi
 		logger.Println("Config file loaded successfully")
 	}
 
+	viper.AutomaticEnv()
+
 	err = viper.Unmarshal(&config)
 	if err != nil {
 		errorLogger.Fatalf("Error unmarshalling config: %v", err)
+	}
+
+	return
+}
+
+func SetTestConfigFile() (config Config) {
+	viper.SetConfigFile("../test_gocommerce.env")
+	err := viper.ReadInConfig()
+	if err != nil {
+		fmt.Println("Config file not found or cannot be read; using environment variables only")
+	} else {
+		fmt.Println("Config file loaded successfully")
+	}
+
+	viper.AutomaticEnv()
+
+	err = viper.Unmarshal(&config)
+	if err != nil {
+		fmt.Printf("Error unmarshalling config: %v", err)
+		os.Exit(1) // Exit on failure
 	}
 
 	return
