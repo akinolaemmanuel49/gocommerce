@@ -29,8 +29,6 @@ func LoadConfig(path string, logger *log.Logger, errorLogger *log.Logger) (confi
 	err = viper.ReadInConfig()
 	if err != nil {
 		errorLogger.Println("Config file not found or cannot be read; using environment variables only")
-	} else {
-		logger.Println("Config file loaded successfully")
 	}
 
 	viper.AutomaticEnv()

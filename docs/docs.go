@@ -9,14 +9,14 @@ const docTemplate = `{
     "info": {
         "description": "{{escape .Description}}",
         "title": "{{.Title}}",
-        "termsOfService": "http://swagger.io/terms/",
+        "termsOfService": "http://localhost/terms/",
         "contact": {
             "name": "Akinola Abiodun E.",
             "email": "biteatertest@gmail.com"
         },
         "license": {
-            "name": "Apache 2.0",
-            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+            "name": "MIT",
+            "url": "http://localhost/license/"
         },
         "version": "{{.Version}}"
     },
@@ -1824,20 +1824,6 @@ const docTemplate = `{
                 }
             }
         },
-        "models.CommonFields": {
-            "type": "object",
-            "properties": {
-                "createdAt": {
-                    "type": "string"
-                },
-                "isDeleted": {
-                    "type": "boolean"
-                },
-                "updatedAt": {
-                    "type": "string"
-                }
-            }
-        },
         "models.CreateCart": {
             "type": "object",
             "properties": {
@@ -2168,6 +2154,9 @@ const docTemplate = `{
                 "address": {
                     "$ref": "#/definitions/models.Address"
                 },
+                "createdAt": {
+                    "type": "string"
+                },
                 "email": {
                     "type": "string"
                 },
@@ -2177,8 +2166,8 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
-                "inline": {
-                    "$ref": "#/definitions/models.CommonFields"
+                "isDeleted": {
+                    "type": "boolean"
                 },
                 "lastName": {
                     "type": "string"
@@ -2187,6 +2176,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "role": {
+                    "type": "string"
+                },
+                "updatedAt": {
                     "type": "string"
                 }
             }

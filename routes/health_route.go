@@ -4,13 +4,12 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/akinolaemmanuel49/gocommerce/configs"
 	"github.com/akinolaemmanuel49/gocommerce/internal/handlers"
 	"github.com/gorilla/mux"
 )
 
 // RegisterHealthRoute initializes repositories, services and attaches handlers to the router
-func RegisterHealthRoute(config *configs.Config, router *mux.Router, logger, errorLogger *log.Logger) {
+func RegisterHealthRoute(router *mux.Router, logger, errorLogger *log.Logger) {
 	const RouteHealth = "/health"
 
 	// Initialize the handler

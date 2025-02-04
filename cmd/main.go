@@ -29,22 +29,19 @@ import (
 // @title GoCommerce API
 // @version 1.0
 // @description This is an e-commerce server GoCommerce server.
-// @termsOfService http://swagger.io/terms/
+// @termsOfService https://gocommerce-h1v5.onrender.com/terms/
 
 // @contact.name Akinola Abiodun E.
 // @contact.email biteatertest@gmail.com
 
-// @license.name Apache 2.0
-// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
+// @license.name MIT
+// @license.url https://gocommerce-h1v5.onrender.com/license/
 
 // @securityDefinitions.apiKey BearerAuth
 // @in header
 // @name Authorization
 
 // @host localhost
-const (
-	RouteHealth = "/health"
-)
 
 // Config variable contains project config details
 var Config configs.Config
@@ -136,7 +133,10 @@ func main() {
 
 func setupRoutes(config *configs.Config, router *mux.Router, db *mongo.Database, logger, errorLogger *log.Logger) {
 	// Health check
-	routes.RegisterHealthRoute(config, router, logger, errorLogger)
+	routes.RegisterHealthRoute(router, logger, errorLogger)
+
+	// Legal routes
+	routes.RegisterLegalRoutes(router)
 
 	// User routes
 	routes.RegisterUserRoutes(config, router, db, logger, errorLogger)
