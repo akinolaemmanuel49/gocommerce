@@ -16,6 +16,7 @@ import (
 	auth_routes "github.com/akinolaemmanuel49/gocommerce/internal/auth/routes"
 	l "github.com/akinolaemmanuel49/gocommerce/log"
 	"github.com/akinolaemmanuel49/gocommerce/routes"
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 
 	_ "github.com/akinolaemmanuel49/gocommerce/docs"
@@ -117,8 +118,12 @@ func main() {
 
 	// Start the HTTP server with graceful shutdown
 	server := &http.Server{
-		Addr:    fmt.Sprintf(":%s", config.Port),
-		Handler: router,
+		Addr: fmt.Sprintf(":%s", config.Port),
+		Handler: handlers.CORS(
+			handlers.AllowedOrigins([]string{"*"}), // Allow all origins (Change this in production)
+			handlers.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}),
+			handlers.AllowedHeaders([]string{"Authorization", "Content-Type"}),
+		)(router),
 	}
 	go func() {
 		logger.Printf("Server is running on http://localhost:%s", config.Port)
