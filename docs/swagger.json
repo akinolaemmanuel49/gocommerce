@@ -1,4 +1,7 @@
 {
+    "schemes": [
+        "https"
+    ],
     "swagger": "2.0",
     "info": {
         "description": "This is an e-commerce server GoCommerce server.",
@@ -14,7 +17,7 @@
         },
         "version": "1.0"
     },
-    "host": "https://gocommerce-h1v5.onrender.com",
+    "host": "gocommerce-h1v5.onrender.com",
     "paths": {
         "/auth/login": {
             "post": {
