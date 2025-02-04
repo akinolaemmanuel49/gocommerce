@@ -1,6 +1,7 @@
 package configs
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"time"
@@ -23,18 +24,14 @@ type Config struct {
 // LoadConfig loads environment variable into the Config struct by
 // unmarshalling them
 func LoadConfig(path string, logger *log.Logger, errorLogger *log.Logger) (config Config, err error) {
-	viper.AddConfigPath(path)
-	viper.SetConfigName("gocommerce")
-	viper.SetConfigType("env")
-
-	viper.AutomaticEnv()
+	viper.SetConfigFile(path)
 
 	err = viper.ReadInConfig()
 	if err != nil {
 		errorLogger.Println("Config file not found or cannot be read; using environment variables only")
-	} else {
-		logger.Println("Config file loaded successfully")
 	}
+
+	viper.AutomaticEnv()
 
 	err = viper.Unmarshal(&config)
 	if err != nil {
@@ -49,4 +46,28 @@ func LoadConfig(path string, logger *log.Logger, errorLogger *log.Logger) (confi
 func GetMongoDBURI() string {
 	mongoURI := os.Getenv("MONGODB_URI")
 	return mongoURI
+}
+
+// SetTestConfigFile loads and/or sets environment variables from
+// a .env or from environment variables `viper.AutomaticEnv`
+func SetTestConfigFile() (config Config) {
+	viper.SetConfigFile("../gocommerce.env")
+	err := viper.ReadInConfig()
+	if err != nil {
+		fmt.Println("Config file not found or cannot be read; using environment variables only")
+	} else {
+		fmt.Println("Config file loaded successfully")
+	}
+
+	viper.AutomaticEnv()
+
+	err = viper.Unmarshal(&config)
+	if err != nil {
+		fmt.Printf("Error unmarshalling config: %v", err)
+		os.Exit(1) // Exit on failure
+	}
+	config.MongoDBName = "GoCommerceTest"
+	config.MongoDBURI = GetMongoDBURI()
+
+	return
 }

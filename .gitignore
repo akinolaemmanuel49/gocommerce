@@ -23,6 +23,7 @@ dist/
 
 # Development/Private files
 gocommerce.env
+test_gocommerce.env
 
 # Binaries
 gocommerce

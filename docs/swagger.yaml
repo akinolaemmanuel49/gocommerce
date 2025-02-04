@@ -96,15 +96,6 @@ definitions:
       message:
         type: string
     type: object
-  models.CommonFields:
-    properties:
-      createdAt:
-        type: string
-      isDeleted:
-        type: boolean
-      updatedAt:
-        type: string
-    type: object
   models.CreateCart:
     properties:
       name:
@@ -330,19 +321,23 @@ definitions:
     properties:
       address:
         $ref: '#/definitions/models.Address'
+      createdAt:
+        type: string
       email:
         type: string
       firstName:
         type: string
       id:
         type: string
-      inline:
-        $ref: '#/definitions/models.CommonFields'
+      isDeleted:
+        type: boolean
       lastName:
         type: string
       phone:
         type: string
       role:
+        type: string
+      updatedAt:
         type: string
     type: object
   models.UserCredentials:
@@ -364,9 +359,9 @@ info:
     name: Akinola Abiodun E.
   description: This is an e-commerce server GoCommerce server.
   license:
-    name: Apache 2.0
-    url: http://www.apache.org/licenses/LICENSE-2.0.html
-  termsOfService: http://swagger.io/terms/
+    name: MIT
+    url: http://localhost/license/
+  termsOfService: http://localhost/terms/
   title: GoCommerce API
   version: "1.0"
 paths:

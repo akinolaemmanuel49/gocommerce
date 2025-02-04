@@ -98,3 +98,5 @@ type OrderHandler struct {
 	logger       *log.Logger
 	errorLogger  *log.Logger
 }
+
+type LegalHandler struct{}

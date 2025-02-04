@@ -11,7 +11,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/akinolaemmanuel49/gocommerce/configs"
 	auth_middlewares "github.com/akinolaemmanuel49/gocommerce/internal/auth/middlewares"
 	"github.com/akinolaemmanuel49/gocommerce/internal/handlers"
 	"github.com/akinolaemmanuel49/gocommerce/internal/models"
@@ -24,10 +23,10 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-var mongoURI = configs.GetMongoDBURI()
+// var mongoURI = configs.GetMongoDBURI()
 
 const (
-	dbName         = "GoCommerceTest"
+	// dbName         = "GoCommerceTest"
 	seedFile       = "../tests/test_data_users.json"
 	collectionName = "users"
 )
@@ -927,7 +926,8 @@ func spawnUserService(db *mongo.Database) *services.UserService {
 }
 
 func setupUserTest(t *testing.T) *TestDatabase {
-	testDB, err := SetupTestDatabase(mongoURI, dbName)
+	// testDB, err := SetupTestDatabase(mongoURI, dbName)
+	testDB, err := SetupTestDatabase()
 	if err != nil {
 		t.Fatalf("Failed to set up test database: %v", err)
 	}
