@@ -42,6 +42,7 @@ func RegisterOrderRoutes(config *configs.Config, router *mux.Router, db *mongo.D
 	orderHandler := handlers.NewOrderHandler(orderService, logger, errorLogger)
 
 	router.Use(middlewares.ErrorMiddleware) // Attach ErrorMiddleware
+	router.Use(corsMiddleware.Handler)
 	authMiddleware := auth_middleware.AuthMiddleware(jwtSecretKey)
 
 	router.Handle(RouteOrders, authMiddleware(http.HandlerFunc(orderHandler.Create))).Methods("POST")

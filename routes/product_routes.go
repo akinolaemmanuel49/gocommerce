@@ -29,6 +29,7 @@ func RegisterProductRoutes(config *configs.Config, router *mux.Router, db *mongo
 	productHandler := handlers.NewProductHandler(productService, logger, errorLogger)
 
 	router.Use(middlewares.ErrorMiddleware) // Attach ErrorMiddleware
+	router.Use(corsMiddleware.Handler)
 	authMiddleware := auth_middlewares.AuthMiddleware(jwtSecretKey)
 
 	// Attach routes
