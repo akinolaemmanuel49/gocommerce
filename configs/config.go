@@ -41,6 +41,13 @@ func LoadConfig(path string, logger *log.Logger, errorLogger *log.Logger) (confi
 	return
 }
 
+// GetMongoDBURI reads the value of environment variable MONGODB_URI
+// and returns the value
+func GetMongoDBURI() string {
+	mongoURI := os.Getenv("MONGODB_URI")
+	return mongoURI
+}
+
 // SetTestConfigFile loads and/or sets environment variables from
 // a .env or from environment variables `viper.AutomaticEnv`
 func SetTestConfigFile() (config Config) {
@@ -60,6 +67,7 @@ func SetTestConfigFile() (config Config) {
 		os.Exit(1) // Exit on failure
 	}
 	config.MongoDBName = "GoCommerceTest"
+	config.MongoDBURI = GetMongoDBURI()
 
 	return
 }
