@@ -9,14 +9,14 @@ const docTemplate = `{
     "info": {
         "description": "{{escape .Description}}",
         "title": "{{.Title}}",
-        "termsOfService": "http://localhost/terms/",
+        "termsOfService": "https://gocommerce-h1v5.onrender.com/terms/",
         "contact": {
             "name": "Akinola Abiodun E.",
             "email": "biteatertest@gmail.com"
         },
         "license": {
             "name": "MIT",
-            "url": "http://localhost/license/"
+            "url": "https://gocommerce-h1v5.onrender.com/license/"
         },
         "version": "{{.Version}}"
     },
@@ -2213,7 +2213,7 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "localhost",
+	Host:             "https://gocommerce-h1v5.onrender.com",
 	BasePath:         "",
 	Schemes:          []string{},
 	Title:            "GoCommerce API",

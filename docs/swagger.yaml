@@ -352,7 +352,7 @@ definitions:
     - email
     - password
     type: object
-host: localhost
+host: https://gocommerce-h1v5.onrender.com
 info:
   contact:
     email: biteatertest@gmail.com
@@ -360,8 +360,8 @@ info:
   description: This is an e-commerce server GoCommerce server.
   license:
     name: MIT
-    url: http://localhost/license/
-  termsOfService: http://localhost/terms/
+    url: https://gocommerce-h1v5.onrender.com/license/
+  termsOfService: https://gocommerce-h1v5.onrender.com/terms/
   title: GoCommerce API
   version: "1.0"
 paths:
