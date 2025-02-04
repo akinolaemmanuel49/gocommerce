@@ -21,6 +21,20 @@ type Config struct {
 	JWTSecretKey   string        `mapstructure:"JWT_SECRET_KEY"`
 }
 
+func GetEnvironmentVariable(config *Config) {
+	config.MongoDBURI = os.Getenv("MONGODB_URI")
+	config.MongoDBName = os.Getenv("MONGODB_NAME")
+	config.RabbitMQURI = os.Getenv("RABBITMQ_URI")
+	config.OrderQueueName = os.Getenv("ORDER_QUEUE_NAME")
+	config.Port = os.Getenv("PORT")
+	timeDuration, err := time.ParseDuration(os.Getenv("DEFAULT_TIMEOUT"))
+	if err != nil {
+		timeDuration = time.Duration(time.Second * 30)
+	}
+	config.DefaultTimeout = timeDuration
+	config.JWTSecretKey = os.Getenv("JWT_SECRET_KEY")
+}
+
 // LoadConfig loads environment variable into the Config struct by
 // unmarshalling them
 func LoadConfig(path string, logger *log.Logger, errorLogger *log.Logger) (config Config, err error) {
@@ -29,9 +43,8 @@ func LoadConfig(path string, logger *log.Logger, errorLogger *log.Logger) (confi
 	err = viper.ReadInConfig()
 	if err != nil {
 		errorLogger.Println("Config file not found or cannot be read; using environment variables only")
+		GetEnvironmentVariable(&config)
 	}
-
-	viper.AutomaticEnv()
 
 	err = viper.Unmarshal(&config)
 	if err != nil {
