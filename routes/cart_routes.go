@@ -33,6 +33,7 @@ func RegisterCartRoutes(config *configs.Config, router *mux.Router, db *mongo.Da
 	cartHandler := handlers.NewCartHandler(cartService, logger, errorLogger)
 
 	router.Use(middlewares.ErrorMiddleware) // Attach ErrorMiddleware
+	router.Use(corsMiddleware.Handler)
 	authMiddleware := auth_middleware.AuthMiddleware(jwtSecretKey)
 
 	router.Handle(RouteCarts, authMiddleware(http.HandlerFunc(cartHandler.Create))).Methods("POST")

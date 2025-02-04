@@ -28,7 +28,8 @@ func RegisterCategoryRoutes(config *configs.Config, router *mux.Router, db *mong
 	// Initialize the handler
 	categoryHandler := handlers.NewCategoryHandler(categoryService, logger, errorLogger)
 
-	router.Use(middlewares.ErrorMiddleware)                         // Attach ErrorMiddleware
+	router.Use(middlewares.ErrorMiddleware) // Attach ErrorMiddleware
+	router.Use(corsMiddleware.Handler)
 	authMiddleware := auth_middlewares.AuthMiddleware(jwtSecretKey) // Attach AuthMiddleware
 
 	// Attach routes
