@@ -29,7 +29,7 @@ func RegisterUserRoutes(config *configs.Config, router *mux.Router, db *mongo.Da
 	userHandler := handlers.NewUserHandler(userService, logger, errorLogger)
 
 	router.Use(middlewares.ErrorMiddleware) // Attach ErrorMiddleware
-	router.Use(corsMiddleware.Handler)
+	// router.Use(corsMiddleware.Handler)
 	authMiddleware := auth_middlewares.AuthMiddleware(jwtSecretKey) // Attach AuthMiddleware
 
 	// Attach routes
