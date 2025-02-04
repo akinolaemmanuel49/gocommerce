@@ -3,18 +3,18 @@
     "info": {
         "description": "This is an e-commerce server GoCommerce server.",
         "title": "GoCommerce API",
-        "termsOfService": "http://localhost/terms/",
+        "termsOfService": "https://gocommerce-h1v5.onrender.com/terms/",
         "contact": {
             "name": "Akinola Abiodun E.",
             "email": "biteatertest@gmail.com"
         },
         "license": {
             "name": "MIT",
-            "url": "http://localhost/license/"
+            "url": "https://gocommerce-h1v5.onrender.com/license/"
         },
         "version": "1.0"
     },
-    "host": "localhost",
+    "host": "https://gocommerce-h1v5.onrender.com",
     "paths": {
         "/auth/login": {
             "post": {

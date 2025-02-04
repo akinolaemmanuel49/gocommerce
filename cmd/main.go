@@ -41,7 +41,7 @@ import (
 // @in header
 // @name Authorization
 
-// @host localhost
+// @host https://gocommerce-h1v5.onrender.com
 
 // Config variable contains project config details
 var Config configs.Config
