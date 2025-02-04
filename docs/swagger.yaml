@@ -352,7 +352,7 @@ definitions:
     - email
     - password
     type: object
-host: https://gocommerce-h1v5.onrender.com
+host: gocommerce-h1v5.onrender.com
 info:
   contact:
     email: biteatertest@gmail.com
@@ -1443,6 +1443,8 @@ paths:
       summary: Read all users
       tags:
       - Users
+schemes:
+- https
 securityDefinitions:
   BearerAuth:
     in: header
